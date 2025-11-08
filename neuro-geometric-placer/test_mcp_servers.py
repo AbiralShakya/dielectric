@@ -63,23 +63,14 @@ def test_direct_function_calls():
         # Test generate_heatmap (simpler function)
         from backend.mcp_servers.ngp_server import generate_heatmap
 
-        async def test_heatmap():
-            result = await generate_heatmap(placement_data, grid_size=16)
-            if "heatmap" in result and len(result["heatmap"]) == 16:
-                print("✅ generate_heatmap function works")
-                return True
-            else:
-                print("❌ generate_heatmap function failed")
-                return False
-
-        # Run the async test
-        import asyncio
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        try:
-            heatmap_ok = loop.run_until_complete(test_heatmap())
-        finally:
-            loop.close()
+        # Call synchronously since tools are sync functions
+        result = generate_heatmap(placement_data, grid_size=16)
+        if "heatmap" in result and len(result["heatmap"]) == 16:
+            print("✅ generate_heatmap function works")
+            heatmap_ok = True
+        else:
+            print("❌ generate_heatmap function failed")
+            heatmap_ok = False
 
         return heatmap_ok
 
@@ -88,7 +79,7 @@ def test_direct_function_calls():
         return False
 
 
-async def test_kicad_export():
+def test_kicad_export():
     """Test KiCad export function."""
     print("\n🧪 Testing KiCad Export")
     print("=" * 40)
@@ -105,7 +96,7 @@ async def test_kicad_export():
             "nets": [{"name": "net1", "pins": [["U1", "pin1"], ["R1", "pin1"]]}]
         }
 
-        result = await export_kicad(placement_data)
+        result = export_kicad(placement_data)
 
         if "kicad_content" in result and result["format"] == "kicad_pcb":
             print("✅ export_kicad function works")
@@ -132,7 +123,7 @@ async def test_mcp_server():
     functions_ok = test_direct_function_calls()
 
     # Test KiCad export
-    kicad_ok = await test_kicad_export()
+    kicad_ok = test_kicad_export()
 
     if setup_ok and functions_ok and kicad_ok:
         print("\n✅ MCP Server tests PASSED!")

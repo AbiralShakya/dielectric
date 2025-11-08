@@ -7,7 +7,7 @@ pydantic>=2.0.0
 # AI & LLM
 openai>=1.0.0  # For xAI compatibility
 requests>=2.31.0
-dedalus-labs>=0.1.0  # For MCP hosting
+dedalus-labs==0.1.0a9  # For MCP hosting
 
 # Computational geometry
 numpy>=1.24.0

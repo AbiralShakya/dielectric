@@ -135,8 +135,8 @@ neuro-geometric-placer/
 
 ## 🔑 API Keys Required
 
-- `XAI_API_KEY` - For Grok reasoning
-- `DEDALUS_API_KEY` - For MCP hosting (optional)
+- `XAI_API_KEY` - For Grok reasoning (configured)
+- `DEDALUS_API_KEY` - For MCP hosting (required for full functionality)
 
 ---
 

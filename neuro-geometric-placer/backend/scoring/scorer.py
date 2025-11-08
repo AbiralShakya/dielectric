@@ -7,7 +7,6 @@ S = α·L_trace + β·D_thermal + γ·C_clearance
 import numpy as np
 from typing import Dict, List, Tuple
 from dataclasses import dataclass
-from numba import jit
 
 from backend.geometry.placement import Placement
 from backend.geometry.component import Component
@@ -19,7 +18,7 @@ class ScoreWeights:
     alpha: float = 0.5  # Trace length weight
     beta: float = 0.3   # Thermal density weight
     gamma: float = 0.2  # Clearance violation weight
-    
+
     def normalize(self):
         """Normalize weights to sum to 1.0."""
         total = self.alpha + self.beta + self.gamma
@@ -29,15 +28,13 @@ class ScoreWeights:
             self.gamma /= total
 
 
-@jit(nopython=True)
 def _manhattan_distance(x1: float, y1: float, x2: float, y2: float) -> float:
-    """Fast Manhattan distance calculation."""
+    """Manhattan distance calculation."""
     return abs(x1 - x2) + abs(y1 - y2)
 
 
-@jit(nopython=True)
 def _euclidean_distance(x1: float, y1: float, x2: float, y2: float) -> float:
-    """Fast Euclidean distance calculation."""
+    """Euclidean distance calculation."""
     dx = x1 - x2
     dy = y1 - y2
     return np.sqrt(dx * dx + dy * dy)

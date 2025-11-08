@@ -6,16 +6,14 @@ Only recomputes affected nets/components on move.
 
 import numpy as np
 from typing import Dict, List, Optional, Tuple
-from numba import jit
 
 from backend.geometry.placement import Placement
 from backend.geometry.component import Component
 from .scorer import WorldModelScorer, ScoreWeights
 
 
-@jit(nopython=True)
 def _fast_manhattan(x1: float, y1: float, x2: float, y2: float) -> float:
-    """Fast Manhattan distance."""
+    """Manhattan distance."""
     return abs(x1 - x2) + abs(y1 - y2)
 
 

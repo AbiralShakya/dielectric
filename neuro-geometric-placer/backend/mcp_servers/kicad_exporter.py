@@ -19,26 +19,32 @@ class KiCadExporterMCP:
     
     async def export(self, placement_data: Dict) -> Dict[str, Any]:
         """
-        Export placement to KiCad format.
-        
+        Export placement to KiCad format via MCP.
+
         Args:
             placement_data: Placement dictionary
-        
+
         Returns:
-            {"kicad_content": str, "format": "kicad"}
+            {"kicad_content": str, "format": "kicad", "metadata": dict}
         """
         placement = Placement.from_dict(placement_data)
         result = await self.exporter.process(placement, format="kicad")
-        
+
         if result["success"]:
             return {
                 "kicad_content": result["output"],
-                "format": "kicad"
+                "format": "kicad",
+                "metadata": {
+                    "component_count": len(placement.components),
+                    "board_size": f"{placement.board.width}mm x {placement.board.height}mm",
+                    "export_method": "dedalus_mcp"
+                }
             }
         else:
             return {
                 "error": result.get("error", "Export failed"),
-                "format": "kicad"
+                "format": "kicad",
+                "metadata": {"status": "failed"}
             }
     
     def get_tool_definition(self) -> Dict:

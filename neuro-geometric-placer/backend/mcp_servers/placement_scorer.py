@@ -30,8 +30,8 @@ class PlacementScorerMCP:
     
     def score_delta(self, placement_data: Dict, move_data: Dict) -> Dict[str, Any]:
         """
-        Compute score delta for a move.
-        
+        Compute score delta for a move using Dedalus MCP.
+
         Args:
             placement_data: Placement dictionary
             move_data: {
@@ -40,13 +40,13 @@ class PlacementScorerMCP:
                 "new_x": float, "new_y": float, "new_angle": float,
                 "weights": {"alpha": float, "beta": float, "gamma": float}
             }
-        
+
         Returns:
             {"delta": float, "new_score": float}
         """
         placement = Placement.from_dict(placement_data)
         scorer = self._get_scorer(move_data.get("weights", {}))
-        
+
         delta = scorer.compute_delta_score(
             placement,
             move_data["component_name"],
@@ -57,19 +57,21 @@ class PlacementScorerMCP:
             move_data["new_y"],
             move_data["new_angle"]
         )
-        
+
         # Compute new score
         comp = placement.get_component(move_data["component_name"])
         if comp:
             comp.x = move_data["new_x"]
             comp.y = move_data["new_y"]
             comp.angle = move_data["new_angle"]
-        
+
         new_score = scorer.score(placement)
-        
+
         return {
             "delta": delta,
-            "new_score": new_score
+            "new_score": new_score,
+            "computation_method": "incremental_scorer",
+            "affected_nets": len(placement.get_affected_nets(move_data["component_name"]))
         }
     
     def get_tool_definition(self) -> Dict:

@@ -22,6 +22,7 @@ st.set_page_config(
 
 st.title("🔌 Neuro-Geometric Placer")
 st.markdown("**AI-Powered PCB Component Placement Optimization**")
+st.markdown("*Powered by xAI (Grok) + Dedalus Labs MCP Servers*")
 
 # Sidebar
 with st.sidebar:
@@ -79,9 +80,9 @@ with tab1:
     # Board configuration
     col1, col2 = st.columns(2)
     with col1:
-        board_width = st.number_input("Board Width (mm)", value=placement_data["board"]["width"], min_value=10.0, max_value=500.0)
+        board_width = st.number_input("Board Width (mm)", value=float(placement_data["board"]["width"]), min_value=10.0, max_value=500.0)
     with col2:
-        board_height = st.number_input("Board Height (mm)", value=placement_data["board"]["height"], min_value=10.0, max_value=500.0)
+        board_height = st.number_input("Board Height (mm)", value=float(placement_data["board"]["height"]), min_value=10.0, max_value=500.0)
     
     placement_data["board"]["width"] = board_width
     placement_data["board"]["height"] = board_height
@@ -257,4 +258,5 @@ with tab3:
 # Footer
 st.markdown("---")
 st.markdown("**Neuro-Geometric Placer** - Built for HackPrinceton 2025")
+st.markdown("*Multi-Agent AI • Computational Geometry • xAI Reasoning • Dedalus Labs MCP*")
 

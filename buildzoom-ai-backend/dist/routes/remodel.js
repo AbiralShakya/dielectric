@@ -1,8 +1,12 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.remodelRouter = void 0;
 const express_1 = require("express");
 const generative_ai_1 = require("@google/generative-ai");
+const form_data_1 = __importDefault(require("form-data"));
 const router = (0, express_1.Router)();
 exports.remodelRouter = router;
 // Initialize Gemini AI (only if we have a valid key)
@@ -179,28 +183,92 @@ async function analyzeFeasibility(roomAnalysis, userRequest) {
         imageGenerationPrompt: `Modern kitchen interior, white shaker style cabinets with brushed nickel hardware, quartz countertops in light gray, large kitchen island, subway tile backsplash, oak laminate flooring, professional architectural photography, 8K quality`
     };
 }
-// Generate remodeled image with Imagen 3
-async function generateRemodeledImage(prompt) {
-    if (!hasValidGeminiKey) {
-        // Return demo image based on prompt content
-        const hasIsland = prompt.toLowerCase().includes('island');
-        const hasWhiteCabinets = prompt.toLowerCase().includes('white') && prompt.toLowerCase().includes('cabinet');
-        const hasQuartz = prompt.toLowerCase().includes('quartz');
-        let imageType = 'modern-kitchen';
-        if (hasIsland && hasWhiteCabinets)
-            imageType = 'modern-kitchen-island';
-        if (hasQuartz)
-            imageType += '-quartz';
+// Generate remodeled image with local Stable Diffusion server
+async function generateRemodeledImage(prompt, imageBase64) {
+    try {
+        // Convert base64 to buffer
+        const base64Data = imageBase64.replace(/^data:image\/[a-z]+;base64,/, '');
+        const buffer = Buffer.from(base64Data, 'base64');
+        // Create form data using form-data library
+        const form = new form_data_1.default();
+        form.append('prompt', prompt);
+        form.append('image', buffer, {
+            filename: 'room.jpg',
+            contentType: 'image/jpeg'
+        });
+        // Call local SD server
+        const response = await fetch('http://localhost:8000/generate', {
+            method: 'POST',
+            headers: form.getHeaders(),
+            body: form
+        });
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('SD server error response:', errorText);
+            throw new Error(`SD server error: ${response.status} ${response.statusText}`);
+        }
+        const data = await response.json();
+        if (data.success) {
+            // Return data URL format for frontend
+            return {
+                url: `data:image/jpeg;base64,${data.image}`,
+                alt: 'AI-generated remodeled room'
+            };
+        }
+        else {
+            throw new Error('SD generation failed');
+        }
+    }
+    catch (error) {
+        console.error('Error generating with local SD:', error);
+        // Fallback to demo image if SD server is not available
+        console.log('Falling back to demo image...');
         return {
             url: `https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop&crop=center&q=80`,
-            alt: 'AI-generated remodeled room - Demo Mode'
+            alt: 'AI-generated remodeled room - Fallback Mode'
         };
     }
-    // Real Imagen 3 API call would go here
-    return {
-        url: 'https://via.placeholder.com/800x600?text=Generated+Remodeled+Image',
-        alt: 'AI-generated remodeled room'
-    };
+}
+// Generate multi-angle images for AR experience
+async function generateMultiAngleImages(basePrompt, imageBase64, numAngles = 5) {
+    try {
+        // Convert base64 to buffer
+        const base64Data = imageBase64.replace(/^data:image\/[a-z]+;base64,/, '');
+        const buffer = Buffer.from(base64Data, 'base64');
+        // Create form data using form-data library
+        const form = new form_data_1.default();
+        form.append('base_prompt', basePrompt);
+        form.append('image', buffer, {
+            filename: 'room.jpg',
+            contentType: 'image/jpeg'
+        });
+        form.append('num_angles', numAngles.toString());
+        const response = await fetch('http://localhost:8000/generate-multi-angle', {
+            method: 'POST',
+            headers: form.getHeaders(),
+            body: form
+        });
+        if (!response.ok) {
+            throw new Error(`SD server error: ${response.status} ${response.statusText}`);
+        }
+        const data = await response.json();
+        if (data.success) {
+            // Convert base64 images to data URLs
+            const images = data.images.map((img) => ({
+                ...img,
+                url: `data:image/jpeg;base64,${img.image}`,
+                image: undefined // Remove base64 string, keep URL
+            }));
+            return images;
+        }
+        else {
+            throw new Error('Multi-angle generation failed');
+        }
+    }
+    catch (error) {
+        console.error('Error generating multi-angle images:', error);
+        return []; // Return empty array as fallback
+    }
 }
 // Main remodel endpoint
 router.post('/generate-remodel', async (req, res) => {
@@ -218,7 +286,7 @@ router.post('/generate-remodel', async (req, res) => {
         const feasibilityAnalysis = await analyzeFeasibility(roomAnalysis, renovationRequest);
         // Step 3: Generate remodeled image
         console.log('🖼️ Generating image...');
-        const remodeledImage = await generateRemodeledImage(feasibilityAnalysis.imageGenerationPrompt);
+        const remodeledImage = await generateRemodeledImage(feasibilityAnalysis.imageGenerationPrompt, imageBase64);
         // Step 4: Compile results
         const results = {
             success: true,
@@ -241,6 +309,36 @@ router.post('/generate-remodel', async (req, res) => {
         console.error('❌ Pipeline error:', error);
         res.status(500).json({
             error: 'Processing failed',
+            details: error instanceof Error ? error.message : 'Unknown error'
+        });
+    }
+});
+// Multi-angle generation endpoint for AR features
+router.post('/generate-multi-angle', async (req, res) => {
+    try {
+        const { imageBase64, renovationRequest, numAngles = 5 } = req.body;
+        if (!imageBase64 || !renovationRequest) {
+            return res.status(400).json({ error: 'Missing required fields: imageBase64 and renovationRequest' });
+        }
+        console.log('🎨 Starting multi-angle generation...');
+        // Generate multi-angle images
+        console.log('🖼️ Generating multi-angle images...');
+        const multiAngleImages = await generateMultiAngleImages(renovationRequest, imageBase64, numAngles);
+        const results = {
+            success: true,
+            data: {
+                images: multiAngleImages,
+                totalAngles: multiAngleImages.length,
+                basePrompt: renovationRequest
+            }
+        };
+        console.log(`✅ Generated ${multiAngleImages.length} angles!`);
+        res.json(results);
+    }
+    catch (error) {
+        console.error('❌ Multi-angle generation error:', error);
+        res.status(500).json({
+            error: 'Multi-angle generation failed',
             details: error instanceof Error ? error.message : 'Unknown error'
         });
     }

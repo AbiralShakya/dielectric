@@ -69,14 +69,18 @@ Frontend (React + Tailwind)
     ↓
 Backend (Node.js + Express)
     ↓
-External APIs (Gemini + xAI)
+Local GPU Server (Python FastAPI + Stable Diffusion)
+    ↓
+External APIs (Gemini + xAI + ElevenLabs)
 ```
 
 ## 🛠️ Tech Stack
 
 - **Frontend**: React 18, TypeScript, Tailwind CSS, Vite
 - **Backend**: Node.js, Express, TypeScript
-- **APIs**: Google Gemini 2.0, xAI Grok
+- **Local AI**: Python FastAPI, Stable Diffusion XL, ControlNet
+- **APIs**: Google Gemini 2.0, xAI Grok, ElevenLabs
+- **AR Features**: Multi-angle image generation
 - **Deployment**: Ready for Vercel/Netlify + serverless functions
 
 ## 📊 Demo Data
@@ -86,6 +90,32 @@ The app includes demo data for testing without API keys. To use real APIs:
 1. Add your API keys to `.env`
 2. Uncomment the real API calls in `src/routes/remodel.ts`
 3. Test with actual room photos
+
+## 🚀 Stable Diffusion Server Setup
+
+For the best image quality, we've included a local Stable Diffusion server:
+
+### Quick Setup (MacBook Pro):
+```bash
+cd buildzoom-sd-server
+chmod +x quick_start.sh
+./quick_start.sh
+```
+
+### Manual Setup:
+```bash
+cd buildzoom-sd-server
+python3 -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+pip install -r requirements.txt
+python setup_models.py
+python sd_server.py
+```
+
+**GPU Requirements:**
+- RTX 3060+ (8GB VRAM) for best performance
+- M1/M2 MacBook Pro works (uses MPS/CPU fallback)
+- Princeton GPU clusters available for demos
 
 ## 🎨 User Flow
 
@@ -145,6 +175,15 @@ Generates renovation plan from image and text description.
     "warnings": [...]
   }
 }
+```
+
+## 📁 Project Structure
+```
+hackprinceton2025/
+├── buildzoom-ai/              # React frontend
+├── buildzoom-ai-backend/      # Node.js API
+├── buildzoom-sd-server/       # Local Stable Diffusion server
+└── README.md                 # Complete setup guide
 ```
 
 ## 🎯 HackPrinceton Prizes

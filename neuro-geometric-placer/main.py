@@ -12,8 +12,8 @@ import os
 # Add the project root to Python path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+# Import our FastMCP app
 from backend.mcp_servers.ngp_server import app
-import mcp.server.stdio
 
 
 def main():
@@ -24,8 +24,8 @@ def main():
     print("  - generate_heatmap: Create thermal heatmaps")
     print("  - export_kicad: Export to KiCad format")
 
-    # Use stdio server for MCP protocol
-    mcp.server.stdio.stdio_server(app.to_server())
+    # Run the FastMCP server with stdio transport (for MCP protocol)
+    app.run(transport="stdio")
 
 
 if __name__ == "__main__":

@@ -1,17 +1,17 @@
 import { Router } from 'express';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import FormData from 'form-data';
+import axios from 'axios';
 
 const router = Router();
 
 // Initialize Gemini AI (only if we have a valid key)
-const hasValidGeminiKey = false; // Force demo mode for development
+const hasValidGeminiKey = !!(process.env.GEMINI_API_KEY && 
+  process.env.GEMINI_API_KEY.length > 10 && 
+  process.env.GEMINI_API_KEY !== 'your_gemini_api_key_here');
 
-console.log('GEMINI_API_KEY:', `"${process.env.GEMINI_API_KEY}"`);
-console.log('hasValidGeminiKey:', hasValidGeminiKey);
-console.log('Check 1:', !!process.env.GEMINI_API_KEY);
-console.log('Check 2:', process.env.GEMINI_API_KEY !== 'your_gemini_api_key_here');
-console.log('Check 3:', process.env.GEMINI_API_KEY && process.env.GEMINI_API_KEY.length > 10);
+console.log('🔑 GEMINI_API_KEY configured:', hasValidGeminiKey);
+console.log('🔑 XAI_API_KEY configured:', !!(process.env.XAI_API_KEY && process.env.XAI_API_KEY.length > 10));
 
 const genAI = hasValidGeminiKey ? new GoogleGenerativeAI(process.env.GEMINI_API_KEY!) : null;
 
@@ -51,7 +51,7 @@ async function analyzeRoom(imageBase64: string) {
   }
 
   // Only execute this if we have a valid API key
-  const model = genAI!.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
+  const model = genAI!.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
   const prompt = `Analyze this room image as a professional interior designer and contractor would. Provide:
 
@@ -98,7 +98,8 @@ Be specific and detailed. Format as structured JSON.`;
 // Cost and feasibility analysis with xAI Grok
 async function analyzeFeasibility(roomAnalysis: any, userRequest: string) {
   // Check if API key is configured (not placeholder)
-  const hasValidXAIKey = false; // Force demo mode for development
+  const hasValidXAIKey = !!(process.env.XAI_API_KEY && 
+    process.env.XAI_API_KEY.length > 10);
 
   if (!hasValidXAIKey) {
     // Return demo data based on user request
@@ -194,10 +195,25 @@ async function analyzeFeasibility(roomAnalysis: any, userRequest: string) {
 
 // Generate remodeled image with local Stable Diffusion server
 async function generateRemodeledImage(prompt: string, imageBase64: string) {
+  console.log('🎨 generateRemodeledImage called');
+  console.log('📝 Prompt:', prompt.substring(0, 100) + '...');
+  console.log('🖼️ Image base64 length:', imageBase64.length);
+  
   try {
-    // Convert base64 to buffer
-    const base64Data = imageBase64.replace(/^data:image\/[a-z]+;base64,/, '');
+    // Convert base64 to buffer - handle both with and without data URL prefix
+    let base64Data = imageBase64;
+    if (imageBase64.includes(',')) {
+      base64Data = imageBase64.split(',')[1];
+    } else if (imageBase64.startsWith('data:')) {
+      base64Data = imageBase64.replace(/^data:image\/[a-z]+;base64,/, '');
+    }
+    
+    if (!base64Data || base64Data.length < 100) {
+      throw new Error('Invalid base64 image data');
+    }
+    
     const buffer = Buffer.from(base64Data, 'base64');
+    console.log('📦 Buffer size:', buffer.length, 'bytes');
 
     // Create form data using form-data library (SDXL Turbo expects image first, then prompt as form)
     const form = new FormData();
@@ -207,40 +223,59 @@ async function generateRemodeledImage(prompt: string, imageBase64: string) {
     });
     form.append('prompt', prompt);
 
-    // Call local SD server
-    const response = await fetch('http://localhost:8000/generate', {
-      method: 'POST',
-      headers: form.getHeaders(),
-      body: form
+    console.log('🌐 Calling SD server at http://localhost:8000/generate...');
+    
+    // Use axios instead of fetch - it handles form-data much better
+    const response = await axios.post('http://localhost:8000/generate', form, {
+      headers: {
+        ...form.getHeaders(),
+      },
+      timeout: 120000, // 2 minute timeout
+      maxContentLength: Infinity,
+      maxBodyLength: Infinity,
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('SD server error response:', errorText);
-      throw new Error(`SD server error: ${response.status} ${response.statusText}`);
-    }
+    console.log('📡 SD server response status:', response.status);
 
-    const data = await response.json();
+    const data = response.data as { success: boolean; image?: string; prompt?: string; format?: string; generation_time?: string };
+    console.log('✅ SD server response received, success:', data.success);
 
-    if (data.success) {
+    if (data.success && data.image) {
+      console.log('🖼️ Image generated, base64 length:', data.image.length);
       // Return data URL format for frontend (SDXL Turbo returns PNG)
       return {
         url: `data:image/png;base64,${data.image}`,
         alt: 'AI-generated remodeled room'
       };
     } else {
-      throw new Error('SD generation failed');
+      throw new Error(`SD generation failed: ${JSON.stringify(data)}`);
     }
 
-  } catch (error) {
-    console.error('Error generating with local SD:', error);
-
-    // Fallback to demo image if SD server is not available
-    console.log('Falling back to demo image...');
-    return {
-      url: `https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&h=600&fit=crop&crop=center&q=80`,
-      alt: 'AI-generated remodeled room - Fallback Mode'
-    };
+  } catch (error: any) {
+    console.error('❌ CRITICAL ERROR generating with local SD:', error);
+    console.error('Error name:', error.name);
+    console.error('Error message:', error.message);
+    console.error('Error code:', error.code);
+    if (error.response) {
+      console.error('Error response status:', error.response.status);
+      console.error('Error response data:', error.response.data);
+    }
+    
+    // Check if it's a connection error
+    if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND' || error.message?.includes('connect')) {
+      throw new Error(`Cannot connect to Stable Diffusion server at http://localhost:8000. Make sure the SD server is running. Error: ${error.message}`);
+    }
+    
+    // Check if it's an axios error with response
+    if (error.response) {
+      const errorDetails = typeof error.response.data === 'string' 
+        ? error.response.data 
+        : JSON.stringify(error.response.data);
+      throw new Error(`SD server error: ${error.response.status} ${error.response.statusText}. Details: ${errorDetails}`);
+    }
+    
+    // Re-throw the error instead of silently falling back
+    throw new Error(`Image generation failed: ${error.message}`);
   }
 }
 
@@ -260,19 +295,18 @@ async function generateMultiAngleImages(basePrompt: string, imageBase64: string,
     form.append('base_prompt', basePrompt);
     form.append('num_angles', numAngles.toString());
 
-    const response = await fetch('http://localhost:8000/generate-multi-angle', {
-      method: 'POST',
-      headers: form.getHeaders(),
-      body: form
+    const response = await axios.post('http://localhost:8000/generate-multi-angle', form, {
+      headers: {
+        ...form.getHeaders(),
+      },
+      timeout: 300000, // 5 minute timeout for multiple images
+      maxContentLength: Infinity,
+      maxBodyLength: Infinity,
     });
 
-    if (!response.ok) {
-      throw new Error(`SD server error: ${response.status} ${response.statusText}`);
-    }
+    const data = response.data as { success: boolean; images?: Array<{ angle?: number; description?: string; image?: string; prompt?: string }>; total_angles?: number; base_prompt?: string };
 
-    const data = await response.json();
-
-    if (data.success) {
+    if (data.success && data.images) {
       // Convert base64 images to data URLs (SDXL Turbo returns PNG)
       const images = data.images.map((img: any) => ({
         ...img,
@@ -314,7 +348,19 @@ router.post('/generate-remodel', async (req, res) => {
     console.log('🖼️ Generating image...');
     // Enhance prompt with user request and preservation instructions
     const enhancedPrompt = `Preserve the exact same room layout, walls, perspective, camera angle, and structural elements. Keep all existing room dimensions, window positions, door locations, and overall architecture unchanged. Only apply these specific renovations: ${renovationRequest}. Maintain the same lighting conditions and camera perspective as the original photo. Professional architectural photography, high quality, realistic.`;
-    const remodeledImage = await generateRemodeledImage(enhancedPrompt, imageBase64);
+    
+    let remodeledImage;
+    try {
+      remodeledImage = await generateRemodeledImage(enhancedPrompt, imageBase64);
+    } catch (error: any) {
+      console.error('❌ Image generation failed:', error);
+      return res.status(500).json({
+        success: false,
+        error: 'Image generation failed',
+        details: error.message || 'Unknown error',
+        hint: 'Make sure the Stable Diffusion server is running at http://localhost:8000'
+      });
+    }
 
     // Step 4: Compile results
     const results = {

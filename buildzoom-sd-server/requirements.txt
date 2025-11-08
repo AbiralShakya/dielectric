@@ -1,0 +1,19 @@
+# Core web server
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+python-multipart>=0.0.6
+
+# Image processing
+Pillow>=10.0.0
+
+# PyTorch - install separately for Mac MPS support
+# torch>=2.1.0
+# torchvision>=0.16.0
+
+# Stable Diffusion XL Turbo (required for the simple version)
+torch>=2.1.0
+torchvision>=0.16.0
+diffusers>=0.25.0
+transformers>=4.36.0
+accelerate>=0.25.0
+safetensors>=0.4.0

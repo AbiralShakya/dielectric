@@ -92,12 +92,13 @@ async def generate_image(
         logger.info(f"🎨 Generating image with prompt: {prompt}")
 
         # Generate with SDXL Turbo (super fast!)
+        # Lower strength (0.5) to preserve more of the original structure
         result = pipe(
             prompt=prompt,
             image=init_image,
             num_inference_steps=4,  # Turbo uses only 4 steps!
             guidance_scale=0.0,     # Turbo doesn't need guidance
-            strength=0.75
+            strength=0.5  # Lower strength preserves more original structure
         ).images[0]
 
         # Convert to base64
@@ -156,7 +157,7 @@ async def generate_multi_angle(
                 image=init_image,
                 num_inference_steps=4,
                 guidance_scale=0.0,
-                strength=0.75
+                strength=0.5  # Lower strength preserves more original structure
             ).images[0]
 
             # Convert to base64

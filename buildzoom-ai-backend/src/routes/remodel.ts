@@ -148,7 +148,7 @@ async function analyzeFeasibility(roomAnalysis: any, userRequest: string) {
         { item: 'Undermount sink', quantity: '1', estimatedCost: 350 },
         { item: 'Kitchen faucet (mid-range)', quantity: '1', estimatedCost: 250 }
       ],
-      imageGenerationPrompt: `Modern kitchen interior with updated features based on user request: ${userRequest}. Professional architectural photography, high quality, realistic lighting.`
+      imageGenerationPrompt: `Preserve the exact same room layout, walls, perspective, and camera angle. Keep all existing structural elements unchanged. Only modify and update features based on: ${userRequest}. Maintain the same room dimensions, window positions, and overall structure. Professional architectural photography, high quality, realistic lighting, same perspective as original.`
     };
   }
 
@@ -188,7 +188,7 @@ async function analyzeFeasibility(roomAnalysis: any, userRequest: string) {
       { item: 'Quartz countertops (40 sq ft)', quantity: '40 sq ft', estimatedCost: 2800 },
       { item: 'Kitchen island base cabinet', quantity: '1', estimatedCost: 1200 }
     ],
-    imageGenerationPrompt: `Modern kitchen interior, white shaker style cabinets with brushed nickel hardware, quartz countertops in light gray, large kitchen island, subway tile backsplash, oak laminate flooring, professional architectural photography, 8K quality`
+    imageGenerationPrompt: `Preserve the exact same room layout, walls, perspective, and camera angle. Keep all existing structural elements unchanged. Only modify and update features based on the renovation request. Maintain the same room dimensions, window positions, and overall structure. Professional architectural photography, high quality, realistic lighting, same perspective as original.`
   };
 }
 
@@ -312,7 +312,9 @@ router.post('/generate-remodel', async (req, res) => {
 
     // Step 3: Generate remodeled image
     console.log('🖼️ Generating image...');
-    const remodeledImage = await generateRemodeledImage(feasibilityAnalysis.imageGenerationPrompt, imageBase64);
+    // Enhance prompt with user request and preservation instructions
+    const enhancedPrompt = `Preserve the exact same room layout, walls, perspective, camera angle, and structural elements. Keep all existing room dimensions, window positions, door locations, and overall architecture unchanged. Only apply these specific renovations: ${renovationRequest}. Maintain the same lighting conditions and camera perspective as the original photo. Professional architectural photography, high quality, realistic.`;
+    const remodeledImage = await generateRemodeledImage(enhancedPrompt, imageBase64);
 
     // Step 4: Compile results
     const results = {

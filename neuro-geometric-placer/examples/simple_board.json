@@ -1,0 +1,87 @@
+{
+  "components": [
+    {
+      "name": "U1",
+      "package": "BGA256",
+      "width": 15.0,
+      "height": 15.0,
+      "power": 2.0,
+      "x": 20.0,
+      "y": 20.0,
+      "angle": 0,
+      "placed": true,
+      "pins": [
+        {"name": "pin1", "x_offset": -7.5, "y_offset": -7.5, "net": "net1"},
+        {"name": "pin2", "x_offset": 7.5, "y_offset": -7.5, "net": "net2"}
+      ]
+    },
+    {
+      "name": "R1",
+      "package": "0805",
+      "width": 2.0,
+      "height": 1.25,
+      "power": 0.0,
+      "x": 50.0,
+      "y": 30.0,
+      "angle": 0,
+      "placed": true,
+      "pins": [
+        {"name": "pin1", "x_offset": -1.0, "y_offset": 0, "net": "net1"},
+        {"name": "pin2", "x_offset": 1.0, "y_offset": 0, "net": "net2"}
+      ]
+    },
+    {
+      "name": "R2",
+      "package": "0805",
+      "width": 2.0,
+      "height": 1.25,
+      "power": 0.0,
+      "x": 60.0,
+      "y": 30.0,
+      "angle": 0,
+      "placed": true,
+      "pins": [
+        {"name": "pin1", "x_offset": -1.0, "y_offset": 0, "net": "net2"},
+        {"name": "pin2", "x_offset": 1.0, "y_offset": 0, "net": ""}
+      ]
+    },
+    {
+      "name": "C1",
+      "package": "0805",
+      "width": 2.0,
+      "height": 1.25,
+      "power": 0.0,
+      "x": 40.0,
+      "y": 40.0,
+      "angle": 0,
+      "placed": true,
+      "pins": [
+        {"name": "pin1", "x_offset": -1.0, "y_offset": 0, "net": ""},
+        {"name": "pin2", "x_offset": 1.0, "y_offset": 0, "net": ""}
+      ]
+    }
+  ],
+  "board": {
+    "width": 100.0,
+    "height": 100.0,
+    "clearance": 0.5
+  },
+  "nets": [
+    {
+      "name": "net1",
+      "pins": [
+        ["U1", "pin1"],
+        ["R1", "pin1"]
+      ]
+    },
+    {
+      "name": "net2",
+      "pins": [
+        ["U1", "pin2"],
+        ["R1", "pin2"],
+        ["R2", "pin1"]
+      ]
+    }
+  ]
+}
+

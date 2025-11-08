@@ -1,0 +1,43 @@
+# Core dependencies
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+python-dotenv>=1.0.0
+pydantic>=2.0.0
+
+# AI & LLM
+openai>=1.0.0  # For xAI compatibility
+requests>=2.31.0
+dedalus-labs>=0.1.0  # For MCP hosting
+
+# Computational geometry
+numpy>=1.24.0
+shapely>=2.0.0
+scipy>=1.11.0
+
+# Optimization
+numba>=0.58.0  # JIT compilation for fast scoring
+jax>=0.4.0  # Optional: GPU acceleration
+jaxlib>=0.4.0
+
+# Visualization
+streamlit>=1.28.0
+matplotlib>=3.7.0
+opencv-python>=4.8.0
+plotly>=5.17.0
+
+# MCP & Agents
+mcp>=0.1.0  # Model Context Protocol
+
+# Database & Caching
+redis>=5.0.0
+sqlalchemy>=2.0.0
+
+# Testing
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+
+# Utilities
+websockets>=12.0
+aiofiles>=23.2.0
+python-multipart>=0.0.6
+

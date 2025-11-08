@@ -1,7 +1,7 @@
 """
 Neuro-Geometric Placer MCP Server
 
-A single MCP server with multiple tools for PCB placement optimization.
+A single MCP server with multiple tools for PCB placement optimization using Dedalus Labs openmcp framework.
 """
 
 import asyncio
@@ -9,17 +9,17 @@ import json
 import numpy as np
 from typing import Dict, Any
 
-from mcp.server.fastmcp import FastMCP
+from openmcp.server import MCPServer
 from backend.scoring.scorer import WorldModelScorer, ScoreWeights
 from backend.scoring.incremental_scorer import IncrementalScorer
 from backend.geometry.placement import Placement
 
 
-# Create FastMCP server
-app = FastMCP("neuro-geometric-placer")
+# Create openmcp server
+server = MCPServer("neuro-geometric-placer")
 
 
-@app.tool()
+@server.tool()
 async def score_delta(
     placement_data: Dict[str, Any],
     move_data: Dict[str, Any]
@@ -91,7 +91,7 @@ async def score_delta(
         }
 
 
-@app.tool()
+@server.tool()
 async def generate_heatmap(
     placement_data: Dict[str, Any],
     grid_size: int = 64
@@ -151,7 +151,7 @@ async def generate_heatmap(
         }
 
 
-@app.tool()
+@server.tool()
 async def export_kicad(placement_data: Dict[str, Any]) -> Dict[str, Any]:
     """
     Export placement to KiCad .kicad_pcb format.
@@ -269,13 +269,17 @@ def generate_kicad_pcb(placement: Placement) -> str:
     return "\n".join(lines)
 
 
-if __name__ == "__main__":
-    # Run the MCP server
+async def main():
+    """Run the MCP server."""
     print("🚀 Starting Neuro-Geometric Placer MCP Server")
     print("Available tools:")
     print("  - score_delta: Compute placement score changes")
     print("  - generate_heatmap: Create thermal heatmaps")
     print("  - export_kicad: Export to KiCad format")
 
-    import mcp.server.stdio
-    mcp.server.stdio.stdio_server(app.to_server())
+    # Serve using openmcp stdio transport
+    await server.serve(transport="stdio")
+
+
+if __name__ == "__main__":
+    asyncio.run(main())

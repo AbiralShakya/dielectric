@@ -7,8 +7,7 @@ pydantic>=2.0.0
 # AI & LLM
 openai>=1.0.0  # For xAI compatibility
 requests>=2.31.0
-dedalus-labs==0.1.0a9
-mcp>=1.21.0  # Official Model Context Protocol SDK
+openmcp>=0.4.0  # Dedalus Labs MCP framework
 
 # Computational geometry
 numpy>=1.24.0
@@ -27,7 +26,7 @@ opencv-python>=4.8.0
 plotly>=5.17.0
 
 # MCP & Agents
-mcp>=0.1.0  # Model Context Protocol
+# openmcp framework handles MCP protocol
 
 # Database & Caching
 redis>=5.0.0

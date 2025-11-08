@@ -12,7 +12,7 @@ import os
 # Add project root to path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from backend.mcp_servers.ngp_server import app as mcp_app
+from backend.mcp_servers.ngp_server import server as mcp_server
 
 
 def test_mcp_server_setup():
@@ -21,18 +21,19 @@ def test_mcp_server_setup():
     print("=" * 40)
 
     try:
-        # Check that the FastMCP app was created
-        if mcp_app is None:
-            print("❌ MCP app not found")
+        # Check that the openmcp server was created
+        if mcp_server is None:
+            print("❌ MCP server not found")
             return False
 
-        print("✅ MCP FastMCP app created successfully")
+        print("✅ MCP openmcp server created successfully")
+        print(f"   Server name: {mcp_server.name}")
 
-        # Check that tools are registered (this would be checked by FastMCP internally)
-        print("✅ Tools should be auto-registered by @app.tool() decorators")
+        # Check that tools are registered (this would be checked by openmcp internally)
+        print("✅ Tools should be auto-registered by @server.tool() decorators")
 
         # Check that we can import the server functions
-        from backend.mcp_servers import score_delta, generate_heatmap, export_kicad
+        from backend.mcp_servers.ngp_server import score_delta, generate_heatmap, export_kicad
         print("✅ All tool functions imported successfully")
 
         return True
@@ -60,7 +61,7 @@ def test_direct_function_calls():
         }
 
         # Test generate_heatmap (simpler function)
-        from backend.mcp_servers import generate_heatmap
+        from backend.mcp_servers.ngp_server import generate_heatmap
 
         async def test_heatmap():
             result = await generate_heatmap(placement_data, grid_size=16)
@@ -93,7 +94,7 @@ async def test_kicad_export():
     print("=" * 40)
 
     try:
-        from backend.mcp_servers import export_kicad
+        from backend.mcp_servers.ngp_server import export_kicad
 
         placement_data = {
             "components": [

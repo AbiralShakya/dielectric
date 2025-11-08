@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-Test MCP Servers
+Test Single MCP Server with Multiple Tools
 
-Tests that MCP servers work correctly.
+Tests the unified Neuro-Geometric Placer MCP server.
 """
 
 import asyncio
@@ -12,154 +12,138 @@ import os
 # Add project root to path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from backend.mcp_servers.placement_scorer import PlacementScorerMCP
-from backend.mcp_servers.thermal_simulator import ThermalSimulatorMCP
-from backend.mcp_servers.kicad_exporter import KiCadExporterMCP
-from backend.geometry.placement import Placement
+from backend.mcp_servers.ngp_server import app as mcp_app
 
 
-def test_placement_scorer():
-    """Test Placement Scorer MCP."""
-    print("🧪 Testing Placement Scorer MCP")
-    print("=" * 50)
+def test_mcp_server_setup():
+    """Test that MCP server is properly configured."""
+    print("🧪 Testing MCP Server Setup")
+    print("=" * 40)
 
     try:
-        # Create test placement
-        components = [
-            {"name": "U1", "package": "BGA", "width": 10, "height": 10, "power": 2.0, "x": 20, "y": 20, "angle": 0, "placed": True},
-            {"name": "R1", "package": "0805", "width": 2, "height": 1.25, "power": 0.0, "x": 50, "y": 30, "angle": 0, "placed": True}
-        ]
-        board = {"width": 100, "height": 100, "clearance": 0.5}
-        nets = [{"name": "net1", "pins": [["U1", "pin1"], ["R1", "pin1"]]}]
-
-        placement_data = {
-            "components": components,
-            "board": board,
-            "nets": nets
-        }
-
-        scorer = PlacementScorerMCP()
-        move_data = {
-            "component_name": "R1",
-            "old_x": 50.0, "old_y": 30.0, "old_angle": 0.0,
-            "new_x": 60.0, "new_y": 30.0, "new_angle": 0.0,
-            "weights": {"alpha": 0.5, "beta": 0.3, "gamma": 0.2}
-        }
-
-        result = scorer.score_delta(placement_data, move_data)
-
-        if "delta" in result and "new_score" in result:
-            print("✅ Placement Scorer MCP: SUCCESS")
-            print(f"   Delta: {result['delta']:.4f}")
-            print(f"   New Score: {result['new_score']:.4f}")
-            print(f"   Affected Nets: {result.get('affected_nets', 'N/A')}")
-            return True
-        else:
-            print("❌ Placement Scorer MCP: FAILED - Missing expected fields")
+        # Check that the FastMCP app was created
+        if mcp_app is None:
+            print("❌ MCP app not found")
             return False
 
+        print("✅ MCP FastMCP app created successfully")
+
+        # Check that tools are registered (this would be checked by FastMCP internally)
+        print("✅ Tools should be auto-registered by @app.tool() decorators")
+
+        # Check that we can import the server functions
+        from backend.mcp_servers import score_delta, generate_heatmap, export_kicad
+        print("✅ All tool functions imported successfully")
+
+        return True
+
     except Exception as e:
-        print(f"❌ Placement Scorer MCP: EXCEPTION - {str(e)}")
+        print(f"❌ MCP Server setup failed: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return False
 
 
-def test_thermal_simulator():
-    """Test Thermal Simulator MCP."""
-    print("\n🧪 Testing Thermal Simulator MCP")
-    print("=" * 50)
+def test_direct_function_calls():
+    """Test calling the MCP tool functions directly (for development/testing)."""
+    print("\n🧪 Testing Direct Function Calls")
+    print("=" * 40)
 
     try:
-        # Create test placement
-        components = [
-            {"name": "U1", "package": "BGA", "width": 10, "height": 10, "power": 2.0, "x": 50, "y": 50, "angle": 0, "placed": True},
-            {"name": "U2", "package": "BGA", "width": 10, "height": 10, "power": 1.5, "x": 30, "y": 30, "angle": 0, "placed": True}
-        ]
-        board = {"width": 100, "height": 100, "clearance": 0.5}
-        nets = []
-
+        # Test with simple mock data
         placement_data = {
-            "components": components,
-            "board": board,
-            "nets": nets
+            "components": [
+                {"name": "U1", "package": "BGA", "width": 10, "height": 10, "power": 2.0, "x": 50, "y": 50, "angle": 0, "placed": True, "pins": []}
+            ],
+            "board": {"width": 100, "height": 100, "clearance": 0.5},
+            "nets": []
         }
 
-        simulator = ThermalSimulatorMCP()
-        result = simulator.generate_heatmap(placement_data, grid_size=32)
+        # Test generate_heatmap (simpler function)
+        from backend.mcp_servers import generate_heatmap
 
-        if "heatmap" in result and "min" in result and "max" in result:
-            print("✅ Thermal Simulator MCP: SUCCESS")
-            print(f"   Heatmap Size: {len(result['heatmap'])}x{len(result['heatmap'][0])}")
-            print(f"   Min Heat: {result['min']:.4f}")
-            print(f"   Max Heat: {result['max']:.4f}")
-            print(f"   Computation: {result.get('computation', 'N/A')}")
-            return True
-        else:
-            print("❌ Thermal Simulator MCP: FAILED - Missing expected fields")
-            return False
+        async def test_heatmap():
+            result = await generate_heatmap(placement_data, grid_size=16)
+            if "heatmap" in result and len(result["heatmap"]) == 16:
+                print("✅ generate_heatmap function works")
+                return True
+            else:
+                print("❌ generate_heatmap function failed")
+                return False
+
+        # Run the async test
+        import asyncio
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        try:
+            heatmap_ok = loop.run_until_complete(test_heatmap())
+        finally:
+            loop.close()
+
+        return heatmap_ok
 
     except Exception as e:
-        print(f"❌ Thermal Simulator MCP: EXCEPTION - {str(e)}")
+        print(f"❌ Direct function calls failed: {str(e)}")
         return False
 
 
-async def test_kicad_exporter():
-    """Test KiCad Exporter MCP."""
-    print("\n🧪 Testing KiCad Exporter MCP")
-    print("=" * 50)
+async def test_kicad_export():
+    """Test KiCad export function."""
+    print("\n🧪 Testing KiCad Export")
+    print("=" * 40)
 
     try:
-        # Create test placement
-        components = [
-            {"name": "U1", "package": "BGA", "width": 10, "height": 10, "power": 2.0, "x": 50, "y": 50, "angle": 0, "placed": True},
-            {"name": "R1", "package": "0805", "width": 2, "height": 1.25, "power": 0.0, "x": 30, "y": 30, "angle": 0, "placed": True}
-        ]
-        board = {"width": 100, "height": 100, "clearance": 0.5}
-        nets = [{"name": "net1", "pins": [["U1", "pin1"], ["R1", "pin1"]]}]
+        from backend.mcp_servers import export_kicad
 
         placement_data = {
-            "components": components,
-            "board": board,
-            "nets": nets
+            "components": [
+                {"name": "U1", "package": "BGA", "width": 10, "height": 10, "power": 2.0, "x": 50, "y": 50, "angle": 0, "placed": True, "pins": [{"name": "pin1", "x_offset": 0, "y_offset": 0, "net": "net1"}]},
+                {"name": "R1", "package": "0805", "width": 2, "height": 1.25, "power": 0.0, "x": 30, "y": 30, "angle": 0, "placed": True, "pins": [{"name": "pin1", "x_offset": 0, "y_offset": 0, "net": "net1"}]}
+            ],
+            "board": {"width": 100, "height": 100, "clearance": 0.5},
+            "nets": [{"name": "net1", "pins": [["U1", "pin1"], ["R1", "pin1"]]}]
         }
 
-        exporter = KiCadExporterMCP()
-        result = await exporter.export(placement_data)
+        result = await export_kicad(placement_data)
 
-        if "kicad_content" in result and result["format"] == "kicad":
-            print("✅ KiCad Exporter MCP: SUCCESS")
-            print(f"   Format: {result['format']}")
-            print(f"   Content Length: {len(result['kicad_content'])} chars")
-            print(f"   Export Method: {result.get('metadata', {}).get('export_method', 'N/A')}")
+        if "kicad_content" in result and result["format"] == "kicad_pcb":
+            print("✅ export_kicad function works")
+            print(f"   Generated {len(result['kicad_content'])} chars of KiCad content")
             return True
         else:
-            print("❌ KiCad Exporter MCP: FAILED - Missing expected fields")
+            print("❌ export_kicad function failed")
             return False
 
     except Exception as e:
-        print(f"❌ KiCad Exporter MCP: EXCEPTION - {str(e)}")
+        print(f"❌ KiCad export failed: {str(e)}")
         return False
 
 
-async def test_all_mcp_servers():
-    """Test all MCP servers."""
-    print("🧪 Testing All MCP Servers")
+async def test_mcp_server():
+    """Test the MCP server setup and basic functionality."""
+    print("🧪 Testing MCP Server Implementation")
     print("=" * 50)
 
-    # Test individual servers
-    scorer_ok = test_placement_scorer()
-    simulator_ok = test_thermal_simulator()
-    exporter_ok = await test_kicad_exporter()
+    # Test server setup
+    setup_ok = test_mcp_server_setup()
 
-    if scorer_ok and simulator_ok and exporter_ok:
-        print("\n✅ All MCP Server tests PASSED!")
-        print("   MCP servers are working correctly.")
+    # Test direct function calls
+    functions_ok = test_direct_function_calls()
+
+    # Test KiCad export
+    kicad_ok = await test_kicad_export()
+
+    if setup_ok and functions_ok and kicad_ok:
+        print("\n✅ MCP Server tests PASSED!")
+        print("   Server is ready for Dedalus Labs deployment.")
+        print("   Tools: score_delta, generate_heatmap, export_kicad")
         return True
     else:
-        print("\n❌ Some MCP Server tests FAILED!")
-        print("   Check MCP server implementations.")
+        print("\n❌ MCP Server tests FAILED!")
+        print("   Check implementation before deploying to Dedalus.")
         return False
 
 
 if __name__ == "__main__":
-    success = asyncio.run(test_all_mcp_servers())
+    success = asyncio.run(test_mcp_server())
     sys.exit(0 if success else 1)

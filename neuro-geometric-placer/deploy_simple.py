@@ -39,8 +39,25 @@ async def export_kicad(request: Dict[str, Any]):
         if not placement_data:
             raise HTTPException(status_code=400, detail="No placement data provided")
 
+        # Ensure placement_data has the correct structure
+        if not isinstance(placement_data, dict):
+            raise HTTPException(status_code=400, detail=f"Placement data must be a dict, got {type(placement_data)}")
+
+        # Validate required fields
+        if "board" not in placement_data:
+            raise HTTPException(status_code=400, detail="Placement data missing 'board' field")
+        if "components" not in placement_data:
+            raise HTTPException(status_code=400, detail="Placement data missing 'components' field")
+        
+        # Ensure components is a list
+        if not isinstance(placement_data.get("components"), list):
+            raise HTTPException(status_code=400, detail="Components must be a list")
+
         # Generate KiCad PCB file content
-        kicad_content = generate_kicad_pcb(placement_data)
+        try:
+            kicad_content = generate_kicad_pcb(placement_data)
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"KiCad generation failed: {str(e)}")
 
         return {
             "success": True,
@@ -50,8 +67,12 @@ async def export_kicad(request: Dict[str, Any]):
             "size_bytes": len(kicad_content)
         }
 
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        import traceback
+        error_detail = f"{str(e)}\n{traceback.format_exc()}"
+        raise HTTPException(status_code=400, detail=error_detail)
 
 def generate_kicad_pcb(placement_data: Dict[str, Any]) -> str:
     """Generate professional KiCad PCB file from placement data"""

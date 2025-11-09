@@ -603,12 +603,31 @@ with tab3:
 
             if st.button("📥 Export KiCad File", use_container_width=True):
                 try:
+                    # Get placement data
+                    placement_data = results.get("placement", {})
+                    
+                    # Ensure we have valid placement data
+                    if not placement_data:
+                        st.error("❌ No placement data available. Please run optimization first.")
+                        st.stop()
+                    
+                    # Ensure placement_data is a dict
+                    if not isinstance(placement_data, dict):
+                        st.error(f"❌ Invalid placement data type: {type(placement_data)}")
+                        st.stop()
+                    
+                    # Validate structure
+                    if "board" not in placement_data or "components" not in placement_data:
+                        st.error("❌ Placement data missing required fields (board, components)")
+                        st.stop()
+                    
                     # Call KiCad export API
-                    export_response = requests.post(
-                        f"{API_BASE}/export/kicad",
-                        json={"placement": results["placement"]},
-                        timeout=10
-                    )
+                    with st.spinner("🔄 Generating KiCad file..."):
+                        export_response = requests.post(
+                            f"{API_BASE}/export/kicad",
+                            json={"placement": placement_data},
+                            timeout=10
+                        )
 
                     if export_response.status_code == 200:
                         export_data = export_response.json()
@@ -625,7 +644,19 @@ with tab3:
                         )
                         st.success(f"✅ KiCad file generated ({export_data['size_bytes']} bytes)")
                     else:
-                        st.error(f"Export failed: {export_response.status_code}")
+                        error_detail = export_response.text
+                        try:
+                            error_json = export_response.json()
+                            error_detail = error_json.get("detail", error_detail)
+                        except:
+                            pass
+                        st.error(f"❌ Export failed: {export_response.status_code}")
+                        st.error(f"Error details: {error_detail}")
+                        with st.expander("🔍 Debug Info"):
+                            st.json({"placement_keys": list(placement_data.keys()) if isinstance(placement_data, dict) else "Not a dict",
+                                    "has_board": "board" in placement_data if isinstance(placement_data, dict) else False,
+                                    "has_components": "components" in placement_data if isinstance(placement_data, dict) else False,
+                                    "components_count": len(placement_data.get("components", [])) if isinstance(placement_data, dict) else 0})
 
                 except Exception as e:
                     st.error(f"Export error: {str(e)}")

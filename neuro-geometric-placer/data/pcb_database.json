@@ -1,0 +1,14 @@
+{
+  "designs": [
+    {
+      "placement": {
+        "components": [
+          {
+            "name": "U1",
+            "package": "SOIC-8",
+            "width": 5,
+            "height": 4,
+            "power": 0.5,
+            "x": 161.99427850431823,
+            "y": 82.36070371916281,
+            "angle": 

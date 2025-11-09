@@ -64,11 +64,12 @@ class PCBDatabase:
             analyzer = GeometryAnalyzer(placement)
             geometry = analyzer.analyze()
             
+            from datetime import datetime
             design_entry = {
                 "placement": placement_data,
                 "geometry": geometry,
                 "metadata": metadata or {},
-                "timestamp": str(np.datetime64('now'))
+                "timestamp": datetime.now().isoformat()
             }
             
             self.database["designs"].append(design_entry)

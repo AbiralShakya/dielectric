@@ -12,22 +12,25 @@ try:
     from backend.agents.intent_agent import IntentAgent
     from backend.agents.local_placer_agent import LocalPlacerAgent
     from backend.agents.verifier_agent import VerifierAgent
+    from backend.database.pcb_database import PCBDatabase
 except ImportError:
     from src.backend.geometry.placement import Placement
     from src.backend.ai.xai_client import XAIClient
     from src.backend.agents.intent_agent import IntentAgent
     from src.backend.agents.local_placer_agent import LocalPlacerAgent
     from src.backend.agents.verifier_agent import VerifierAgent
+    from src.backend.database.pcb_database import PCBDatabase
 
 
 class AgentOrchestrator:
     """Orchestrates PCB placement optimization using direct AI agents (no Dedalus)."""
 
-    def __init__(self):
+    def __init__(self, use_database: bool = True):
         """Initialize orchestrator with direct AI agent instances."""
         self.intent_agent = IntentAgent()
         self.local_placer_agent = LocalPlacerAgent()
         self.verifier_agent = VerifierAgent()
+        self.database = PCBDatabase() if use_database else None
     
     async def optimize_fast(
         self,
@@ -67,6 +70,23 @@ class AgentOrchestrator:
             intent_explanation = weights_result["explanation"]
             geometry_data = weights_result.get("geometry_data", {})
 
+            # Query database for optimization hints
+            database_hints = {}
+            if self.database and geometry_data:
+                try:
+                    database_hints = self.database.get_optimization_hints(geometry_data, user_intent)
+                    if database_hints.get("recommended_weights"):
+                        # Blend database recommendations with xAI weights
+                        db_weights = database_hints["recommended_weights"]
+                        weights = {
+                            "alpha": 0.7 * weights["alpha"] + 0.3 * db_weights["alpha"],
+                            "beta": 0.7 * weights["beta"] + 0.3 * db_weights["beta"],
+                            "gamma": 0.7 * weights["gamma"] + 0.3 * db_weights["gamma"]
+                        }
+                        print(f"📊 Database: Applied industry patterns")
+                except Exception as e:
+                    print(f"⚠️  Database query failed: {e}")
+
             print(f"✅ IntentAgent: {intent_explanation}")
             print(f"   Weights: α={weights['alpha']:.2f}, β={weights['beta']:.2f}, γ={weights['gamma']:.2f}")
             if geometry_data:
@@ -101,6 +121,21 @@ class AgentOrchestrator:
 
             verification_result["passed"] = passed
 
+            # Store optimized design in database for learning
+            if self.database:
+                try:
+                    optimized_data = optimized_placement.to_dict()
+                    metadata = {
+                        "user_intent": user_intent,
+                        "weights": weights,
+                        "score": final_score,
+                        "verification": verification_result
+                    }
+                    self.database.add_design(optimized_data, metadata)
+                    print(f"💾 Database: Stored optimized design for learning")
+                except Exception as e:
+                    print(f"⚠️  Database storage failed: {e}")
+
             return {
                 "success": True,
                 "placement": optimized_placement,
@@ -108,6 +143,7 @@ class AgentOrchestrator:
                 "weights": weights,
                 "intent_explanation": intent_explanation,
                 "geometry_data": geometry_data,  # Computational geometry analysis
+                "database_hints": database_hints,  # Industry patterns
                 "stats": stats,
                 "verification": verification_result,
                 "agents_used": ["IntentAgent", "LocalPlacerAgent", "VerifierAgent"],

@@ -116,16 +116,18 @@ class KiCadExporter:
             ""
         ])
         
-        # Add nets
+        # Add nets (nets are optional)
+        net_map = {}
         if include_nets and nets:
             net_id = 1
-            net_map = {}
             for net in nets:
-                net_name = net.get("name", f"Net{net_id}")
-                net_map[net_name] = net_id
-                lines.append(f'  (net {net_id} "{net_name}")')
-                net_id += 1
-            lines.append("")
+                if isinstance(net, dict):
+                    net_name = net.get("name", f"Net{net_id}")
+                    net_map[net_name] = net_id
+                    lines.append(f'  (net {net_id} "{net_name}")')
+                    net_id += 1
+            if net_map:
+                lines.append("")
         
         # Add components as footprints
         footprint_id = 1

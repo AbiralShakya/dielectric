@@ -594,7 +594,7 @@ with tab3:
         # Export options
         st.subheader("📋 Export Formats")
 
-        col1, col2, col3 = st.columns(3)
+        col1, col2 = st.columns(2)
 
         with col1:
             st.markdown("### 🛠️ KiCad (.kicad_pcb)")
@@ -662,13 +662,6 @@ with tab3:
                     st.error(f"Export error: {str(e)}")
 
         with col2:
-            st.markdown("### 🔧 Altium Designer")
-            st.markdown("**Compatible with:** Altium Designer")
-            st.markdown("**Use for:** Professional PCB design")
-            if st.button("📥 Download Altium File", use_container_width=True):
-                st.info("Altium export coming soon...")
-
-        with col3:
             st.markdown("### 📄 JSON Format")
             st.markdown("**Compatible with:** Custom tools, analysis")
             st.markdown("**Use for:** Data analysis, further processing")

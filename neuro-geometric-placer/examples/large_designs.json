@@ -1,0 +1,109 @@
+{
+  "examples": [
+    {
+      "name": "Multi-Layer Motherboard",
+      "description": "Complex motherboard with CPU, memory, power supply, and I/O modules",
+      "board": {
+        "width": 200,
+        "height": 150,
+        "clearance": 0.5
+      },
+      "modules": [
+        {
+          "name": "CPU Module",
+          "components": ["CPU", "VRM1", "VRM2", "C1", "C2", "C3"]
+        },
+        {
+          "name": "Memory Module",
+          "components": ["RAM1", "RAM2", "RAM3", "RAM4", "R1", "R2"]
+        },
+        {
+          "name": "Power Supply",
+          "components": ["PWR_IC", "L1", "L2", "C4", "C5", "C6"]
+        },
+        {
+          "name": "I/O Module",
+          "components": ["USB_IC", "ETH_IC", "AUDIO_IC", "R3", "R4"]
+        }
+      ],
+      "components": [
+        {"name": "CPU", "package": "BGA", "width": 25, "height": 25, "power": 15.0, "x": 50, "y": 50, "angle": 0, "placed": true},
+        {"name": "VRM1", "package": "QFN-16", "width": 4, "height": 4, "power": 3.0, "x": 30, "y": 40, "angle": 0, "placed": true},
+        {"name": "VRM2", "package": "QFN-16", "width": 4, "height": 4, "power": 3.0, "x": 70, "y": 40, "angle": 0, "placed": true},
+        {"name": "C1", "package": "0805", "width": 2, "height": 1.25, "power": 0.0, "x": 35, "y": 35, "angle": 0, "placed": true},
+        {"name": "C2", "package": "0805", "width": 2, "height": 1.25, "power": 0.0, "x": 45, "y": 35, "angle": 0, "placed": true},
+        {"name": "C3", "package": "0805", "width": 2, "height": 1.25, "power": 0.0, "x": 65, "y": 35, "angle": 0, "placed": true},
+        {"name": "RAM1", "package": "BGA", "width": 15, "height": 10, "power": 2.0, "x": 120, "y": 40, "angle": 0, "placed": true},
+        {"name": "RAM2", "package": "BGA", "width": 15, "height": 10, "power": 2.0, "x": 140, "y": 40, "angle": 0, "placed": true},
+        {"name": "RAM3", "package": "BGA", "width": 15, "height": 10, "power": 2.0, "x": 120, "y": 60, "angle": 0, "placed": true},
+        {"name": "RAM4", "package": "BGA", "width": 15, "height": 10, "power": 2.0, "x": 140, "y": 60, "angle": 0, "placed": true},
+        {"name": "R1", "package": "0805", "width": 2, "height": 1.25, "power": 0.0, "x": 130, "y": 30, "angle": 0, "placed": true},
+        {"name": "R2", "package": "0805", "width": 2, "height": 1.25, "power": 0.0, "x": 130, "y": 70, "angle": 0, "placed": true},
+        {"name": "PWR_IC", "package": "SOIC-8", "width": 5, "height": 4, "power": 1.5, "x": 50, "y": 100, "angle": 0, "placed": true},
+        {"name": "L1", "package": "INDUCTOR-10MM", "width": 10, "height": 10, "power": 0.0, "x": 70, "y": 100, "angle": 0, "placed": true},
+        {"name": "L2", "package": "INDUCTOR-10MM", "width": 10, "height": 10, "power": 0.0, "x": 90, "y": 100, "angle": 0, "placed": true},
+        {"name": "C4", "package": "CAP-10MM", "width": 10, "height": 10, "power": 0.0, "x": 60, "y": 110, "angle": 0, "placed": true},
+        {"name": "C5", "package": "CAP-10MM", "width": 10, "height": 10, "power": 0.0, "x": 80, "y": 110, "angle": 0, "placed": true},
+        {"name": "C6", "package": "0805", "width": 2, "height": 1.25, "power": 0.0, "x": 100, "y": 105, "angle": 0, "placed": true},
+        {"name": "USB_IC", "package": "QFN-16", "width": 4, "height": 4, "power": 0.5, "x": 150, "y": 100, "angle": 0, "placed": true},
+        {"name": "ETH_IC", "package": "QFN-16", "width": 4, "height": 4, "power": 0.8, "x": 170, "y": 100, "angle": 0, "placed": true},
+        {"name": "AUDIO_IC", "package": "SOIC-8", "width": 5, "height": 4, "power": 0.3, "x": 160, "y": 120, "angle": 0, "placed": true},
+        {"name": "R3", "package": "0805", "width": 2, "height": 1.25, "power": 0.0, "x": 155, "y": 110, "angle": 0, "placed": true},
+        {"name": "R4", "package": "0805", "width": 2, "height": 1.25, "power": 0.0, "x": 165, "y": 110, "angle": 0, "placed": true}
+      ],
+      "nets": [
+        {"name": "VCC_CPU", "pins": [["VRM1", "pin1"], ["CPU", "VCC"], ["C1", "pin1"], ["C2", "pin1"]]},
+        {"name": "VCC_MEM", "pins": [["VRM2", "pin1"], ["RAM1", "VCC"], ["RAM2", "VCC"], ["RAM3", "VCC"], ["RAM4", "VCC"]]},
+        {"name": "GND", "pins": [["CPU", "GND"], ["VRM1", "GND"], ["VRM2", "GND"], ["RAM1", "GND"], ["PWR_IC", "GND"]]},
+        {"name": "CLK", "pins": [["CPU", "CLK"], ["RAM1", "CLK"], ["RAM2", "CLK"]]},
+        {"name": "DATA", "pins": [["CPU", "DATA"], ["RAM1", "DATA"], ["USB_IC", "DATA"]]}
+      ]
+    },
+    {
+      "name": "Industrial Control Board",
+      "description": "Multi-layer control board with power management, sensors, and communication",
+      "board": {
+        "width": 180,
+        "height": 120,
+        "clearance": 0.5
+      },
+      "modules": [
+        {
+          "name": "MCU Section",
+          "components": ["MCU", "XTAL1", "XTAL2", "C_MCU1", "C_MCU2"]
+        },
+        {
+          "name": "Sensor Interface",
+          "components": ["ADC", "SENSOR1", "SENSOR2", "R_SENSE1", "R_SENSE2"]
+        },
+        {
+          "name": "Communication",
+          "components": ["CAN_IC", "RS485", "R_CAN1", "R_CAN2"]
+        }
+      ],
+      "components": [
+        {"name": "MCU", "package": "LQFP-64", "width": 10, "height": 10, "power": 1.2, "x": 40, "y": 40, "angle": 0, "placed": true},
+        {"name": "XTAL1", "package": "0805", "width": 2, "height": 1.25, "power": 0.0, "x": 30, "y": 35, "angle": 0, "placed": true},
+        {"name": "XTAL2", "package": "0805", "width": 2, "height": 1.25, "power": 0.0, "x": 30, "y": 45, "angle": 0, "placed": true},
+        {"name": "C_MCU1", "package": "0805", "width": 2, "height": 1.25, "power": 0.0, "x": 50, "y": 35, "angle": 0, "placed": true},
+        {"name": "C_MCU2", "package": "0805", "width": 2, "height": 1.25, "power": 0.0, "x": 50, "y": 45, "angle": 0, "placed": true},
+        {"name": "ADC", "package": "SOIC-8", "width": 5, "height": 4, "power": 0.3, "x": 100, "y": 40, "angle": 0, "placed": true},
+        {"name": "SENSOR1", "package": "0805", "width": 2, "height": 1.25, "power": 0.1, "x": 110, "y": 35, "angle": 0, "placed": true},
+        {"name": "SENSOR2", "package": "0805", "width": 2, "height": 1.25, "power": 0.1, "x": 110, "y": 45, "angle": 0, "placed": true},
+        {"name": "R_SENSE1", "package": "0805", "width": 2, "height": 1.25, "power": 0.0, "x": 120, "y": 35, "angle": 0, "placed": true},
+        {"name": "R_SENSE2", "package": "0805", "width": 2, "height": 1.25, "power": 0.0, "x": 120, "y": 45, "angle": 0, "placed": true},
+        {"name": "CAN_IC", "package": "SOIC-8", "width": 5, "height": 4, "power": 0.5, "x": 140, "y": 40, "angle": 0, "placed": true},
+        {"name": "RS485", "package": "SOIC-8", "width": 5, "height": 4, "power": 0.4, "x": 150, "y": 40, "angle": 0, "placed": true},
+        {"name": "R_CAN1", "package": "0805", "width": 2, "height": 1.25, "power": 0.0, "x": 145, "y": 30, "angle": 0, "placed": true},
+        {"name": "R_CAN2", "package": "0805", "width": 2, "height": 1.25, "power": 0.0, "x": 145, "y": 50, "angle": 0, "placed": true}
+      ],
+      "nets": [
+        {"name": "VCC", "pins": [["MCU", "VCC"], ["ADC", "VCC"], ["CAN_IC", "VCC"]]},
+        {"name": "GND", "pins": [["MCU", "GND"], ["ADC", "GND"], ["CAN_IC", "GND"]]},
+        {"name": "SENSOR_DATA", "pins": [["ADC", "IN1"], ["SENSOR1", "OUT"], ["R_SENSE1", "pin1"]]},
+        {"name": "CAN_BUS", "pins": [["CAN_IC", "CAN_H"], ["CAN_IC", "CAN_L"], ["R_CAN1", "pin1"]]}
+      ]
+    }
+  ]
+}
+

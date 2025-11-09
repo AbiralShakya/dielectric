@@ -48,7 +48,7 @@ class KiCadExporter:
         clearance = board.get("clearance", 0.5)
         
         lines = [
-            "(kicad_pcb (version 20221018) (generator \"neuro-geometric-placer\")",
+            "(kicad_pcb (version 20221018) (generator \"dielectric\")",
             "",
             "  (general",
             "    (thickness 1.6)",
@@ -151,12 +151,12 @@ class KiCadExporter:
     def _soic8_footprint(self, name: str, x: float, y: float, angle: float, pins: List, comp: Dict, net_map: Dict) -> List[str]:
         """Generate SOIC-8 footprint."""
         lines = [
-            f'  (footprint "{name}" (version 20221018) (generator "neuro-geometric-placer")',
+            f'  (footprint "{name}" (version 20221018) (generator "dielectric")',
             '    (layer "F.Cu")',
             f"    (tedit 0) (tstamp 0)",
             f"    (at {x:.3f} {y:.3f} {angle})",
-            f'    (descr "SOIC-8 - AI optimized")',
-            '    (tags "ai-optimized soic-8")',
+            f'    (descr "SOIC-8 - Dielectric optimized")',
+            '    (tags "dielectric soic-8")',
             "    (property \"Reference\" \"U\" (at 0 -3.81 0)",
             '      (layer "F.SilkS")',
             "      (effects (font (size 1 1) (thickness 0.15)))",
@@ -195,11 +195,11 @@ class KiCadExporter:
     def _r0805_footprint(self, name: str, x: float, y: float, angle: float, pins: List, comp: Dict, net_map: Dict) -> List[str]:
         """Generate 0805 resistor/capacitor footprint."""
         lines = [
-            f'  (footprint "{name}" (version 20221018) (generator "neuro-geometric-placer")',
+            f'  (footprint "{name}" (version 20221018) (generator "dielectric")',
             '    (layer "F.Cu")',
             f"    (tedit 0) (tstamp 0)",
             f"    (at {x:.3f} {y:.3f} {angle})",
-            f'    (descr "0805 - AI optimized")',
+            f'    (descr "0805 - Dielectric optimized")',
             '    (tags "ai-optimized 0805")',
             "    (property \"Reference\" \"R\" (at 0 -1.27 0)",
             '      (layer "F.SilkS")',
@@ -235,11 +235,11 @@ class KiCadExporter:
     def _led5mm_footprint(self, name: str, x: float, y: float, angle: float, pins: List, comp: Dict, net_map: Dict) -> List[str]:
         """Generate LED 5mm footprint."""
         lines = [
-            f'  (footprint "{name}" (version 20221018) (generator "neuro-geometric-placer")',
+            f'  (footprint "{name}" (version 20221018) (generator "dielectric")',
             '    (layer "F.Cu")',
             f"    (tedit 0) (tstamp 0)",
             f"    (at {x:.3f} {y:.3f} {angle})",
-            f'    (descr "LED-5MM - AI optimized")',
+            f'    (descr "LED-5MM - Dielectric optimized")',
             '    (tags "ai-optimized led")',
             ""
         ]
@@ -268,11 +268,11 @@ class KiCadExporter:
     def _bga_footprint(self, name: str, x: float, y: float, angle: float, pins: List, comp: Dict, net_map: Dict) -> List[str]:
         """Generate BGA footprint."""
         lines = [
-            f'  (footprint "{name}" (version 20221018) (generator "neuro-geometric-placer")',
+            f'  (footprint "{name}" (version 20221018) (generator "dielectric")',
             '    (layer "F.Cu")',
             f"    (tedit 0) (tstamp 0)",
             f"    (at {x:.3f} {y:.3f} {angle})",
-            f'    (descr "BGA - AI optimized")',
+            f'    (descr "BGA - Dielectric optimized")',
             '    (tags "ai-optimized bga")',
             ""
         ]
@@ -309,17 +309,18 @@ class KiCadExporter:
     def _qfn16_footprint(self, name: str, x: float, y: float, angle: float, pins: List, comp: Dict, net_map: Dict) -> List[str]:
         """Generate QFN-16 footprint."""
         lines = [
-            f'  (footprint "{name}" (version 20221018) (generator "neuro-geometric-placer")',
+            f'  (footprint "{name}" (version 20221018) (generator "dielectric")',
             '    (layer "F.Cu")',
             f"    (tedit 0) (tstamp 0)",
             f"    (at {x:.3f} {y:.3f} {angle})",
-            f'    (descr "QFN-16 - AI optimized")',
+            f'    (descr "QFN-16 - Dielectric optimized")',
             '    (tags "ai-optimized qfn")',
             ""
         ]
         
         # QFN-16: 4 pads per side
-        pad_size = (0.3, 0.8)
+        pad_width = 0.3
+        pad_height = 0.8
         body_size = 3.0
         pad_positions = []
         
@@ -339,13 +340,13 @@ class KiCadExporter:
         for i, (px, py) in enumerate(pad_positions):
             pin_name = f"pin{i+1}" if i < len(pins) else f"pad{i+1}"
             net_name = None
-            if i < len(pins):
+            if i < len(pins) and isinstance(pins[i], dict):
                 net_name = pins[i].get("net", "")
             
             net_num = net_map.get(net_name, 0) if net_name else 0
             
             lines.extend([
-                f'    (pad "{pin_name}" smd roundrect (at {px:.3f} {py:.3f} {angle}) (size {pad_size[0]} {pad_size[1]}) (layers "F.Cu" "F.Paste" "F.Mask")',
+                f'    (pad "{pin_name}" smd roundrect (at {px:.3f} {py:.3f} {angle}) (size {pad_width} {pad_height}) (layers "F.Cu" "F.Paste" "F.Mask")',
                 f"      (roundrect_rratio 0.25) (net {net_num} \"{net_name or ''}\")",
                 "    )"
             ])
@@ -368,12 +369,12 @@ class KiCadExporter:
         height = comp.get("height", 5)
         
         lines = [
-            f'  (footprint "{name}" (version 20221018) (generator "neuro-geometric-placer")',
+            f'  (footprint "{name}" (version 20221018) (generator "dielectric")',
             '    (layer "F.Cu")',
             f"    (tedit 0) (tstamp 0)",
             f"    (at {x:.3f} {y:.3f} {angle})",
-            f'    (descr "{package_type} - AI optimized")',
-            '    (tags "ai-optimized")',
+            f'    (descr "{package_type} - Dielectric optimized")',
+            '    (tags "dielectric")',
             ""
         ]
         

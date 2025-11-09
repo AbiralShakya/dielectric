@@ -12,6 +12,7 @@ try:
     from backend.agents.intent_agent import IntentAgent
     from backend.agents.local_placer_agent import LocalPlacerAgent
     from backend.agents.verifier_agent import VerifierAgent
+    from backend.agents.error_fixer_agent import ErrorFixerAgent
     from backend.database.pcb_database import PCBDatabase
 except ImportError:
     from src.backend.geometry.placement import Placement
@@ -19,6 +20,7 @@ except ImportError:
     from src.backend.agents.intent_agent import IntentAgent
     from src.backend.agents.local_placer_agent import LocalPlacerAgent
     from src.backend.agents.verifier_agent import VerifierAgent
+    from src.backend.agents.error_fixer_agent import ErrorFixerAgent
     from src.backend.database.pcb_database import PCBDatabase
 
 
@@ -30,6 +32,7 @@ class AgentOrchestrator:
         self.intent_agent = IntentAgent()
         self.local_placer_agent = LocalPlacerAgent()
         self.verifier_agent = VerifierAgent()
+        self.error_fixer_agent = ErrorFixerAgent()
         self.database = PCBDatabase() if use_database else None
     
     async def optimize_fast(
@@ -121,6 +124,38 @@ class AgentOrchestrator:
 
             verification_result["passed"] = passed
 
+            # Agentic error fixing - automatically fix issues
+            fix_result = None
+            if not passed or final_score < 0.5:
+                print("🔧 ErrorFixerAgent: Automatically fixing design issues...")
+                fix_result = await self.error_fixer_agent.fix_design(optimized_placement, max_iterations=5)
+                
+                if fix_result.get("success") and fix_result.get("fixes_applied"):
+                    optimized_placement = fix_result["placement"]
+                    print(f"✅ ErrorFixerAgent: Fixed {len(fix_result['fixes_applied'])} issues")
+                    print(f"   Quality improved: {fix_result['initial_quality']:.2f} → {fix_result['final_quality']:.2f}")
+                    
+                    # Re-verify after fixes
+                    verification_result = await self.verifier_agent.process(optimized_placement)
+                    passed = len(verification_result.get("violations", [])) == 0
+                    verification_result["passed"] = passed
+                    
+                    # Recalculate score
+                    try:
+                        from src.backend.scoring.scorer import WorldModelScorer, ScoreWeights
+                        score_weights = ScoreWeights(
+                            alpha=weights.get("alpha", 0.33),
+                            beta=weights.get("beta", 0.33),
+                            gamma=weights.get("gamma", 0.34)
+                        )
+                        scorer = WorldModelScorer(score_weights)
+                        final_score = scorer.score(optimized_placement)
+                    except ImportError:
+                        # Fallback: use simple scoring
+                        final_score = fix_result.get("final_quality", 0) * 100
+                else:
+                    print("⚠️  ErrorFixerAgent: No fixes applied or fix failed")
+
             # Store optimized design in database for learning
             if self.database:
                 try:
@@ -136,6 +171,16 @@ class AgentOrchestrator:
                 except Exception as e:
                     print(f"⚠️  Database storage failed: {e}")
 
+            # Include error fixer results if fixes were applied
+            error_fixes = None
+            if fix_result and fix_result.get("fixes_applied"):
+                error_fixes = {
+                    "fixes_applied": len(fix_result["fixes_applied"]),
+                    "iterations": fix_result.get("iterations", 0),
+                    "quality_improvement": fix_result.get("final_quality", 0) - fix_result.get("initial_quality", 0),
+                    "fixes": fix_result.get("fixes_applied", [])
+                }
+            
             return {
                 "success": True,
                 "placement": optimized_placement,
@@ -144,9 +189,10 @@ class AgentOrchestrator:
                 "intent_explanation": intent_explanation,
                 "geometry_data": geometry_data,  # Computational geometry analysis
                 "database_hints": database_hints,  # Industry patterns
+                "error_fixes": error_fixes,  # Agentic error fixing
                 "stats": stats,
                 "verification": verification_result,
-                "agents_used": ["IntentAgent", "LocalPlacerAgent", "VerifierAgent"],
+                "agents_used": ["IntentAgent", "LocalPlacerAgent", "VerifierAgent", "ErrorFixerAgent"],
                 "method": "direct_ai_agents"
             }
 

@@ -116,8 +116,10 @@ class KiCadExporter:
             ""
         ])
         
-        # Add nets (nets are optional)
+        # Build component-to-net mapping for proper connections
+        comp_pin_to_net = {}  # Maps (component_name, pin_name) -> net_name
         net_map = {}
+        
         if include_nets and nets:
             net_id = 1
             for net in nets:
@@ -125,6 +127,18 @@ class KiCadExporter:
                     net_name = net.get("name", f"Net{net_id}")
                     net_map[net_name] = net_id
                     lines.append(f'  (net {net_id} "{net_name}")')
+                    
+                    # Map component pins to this net
+                    net_pins = net.get("pins", [])
+                    for pin_ref in net_pins:
+                        if isinstance(pin_ref, list) and len(pin_ref) >= 2:
+                            comp_name = pin_ref[0]
+                            pin_name = pin_ref[1] if len(pin_ref) > 1 else "pin1"
+                            comp_pin_to_net[(comp_name, pin_name)] = net_name
+                        elif isinstance(pin_ref, str):
+                            # Fallback: just component name
+                            comp_pin_to_net[(pin_ref, "pin1")] = net_name
+                    
                     net_id += 1
             if net_map:
                 lines.append("")
@@ -139,17 +153,20 @@ class KiCadExporter:
             angle = comp.get("angle", 0)
             pins = comp.get("pins", [])
             
-            # Get footprint generator
+            # Get footprint generator with proper net mapping
             footprint_gen = self.footprint_templates.get(package, self._generic_footprint)
-            footprint_lines = footprint_gen(name, x, y, angle, pins, comp, net_map if include_nets else {})
+            footprint_lines = footprint_gen(name, x, y, angle, pins, comp, net_map, comp_pin_to_net)
             lines.extend(footprint_lines)
             footprint_id += 1
         
         lines.append(")")
         return "\n".join(lines)
     
-    def _soic8_footprint(self, name: str, x: float, y: float, angle: float, pins: List, comp: Dict, net_map: Dict) -> List[str]:
-        """Generate SOIC-8 footprint."""
+    def _soic8_footprint(self, name: str, x: float, y: float, angle: float, pins: List, comp: Dict, net_map: Dict, comp_pin_to_net: Dict = None) -> List[str]:
+        """Generate SOIC-8 footprint with proper net connections."""
+        if comp_pin_to_net is None:
+            comp_pin_to_net = {}
+            
         lines = [
             f'  (footprint "{name}" (version 20221018) (generator "dielectric")',
             '    (layer "F.Cu")',
@@ -177,22 +194,46 @@ class KiCadExporter:
         for i, (px, py) in enumerate(pad_positions):
             pin_name = f"pin{i+1}" if i < len(pins) else f"pad{i+1}"
             net_name = None
-            if i < len(pins):
-                net_name = pins[i].get("net", "")
+            net_num = 0
             
-            net_num = net_map.get(net_name, 0) if net_name else 0
+            # Try to get net from comp_pin_to_net mapping first
+            if comp_pin_to_net:
+                net_name = comp_pin_to_net.get((name, pin_name))
+                if not net_name:
+                    # Try with just pin number
+                    net_name = comp_pin_to_net.get((name, f"pin{i+1}"))
             
-            lines.extend([
-                f'    (pad "{pin_name}" smd roundrect (at {px:.3f} {py:.3f} {angle}) (size 0.6 1.55) (layers "F.Cu" "F.Paste" "F.Mask")',
-                f"      (roundrect_rratio 0.25) (net {net_num} \"{net_name or ''}\")",
-                "    )"
-            ])
+            # Fallback to pins array
+            if not net_name and i < len(pins):
+                if isinstance(pins[i], dict):
+                    net_name = pins[i].get("net", "")
+                elif isinstance(pins[i], str):
+                    net_name = pins[i]
+            
+            # Get net number
+            if net_name:
+                net_num = net_map.get(net_name, 0)
+            
+            # Only add net if it exists (net_num > 0)
+            if net_num > 0:
+                lines.extend([
+                    f'    (pad "{pin_name}" smd roundrect (at {px:.3f} {py:.3f} {angle}) (size 0.6 1.55) (layers "F.Cu" "F.Paste" "F.Mask")',
+                    f"      (roundrect_rratio 0.25) (net {net_num} \"{net_name}\")",
+                    "    )"
+                ])
+            else:
+                # Pad without net (unconnected)
+                lines.extend([
+                    f'    (pad "{pin_name}" smd roundrect (at {px:.3f} {py:.3f} {angle}) (size 0.6 1.55) (layers "F.Cu" "F.Paste" "F.Mask")',
+                    "      (roundrect_rratio 0.25)",
+                    "    )"
+                ])
         
         lines.append("  )")
         lines.append("")
         return lines
     
-    def _r0805_footprint(self, name: str, x: float, y: float, angle: float, pins: List, comp: Dict, net_map: Dict) -> List[str]:
+    def _r0805_footprint(self, name: str, x: float, y: float, angle: float, pins: List, comp: Dict, net_map: Dict, comp_pin_to_net: Dict = None) -> List[str]:
         """Generate 0805 resistor/capacitor footprint."""
         lines = [
             f'  (footprint "{name}" (version 20221018) (generator "dielectric")',
@@ -213,27 +254,48 @@ class KiCadExporter:
         ]
         
         # Two pads for 0805
+        if comp_pin_to_net is None:
+            comp_pin_to_net = {}
+            
         pad_positions = [(-0.95, 0), (0.95, 0)]
         for i, (px, py) in enumerate(pad_positions):
             pin_name = f"pin{i+1}" if i < len(pins) else f"pad{i+1}"
             net_name = None
-            if i < len(pins) and isinstance(pins[i], dict):
+            net_num = 0
+            
+            # Try comp_pin_to_net mapping first
+            if comp_pin_to_net:
+                net_name = comp_pin_to_net.get((name, pin_name)) or comp_pin_to_net.get((name, f"pin{i+1}"))
+            
+            # Fallback to pins array
+            if not net_name and i < len(pins) and isinstance(pins[i], dict):
                 net_name = pins[i].get("net", "")
             
-            net_num = net_map.get(net_name, 0) if net_name else 0
+            if net_name:
+                net_num = net_map.get(net_name, 0)
             
-            lines.extend([
-                f'    (pad "{pin_name}" smd roundrect (at {px:.3f} {py:.3f} {angle}) (size 0.8 1.3) (layers "F.Cu" "F.Paste" "F.Mask")',
-                f"      (roundrect_rratio 0.25) (net {net_num} \"{net_name or ''}\")",
-                "    )"
-            ])
+            if net_num > 0:
+                lines.extend([
+                    f'    (pad "{pin_name}" smd roundrect (at {px:.3f} {py:.3f} {angle}) (size 0.8 1.3) (layers "F.Cu" "F.Paste" "F.Mask")',
+                    f"      (roundrect_rratio 0.25) (net {net_num} \"{net_name}\")",
+                    "    )"
+                ])
+            else:
+                lines.extend([
+                    f'    (pad "{pin_name}" smd roundrect (at {px:.3f} {py:.3f} {angle}) (size 0.8 1.3) (layers "F.Cu" "F.Paste" "F.Mask")',
+                    "      (roundrect_rratio 0.25)",
+                    "    )"
+                ])
         
         lines.append("  )")
         lines.append("")
         return lines
     
-    def _led5mm_footprint(self, name: str, x: float, y: float, angle: float, pins: List, comp: Dict, net_map: Dict) -> List[str]:
-        """Generate LED 5mm footprint."""
+    def _led5mm_footprint(self, name: str, x: float, y: float, angle: float, pins: List, comp: Dict, net_map: Dict, comp_pin_to_net: Dict = None) -> List[str]:
+        """Generate LED 5mm footprint with proper net connections."""
+        if comp_pin_to_net is None:
+            comp_pin_to_net = {}
+            
         lines = [
             f'  (footprint "{name}" (version 20221018) (generator "dielectric")',
             '    (layer "F.Cu")',
@@ -248,25 +310,44 @@ class KiCadExporter:
         pad_positions = [("anode", -2.5, 0), ("cathode", 2.5, 0)]
         for pin_name, px, py in pad_positions:
             net_name = None
-            for pin in pins:
-                if pin.get("name") == pin_name:
-                    net_name = pin.get("net", "")
-                    break
+            net_num = 0
             
-            net_num = net_map.get(net_name, 0) if net_name else 0
+            # Try comp_pin_to_net mapping first
+            if comp_pin_to_net:
+                net_name = comp_pin_to_net.get((name, pin_name))
             
-            lines.extend([
-                f'    (pad "{pin_name}" thru_hole circle (at {px:.3f} {py:.3f} {angle}) (size 1.5 1.5) (drill 0.8)',
-                f'      (layers "*.Cu" "*.Mask") (net {net_num} "{net_name or ""}")',
-                "    )"
-            ])
+            # Fallback to pins array
+            if not net_name:
+                for pin in pins:
+                    if isinstance(pin, dict) and pin.get("name") == pin_name:
+                        net_name = pin.get("net", "")
+                        break
+            
+            if net_name:
+                net_num = net_map.get(net_name, 0)
+            
+            if net_num > 0:
+                lines.extend([
+                    f'    (pad "{pin_name}" thru_hole circle (at {px:.3f} {py:.3f} {angle}) (size 1.5 1.5) (drill 0.8)',
+                    f'      (layers "*.Cu" "*.Mask") (net {net_num} "{net_name}")',
+                    "    )"
+                ])
+            else:
+                lines.extend([
+                    f'    (pad "{pin_name}" thru_hole circle (at {px:.3f} {py:.3f} {angle}) (size 1.5 1.5) (drill 0.8)',
+                    '      (layers "*.Cu" "*.Mask")',
+                    "    )"
+                ])
         
         lines.append("  )")
         lines.append("")
         return lines
     
-    def _bga_footprint(self, name: str, x: float, y: float, angle: float, pins: List, comp: Dict, net_map: Dict) -> List[str]:
-        """Generate BGA footprint."""
+    def _bga_footprint(self, name: str, x: float, y: float, angle: float, pins: List, comp: Dict, net_map: Dict, comp_pin_to_net: Dict = None) -> List[str]:
+        """Generate BGA footprint with proper net connections."""
+        if comp_pin_to_net is None:
+            comp_pin_to_net = {}
+            
         lines = [
             f'  (footprint "{name}" (version 20221018) (generator "dielectric")',
             '    (layer "F.Cu")',
@@ -290,23 +371,38 @@ class KiCadExporter:
                 pin_name = f"A{ball_num}"
                 
                 net_name = None
-                if ball_num <= len(pins):
-                    net_name = pins[ball_num - 1].get("net", "")
+                net_num = 0
                 
-                net_num = net_map.get(net_name, 0) if net_name else 0
+                # Try comp_pin_to_net mapping first
+                if comp_pin_to_net:
+                    net_name = comp_pin_to_net.get((name, pin_name)) or comp_pin_to_net.get((name, f"pin{ball_num}"))
                 
-                lines.extend([
-                    f'    (pad "{pin_name}" smd round (at {px:.3f} {py:.3f} {angle}) (size 0.5 0.5) (layers "F.Cu" "F.Paste" "F.Mask")',
-                    f"      (net {net_num} \"{net_name or ''}\")",
-                    "    )"
-                ])
+                # Fallback to pins array
+                if not net_name and ball_num <= len(pins):
+                    if isinstance(pins[ball_num - 1], dict):
+                        net_name = pins[ball_num - 1].get("net", "")
+                
+                if net_name:
+                    net_num = net_map.get(net_name, 0)
+                
+                if net_num > 0:
+                    lines.extend([
+                        f'    (pad "{pin_name}" smd round (at {px:.3f} {py:.3f} {angle}) (size 0.5 0.5) (layers "F.Cu" "F.Paste" "F.Mask")',
+                        f"      (net {net_num} \"{net_name}\")",
+                        "    )"
+                    ])
+                else:
+                    lines.extend([
+                        f'    (pad "{pin_name}" smd round (at {px:.3f} {py:.3f} {angle}) (size 0.5 0.5) (layers "F.Cu" "F.Paste" "F.Mask")',
+                        "    )"
+                    ])
                 ball_num += 1
         
         lines.append("  )")
         lines.append("")
         return lines
     
-    def _qfn16_footprint(self, name: str, x: float, y: float, angle: float, pins: List, comp: Dict, net_map: Dict) -> List[str]:
+    def _qfn16_footprint(self, name: str, x: float, y: float, angle: float, pins: List, comp: Dict, net_map: Dict, comp_pin_to_net: Dict = None) -> List[str]:
         """Generate QFN-16 footprint."""
         lines = [
             f'  (footprint "{name}" (version 20221018) (generator "dielectric")',
@@ -337,34 +433,55 @@ class KiCadExporter:
         for i in range(4):
             pad_positions.append((-body_size/2, body_size/2 - 0.5 - i*0.5))
         
+        if comp_pin_to_net is None:
+            comp_pin_to_net = {}
+            
         for i, (px, py) in enumerate(pad_positions):
             pin_name = f"pin{i+1}" if i < len(pins) else f"pad{i+1}"
             net_name = None
-            if i < len(pins) and isinstance(pins[i], dict):
+            net_num = 0
+            
+            # Try comp_pin_to_net mapping first
+            if comp_pin_to_net:
+                net_name = comp_pin_to_net.get((name, pin_name)) or comp_pin_to_net.get((name, f"pin{i+1}"))
+            
+            # Fallback to pins array
+            if not net_name and i < len(pins) and isinstance(pins[i], dict):
                 net_name = pins[i].get("net", "")
             
-            net_num = net_map.get(net_name, 0) if net_name else 0
+            if net_name:
+                net_num = net_map.get(net_name, 0)
             
-            lines.extend([
-                f'    (pad "{pin_name}" smd roundrect (at {px:.3f} {py:.3f} {angle}) (size {pad_width} {pad_height}) (layers "F.Cu" "F.Paste" "F.Mask")',
-                f"      (roundrect_rratio 0.25) (net {net_num} \"{net_name or ''}\")",
-                "    )"
-            ])
+            if net_num > 0:
+                lines.extend([
+                    f'    (pad "{pin_name}" smd roundrect (at {px:.3f} {py:.3f} {angle}) (size {pad_width} {pad_height}) (layers "F.Cu" "F.Paste" "F.Mask")',
+                    f"      (roundrect_rratio 0.25) (net {net_num} \"{net_name}\")",
+                    "    )"
+                ])
+            else:
+                lines.extend([
+                    f'    (pad "{pin_name}" smd roundrect (at {px:.3f} {py:.3f} {angle}) (size {pad_width} {pad_height}) (layers "F.Cu" "F.Paste" "F.Mask")',
+                    "      (roundrect_rratio 0.25)",
+                    "    )"
+                ])
         
         lines.append("  )")
         lines.append("")
         return lines
     
-    def _inductor_footprint(self, name: str, x: float, y: float, angle: float, pins: List, comp: Dict, net_map: Dict) -> List[str]:
+    def _inductor_footprint(self, name: str, x: float, y: float, angle: float, pins: List, comp: Dict, net_map: Dict, comp_pin_to_net: Dict = None) -> List[str]:
         """Generate inductor footprint."""
-        return self._generic_footprint(name, x, y, angle, pins, comp, net_map, "INDUCTOR")
+        return self._generic_footprint(name, x, y, angle, pins, comp, net_map, comp_pin_to_net, "INDUCTOR")
     
-    def _cap_footprint(self, name: str, x: float, y: float, angle: float, pins: List, comp: Dict, net_map: Dict) -> List[str]:
+    def _cap_footprint(self, name: str, x: float, y: float, angle: float, pins: List, comp: Dict, net_map: Dict, comp_pin_to_net: Dict = None) -> List[str]:
         """Generate capacitor footprint."""
-        return self._generic_footprint(name, x, y, angle, pins, comp, net_map, "CAP")
+        return self._generic_footprint(name, x, y, angle, pins, comp, net_map, comp_pin_to_net, "CAP")
     
-    def _generic_footprint(self, name: str, x: float, y: float, angle: float, pins: List, comp: Dict, net_map: Dict, package_type: str = "GENERIC") -> List[str]:
-        """Generate generic footprint."""
+    def _generic_footprint(self, name: str, x: float, y: float, angle: float, pins: List, comp: Dict, net_map: Dict, comp_pin_to_net: Dict = None, package_type: str = "GENERIC") -> List[str]:
+        """Generate generic footprint with proper net connections."""
+        if comp_pin_to_net is None:
+            comp_pin_to_net = {}
+            
         width = comp.get("width", 5)
         height = comp.get("height", 5)
         
@@ -381,17 +498,36 @@ class KiCadExporter:
         # Add pads based on pins
         if pins:
             for i, pin in enumerate(pins):
-                pin_name = pin.get("name", f"pin{i+1}")
-                x_offset = pin.get("x_offset", 0)
-                y_offset = pin.get("y_offset", 0)
-                net_name = pin.get("net", "")
-                net_num = net_map.get(net_name, 0) if net_name else 0
+                pin_name = pin.get("name", f"pin{i+1}") if isinstance(pin, dict) else f"pin{i+1}"
+                x_offset = pin.get("x_offset", 0) if isinstance(pin, dict) else 0
+                y_offset = pin.get("y_offset", 0) if isinstance(pin, dict) else 0
                 
-                lines.extend([
-                    f'    (pad "{pin_name}" smd roundrect (at {x_offset:.3f} {y_offset:.3f} {angle}) (size 0.8 0.8) (layers "F.Cu" "F.Paste" "F.Mask")',
-                    f"      (roundrect_rratio 0.25) (net {net_num} \"{net_name or ''}\")",
-                    "    )"
-                ])
+                net_name = None
+                net_num = 0
+                
+                # Try comp_pin_to_net mapping first
+                if comp_pin_to_net:
+                    net_name = comp_pin_to_net.get((name, pin_name)) or comp_pin_to_net.get((name, f"pin{i+1}"))
+                
+                # Fallback to pins array
+                if not net_name and isinstance(pin, dict):
+                    net_name = pin.get("net", "")
+                
+                if net_name:
+                    net_num = net_map.get(net_name, 0)
+                
+                if net_num > 0:
+                    lines.extend([
+                        f'    (pad "{pin_name}" smd roundrect (at {x_offset:.3f} {y_offset:.3f} {angle}) (size 0.8 0.8) (layers "F.Cu" "F.Paste" "F.Mask")',
+                        f"      (roundrect_rratio 0.25) (net {net_num} \"{net_name}\")",
+                        "    )"
+                    ])
+                else:
+                    lines.extend([
+                        f'    (pad "{pin_name}" smd roundrect (at {x_offset:.3f} {y_offset:.3f} {angle}) (size 0.8 0.8) (layers "F.Cu" "F.Paste" "F.Mask")',
+                        "      (roundrect_rratio 0.25)",
+                        "    )"
+                    ])
         else:
             # Default: two pads
             pad_size = min(width, height) * 0.3

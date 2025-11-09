@@ -43,7 +43,8 @@ class LocalPlacerAgent:
         placement: Placement,
         weights: Dict,
         max_time_ms: float = 200.0,
-        callback: Optional[Callable] = None
+        callback: Optional[Callable] = None,
+        random_seed: Optional[int] = None
     ) -> Dict:
         """
         Run fast local optimization.
@@ -64,6 +65,9 @@ class LocalPlacerAgent:
         """
         try:
             self._setup_scorer(weights)
+            # Recreate placer with seed if provided
+            if random_seed is not None:
+                self.placer = LocalPlacer(self.scorer, random_seed=random_seed)
             
             best_placement, best_score, stats = self.placer.optimize_fast(
                 placement,

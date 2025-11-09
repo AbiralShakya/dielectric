@@ -22,7 +22,8 @@ class SimulatedAnnealing:
         initial_temp: float = 100.0,
         final_temp: float = 0.1,
         cooling_rate: float = 0.95,
-        max_iterations: int = 1000
+        max_iterations: int = 1000,
+        random_seed: Optional[int] = None
     ):
         """
         Initialize simulated annealing.
@@ -33,12 +34,15 @@ class SimulatedAnnealing:
             final_temp: Final temperature
             cooling_rate: Temperature decay rate
             max_iterations: Maximum iterations
+            random_seed: Random seed for deterministic optimization (None = non-deterministic)
         """
         self.scorer = scorer
         self.initial_temp = initial_temp
         self.final_temp = final_temp
         self.cooling_rate = cooling_rate
         self.max_iterations = max_iterations
+        self.random_seed = random_seed
+        self.rng = np.random.RandomState(random_seed) if random_seed is not None else np.random
     
     def _temperature(self, iteration: int) -> float:
         """Compute temperature at iteration."""
@@ -55,30 +59,30 @@ class SimulatedAnnealing:
         """
         comp_names = list(placement.components.keys())
         
-        if np.random.rand() < 0.7:  # 70% move, 30% swap
+        if self.rng.rand() < 0.7:  # 70% move, 30% swap
             # Move a component
-            comp_name = np.random.choice(comp_names)
+            comp_name = self.rng.choice(comp_names)
             comp = placement.get_component(comp_name)
             
             # Random new position
             margin = max(comp.width, comp.height)
-            new_x = np.random.uniform(margin, placement.board.width - margin)
-            new_y = np.random.uniform(margin, placement.board.height - margin)
-            new_angle = np.random.choice([0, 90, 180, 270])
+            new_x = self.rng.uniform(margin, placement.board.width - margin)
+            new_y = self.rng.uniform(margin, placement.board.height - margin)
+            new_angle = self.rng.choice([0, 90, 180, 270])
             
             return ("move", comp_name, new_x, new_y, new_angle)
         else:
             # Swap two components
             if len(comp_names) >= 2:
-                comp1, comp2 = np.random.choice(comp_names, size=2, replace=False)
+                comp1, comp2 = self.rng.choice(comp_names, size=2, replace=False)
                 return ("swap", comp1, comp2)
             else:
                 # Fallback to move
                 comp_name = comp_names[0]
                 comp = placement.get_component(comp_name)
                 margin = max(comp.width, comp.height)
-                new_x = np.random.uniform(margin, placement.board.width - margin)
-                new_y = np.random.uniform(margin, placement.board.height - margin)
+                new_x = self.rng.uniform(margin, placement.board.width - margin)
+                new_y = self.rng.uniform(margin, placement.board.height - margin)
                 return ("move", comp_name, new_x, new_y, 0)
     
     def optimize(
@@ -146,7 +150,7 @@ class SimulatedAnnealing:
                     stats["improvements"] += 1
                 elif temp > 0:
                     prob = np.exp(-delta / temp)
-                    if np.random.rand() < prob:
+                    if self.rng.rand() < prob:
                         accept = True
                 
                 if accept:

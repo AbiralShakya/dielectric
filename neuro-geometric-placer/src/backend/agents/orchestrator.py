@@ -98,9 +98,12 @@ class AgentOrchestrator:
                       f"Hotspots={geometry_data.get('thermal_hotspots', 0)}")
 
             # Step 2: LocalPlacerAgent runs optimization with the weights
-            print("🔧 LocalPlacerAgent: Running optimization...")
+            # Use deterministic seed for reproducible results
+            import hashlib
+            seed = int(hashlib.md5(user_intent.encode()).hexdigest()[:8], 16) % (2**31)
+            print(f"🔧 LocalPlacerAgent: Running optimization (seed={seed})...")
             placement_result = await self.local_placer_agent.process(
-                placement, weights, max_time_ms=500.0, callback=callback
+                placement, weights, max_time_ms=500.0, callback=callback, random_seed=seed
             )
 
             if not placement_result["success"]:

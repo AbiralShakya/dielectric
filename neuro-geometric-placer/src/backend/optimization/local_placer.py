@@ -23,12 +23,13 @@ class LocalPlacer:
     Designed for <200ms response time.
     """
     
-    def __init__(self, scorer: IncrementalScorer):
+    def __init__(self, scorer: IncrementalScorer, random_seed: Optional[int] = None):
         """
         Initialize local placer.
         
         Args:
             scorer: Incremental scorer
+            random_seed: Random seed for deterministic optimization
         """
         self.scorer = scorer
         self.sa = SimulatedAnnealing(
@@ -36,7 +37,8 @@ class LocalPlacer:
             initial_temp=50.0,
             final_temp=0.1,
             cooling_rate=0.9,
-            max_iterations=200  # Fast path: fewer iterations
+            max_iterations=200,  # Fast path: fewer iterations
+            random_seed=random_seed
         )
     
     def optimize_fast(

@@ -6,8 +6,12 @@ Uses Dedalus SDK to orchestrate PCB placement optimization via MCP servers.
 
 import asyncio
 from typing import Dict, Optional, Callable, List
-from backend.geometry.placement import Placement
-from backend.ai.dedalus_client import DedalusClient
+try:
+    from backend.geometry.placement import Placement
+    from backend.ai.dedalus_client import DedalusClient
+except ImportError:
+    from src.backend.geometry.placement import Placement
+    from src.backend.ai.dedalus_client import DedalusClient
 
 
 class AgentOrchestrator:

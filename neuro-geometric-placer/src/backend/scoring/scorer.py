@@ -8,8 +8,12 @@ import numpy as np
 from typing import Dict, List, Tuple
 from dataclasses import dataclass
 
-from backend.geometry.placement import Placement
-from backend.geometry.component import Component
+try:
+    from backend.geometry.placement import Placement
+    from backend.geometry.component import Component
+except ImportError:
+    from src.backend.geometry.placement import Placement
+    from src.backend.geometry.component import Component
 
 
 @dataclass

@@ -5,7 +5,10 @@ Generates high-level annealing schedule and move heuristics.
 """
 
 from typing import Dict, Optional
-from backend.ai.xai_client import XAIClient
+try:
+    from backend.ai.xai_client import XAIClient
+except ImportError:
+    from src.backend.ai.xai_client import XAIClient
 
 
 class PlannerAgent:

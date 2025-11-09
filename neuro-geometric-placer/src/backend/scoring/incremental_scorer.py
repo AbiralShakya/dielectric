@@ -7,8 +7,12 @@ Only recomputes affected nets/components on move.
 import numpy as np
 from typing import Dict, List, Optional, Tuple
 
-from backend.geometry.placement import Placement
-from backend.geometry.component import Component
+try:
+    from backend.geometry.placement import Placement
+    from backend.geometry.component import Component
+except ImportError:
+    from src.backend.geometry.placement import Placement
+    from src.backend.geometry.component import Component
 from .scorer import WorldModelScorer, ScoreWeights
 
 

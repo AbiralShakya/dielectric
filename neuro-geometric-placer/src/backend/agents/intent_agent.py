@@ -5,7 +5,10 @@ Converts natural language → weight vector (α, β, γ)
 """
 
 from typing import Dict, Tuple, Optional
-from backend.ai.xai_client import XAIClient
+try:
+    from backend.ai.xai_client import XAIClient
+except ImportError:
+    from src.backend.ai.xai_client import XAIClient
 
 
 class IntentAgent:

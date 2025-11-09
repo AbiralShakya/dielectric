@@ -6,10 +6,16 @@ Fast path optimizer for interactive UI (<200ms).
 
 import asyncio
 from typing import Dict, Optional, Callable
-from backend.geometry.placement import Placement
-from backend.scoring.scorer import WorldModelScorer, ScoreWeights
-from backend.scoring.incremental_scorer import IncrementalScorer
-from backend.optimization.local_placer import LocalPlacer
+try:
+    from backend.geometry.placement import Placement
+    from backend.scoring.scorer import WorldModelScorer, ScoreWeights
+    from backend.scoring.incremental_scorer import IncrementalScorer
+    from backend.optimization.local_placer import LocalPlacer
+except ImportError:
+    from src.backend.geometry.placement import Placement
+    from src.backend.scoring.scorer import WorldModelScorer, ScoreWeights
+    from src.backend.scoring.incremental_scorer import IncrementalScorer
+    from src.backend.optimization.local_placer import LocalPlacer
 
 
 class LocalPlacerAgent:

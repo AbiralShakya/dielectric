@@ -5,10 +5,16 @@ Heavy batch optimization for quality results (background).
 """
 
 from typing import Dict, Optional, Callable
-from backend.geometry.placement import Placement
-from backend.scoring.scorer import WorldModelScorer, ScoreWeights
-from backend.scoring.incremental_scorer import IncrementalScorer
-from backend.optimization.simulated_annealing import SimulatedAnnealing
+try:
+    from backend.geometry.placement import Placement
+    from backend.scoring.scorer import WorldModelScorer, ScoreWeights
+    from backend.scoring.incremental_scorer import IncrementalScorer
+    from backend.optimization.simulated_annealing import SimulatedAnnealing
+except ImportError:
+    from src.backend.geometry.placement import Placement
+    from src.backend.scoring.scorer import WorldModelScorer, ScoreWeights
+    from src.backend.scoring.incremental_scorer import IncrementalScorer
+    from src.backend.optimization.simulated_annealing import SimulatedAnnealing
 
 
 class GlobalOptimizerAgent:

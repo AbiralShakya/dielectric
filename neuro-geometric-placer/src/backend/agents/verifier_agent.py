@@ -5,7 +5,10 @@ Design-rule checks and manufacturability verification.
 """
 
 from typing import Dict, List
-from backend.geometry.placement import Placement
+try:
+    from backend.geometry.placement import Placement
+except ImportError:
+    from src.backend.geometry.placement import Placement
 
 
 class VerifierAgent:

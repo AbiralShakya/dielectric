@@ -5,7 +5,10 @@ Converts placement to KiCad/Altium formats.
 """
 
 from typing import Dict
-from backend.geometry.placement import Placement
+try:
+    from backend.geometry.placement import Placement
+except ImportError:
+    from src.backend.geometry.placement import Placement
 
 
 class ExporterAgent:

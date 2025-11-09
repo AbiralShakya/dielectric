@@ -6,7 +6,7 @@ Runs quick local optimization for instant UI feedback.
 
 import numpy as np
 import time
-from typing import Optional, Callable, Dict
+from typing import Optional, Callable, Dict, List
 from backend.geometry.placement import Placement
 from backend.scoring.incremental_scorer import IncrementalScorer
 from .simulated_annealing import SimulatedAnnealing

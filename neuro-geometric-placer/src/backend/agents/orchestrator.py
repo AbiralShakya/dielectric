@@ -47,9 +47,15 @@ class AgentOrchestrator:
             Complete optimization result
         """
         try:
-            # Step 1: IntentAgent converts natural language to optimization weights
-            print(f"🤖 IntentAgent: Processing '{user_intent}'...")
-            weights_result = await self.intent_agent.process_intent(user_intent)
+            # Step 1: IntentAgent converts natural language to optimization weights using computational geometry
+            print(f"🤖 IntentAgent: Processing '{user_intent}' with computational geometry analysis...")
+            context = {
+                "board_width": placement.board.width,
+                "board_height": placement.board.height,
+                "component_count": len(placement.components),
+                "net_count": len(placement.nets)
+            }
+            weights_result = await self.intent_agent.process_intent(user_intent, context, placement)
 
             if not weights_result["success"]:
                 return {
@@ -59,9 +65,14 @@ class AgentOrchestrator:
 
             weights = weights_result["weights"]
             intent_explanation = weights_result["explanation"]
+            geometry_data = weights_result.get("geometry_data", {})
 
             print(f"✅ IntentAgent: {intent_explanation}")
             print(f"   Weights: α={weights['alpha']:.2f}, β={weights['beta']:.2f}, γ={weights['gamma']:.2f}")
+            if geometry_data:
+                print(f"   Computational Geometry: MST={geometry_data.get('mst_length', 0):.1f}mm, "
+                      f"Voronoi variance={geometry_data.get('voronoi_variance', 0):.2f}, "
+                      f"Hotspots={geometry_data.get('thermal_hotspots', 0)}")
 
             # Step 2: LocalPlacerAgent runs optimization with the weights
             print("🔧 LocalPlacerAgent: Running optimization...")
@@ -96,6 +107,7 @@ class AgentOrchestrator:
                 "score": final_score,
                 "weights": weights,
                 "intent_explanation": intent_explanation,
+                "geometry_data": geometry_data,  # Computational geometry analysis
                 "stats": stats,
                 "verification": verification_result,
                 "agents_used": ["IntentAgent", "LocalPlacerAgent", "VerifierAgent"],

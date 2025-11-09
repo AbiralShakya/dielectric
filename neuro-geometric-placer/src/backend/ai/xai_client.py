@@ -58,35 +58,58 @@ class XAIClient:
     def intent_to_weights(
         self,
         user_intent: str,
-        context: Optional[Dict] = None
+        context: Optional[Dict] = None,
+        geometry_data: Optional[Dict] = None
     ) -> Tuple[float, float, float]:
         """
-        Convert natural language intent to weight vector (α, β, γ).
+        Convert natural language intent to weight vector (α, β, γ) using computational geometry reasoning.
         
         Args:
             user_intent: Natural language description
             context: Optional context (board size, component count, etc.)
+            geometry_data: Computational geometry data structures (Voronoi diagrams, convex hulls, etc.)
         
         Returns:
             (alpha, beta, gamma) weight tuple
         """
+        # Build computational geometry context for xAI reasoning
+        geometry_context = ""
+        if geometry_data:
+            geometry_context = f"""
+Computational Geometry Analysis:
+- Component density: {geometry_data.get('density', 0):.2f} components/mm²
+- Convex hull area: {geometry_data.get('convex_hull_area', 0):.2f} mm²
+- Voronoi cell variance: {geometry_data.get('voronoi_variance', 0):.2f}
+- Minimum spanning tree length: {geometry_data.get('mst_length', 0):.2f} mm
+- Thermal hotspots: {geometry_data.get('thermal_hotspots', 0)} regions
+- Net crossing count: {geometry_data.get('net_crossings', 0)}
+- Component overlap risk: {geometry_data.get('overlap_risk', 0):.2f}
+"""
+        
         prompt = f"""
-You are a PCB design optimization expert. Convert user intent into optimization weights.
+You are a PCB design optimization expert with deep knowledge of computational geometry algorithms.
 
 User intent: "{user_intent}"
 
-Context: {json.dumps(context or {}, indent=2)}
+Board Context: {json.dumps(context or {}, indent=2)}
+{geometry_context}
 
-You need to return three weights (alpha, beta, gamma) that sum to 1.0:
-- alpha: Weight for trace length minimization (0.0 to 1.0)
-- beta: Weight for thermal density minimization (0.0 to 1.0)  
-- gamma: Weight for clearance violation penalties (0.0 to 1.0)
+You need to reason over this computational geometry data and return three weights (alpha, beta, gamma) that sum to 1.0:
+- alpha: Weight for trace length minimization (Manhattan/Euclidean distance optimization)
+- beta: Weight for thermal density minimization (Voronoi-based thermal spreading)  
+- gamma: Weight for clearance violation penalties (geometric collision detection)
+
+Reasoning process:
+1. Analyze the computational geometry metrics (density, Voronoi cells, MST length)
+2. Consider thermal hotspots and net crossings
+3. Map user intent to geometric optimization priorities
+4. Return weights that balance these factors
 
 Examples:
-- "Optimize for minimal trace length" → alpha=0.8, beta=0.1, gamma=0.1
-- "Keep components cool" → alpha=0.2, beta=0.7, gamma=0.1
-- "Prioritize cooling but keep wires short" → alpha=0.4, beta=0.5, gamma=0.1
-- "Minimize violations" → alpha=0.3, beta=0.2, gamma=0.5
+- "Optimize for minimal trace length" → alpha=0.8, beta=0.1, gamma=0.1 (prioritize MST reduction)
+- "Keep components cool" → alpha=0.2, beta=0.7, gamma=0.1 (prioritize Voronoi-based thermal spreading)
+- "Prioritize cooling but keep wires short" → alpha=0.4, beta=0.5, gamma=0.1 (balance MST and thermal)
+- "Minimize violations" → alpha=0.3, beta=0.2, gamma=0.5 (prioritize collision detection)
 
 Return ONLY a JSON object with "alpha", "beta", "gamma" fields. No other text.
 """

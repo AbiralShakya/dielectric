@@ -1,0 +1,13 @@
+version: '1'
+runtime: python3.11
+build:
+  commands:
+    - pip install -e .
+start:
+  command: python main.py
+mcp:
+  enabled: true
+  tools:
+    - score_delta
+    - generate_heatmap
+    - export_kicad

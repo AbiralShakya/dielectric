@@ -1,27 +1,31 @@
 #!/usr/bin/env python3
 """
-Setup script for Neuro-Geometric Placer
+Setup script for Neuro-Geometric Placer MCP Server
 """
 
 from setuptools import setup, find_packages
-
-with open("requirements.txt") as f:
-    requirements = f.read().splitlines()
 
 setup(
     name="neuro-geometric-placer",
     version="1.0.0",
     description="AI-Powered PCB Component Placement System",
-    long_description=open("README.md").read(),
-    long_description_content_type="text/markdown",
     author="Abiral Shakya",
-    packages=find_packages(where=".", include=["backend*"]),
+    packages=find_packages(include=["backend*"]),
     include_package_data=True,
-    install_requires=requirements,
+    install_requires=[
+        "fastapi>=0.104.0",
+        "uvicorn[standard]>=0.24.0",
+        "pydantic>=2.0.0",
+        "python-dotenv>=1.0.0",
+        "dedalus-labs>=0.0.1",
+        "numpy>=1.24.0",
+        "shapely>=2.0.0",
+        "scipy>=1.11.0",
+    ],
     python_requires=">=3.11",
     entry_points={
         "console_scripts": [
-            "ngp-server=backend.mcp_servers.ngp_server:main",
+            "ngp=main:main",
         ],
     },
     classifiers=[

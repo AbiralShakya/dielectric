@@ -30,8 +30,8 @@ dependencies = [
 ]
 
 [project.scripts]
-ngp = "main:main"
+ngp = "src.main:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["backend*"]
+include = ["src*"]

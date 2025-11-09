@@ -25,7 +25,7 @@ setup(
     python_requires=">=3.11",
     entry_points={
         "console_scripts": [
-            "ngp=main:main",
+            "ngp=src.main:main",
         ],
     },
     classifiers=[

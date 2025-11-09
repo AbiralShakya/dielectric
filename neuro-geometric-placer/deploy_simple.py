@@ -63,7 +63,7 @@ async def optimize_placement(request: Dict[str, Any]):
             "stats": result.get("stats", {}),
             "agents_used": ["IntentAgent", "LocalPlacerAgent", "VerifierAgent"],
             "ai_driven": True,
-            "method": "dedalus_multi_agent"
+            "method": "direct_ai_agents"
         }
 
     except Exception as e:

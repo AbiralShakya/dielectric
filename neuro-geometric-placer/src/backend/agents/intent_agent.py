@@ -19,7 +19,7 @@ class IntentAgent:
         self.name = "IntentAgent"
         self.client = XAIClient()
     
-    async def process(self, user_intent: str, context: Optional[Dict] = None) -> Dict:
+    async def process_intent(self, user_intent: str, context: Optional[Dict] = None) -> Dict:
         """
         Process user intent and return weights.
         

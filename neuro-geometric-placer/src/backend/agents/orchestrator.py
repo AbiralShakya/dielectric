@@ -8,24 +8,26 @@ import asyncio
 from typing import Dict, Optional, Callable, List
 try:
     from backend.geometry.placement import Placement
-    from backend.ai.dedalus_client import DedalusClient
+    from backend.ai.xai_client import XAIClient
+    from backend.agents.intent_agent import IntentAgent
+    from backend.agents.local_placer_agent import LocalPlacerAgent
+    from backend.agents.verifier_agent import VerifierAgent
 except ImportError:
     from src.backend.geometry.placement import Placement
-    from src.backend.ai.dedalus_client import DedalusClient
+    from src.backend.ai.xai_client import XAIClient
+    from src.backend.agents.intent_agent import IntentAgent
+    from src.backend.agents.local_placer_agent import LocalPlacerAgent
+    from src.backend.agents.verifier_agent import VerifierAgent
 
 
 class AgentOrchestrator:
-    """Orchestrates PCB placement optimization using Dedalus MCP servers."""
+    """Orchestrates PCB placement optimization using direct AI agents (no Dedalus)."""
 
-    def __init__(self, mcp_server_slug: str = "abiralshakya/ngp"):
-        """
-        Initialize orchestrator with Dedalus client.
-
-        Args:
-            mcp_server_slug: Slug of the deployed MCP server
-        """
-        self.mcp_server_slug = mcp_server_slug
-        self.dedalus_client = DedalusClient()
+    def __init__(self):
+        """Initialize orchestrator with direct AI agent instances."""
+        self.intent_agent = IntentAgent()
+        self.local_placer_agent = LocalPlacerAgent()
+        self.verifier_agent = VerifierAgent()
     
     async def optimize_fast(
         self,
@@ -34,67 +36,76 @@ class AgentOrchestrator:
         callback: Optional[Callable] = None
     ) -> Dict:
         """
-        Fast path optimization using Dedalus MCP server.
+        Fast path optimization using direct AI agents (no Dedalus).
 
         Args:
             placement: Initial placement
             user_intent: Natural language optimization intent
-            callback: Optional progress callback (not used in Dedalus version)
+            callback: Optional progress callback
 
         Returns:
             Complete optimization result
         """
         try:
-            # Convert placement to JSON format for MCP tools
-            placement_data = placement.to_dict()
+            # Step 1: IntentAgent converts natural language to optimization weights
+            print(f"🤖 IntentAgent: Processing '{user_intent}'...")
+            weights_result = await self.intent_agent.process_intent(user_intent)
 
-            # Craft optimization prompt with placement context
-            optimization_prompt = f"""
-            Optimize this PCB component placement for: {user_intent}
-
-            Current board: {placement.board.width}mm x {placement.board.height}mm
-            Components: {len(placement.components)}
-            Initial placement data: {placement_data}
-
-            Use the available MCP tools to:
-            1. Compute score deltas for component moves
-            2. Generate thermal heatmaps
-            3. Export optimized placement to KiCad format
-
-            Focus on fast optimization (<200ms) suitable for interactive use.
-            Prioritize thermal management and trace length minimization.
-            """
-
-            # Run optimization via Dedalus MCP server
-            result = await self.dedalus_client.run_optimization(
-                input_text=optimization_prompt,
-                mcp_server_slug=self.mcp_server_slug,
-                model="xai/grok-2-1212"
-            )
-
-            if not result["success"]:
+            if not weights_result["success"]:
                 return {
                     "success": False,
-                    "error": "Dedalus optimization failed",
-                    "details": result
+                    "error": f"IntentAgent failed: {weights_result.get('error', 'Unknown error')}"
                 }
 
-            # Parse the result (in a real implementation, the MCP server would return structured data)
+            weights = weights_result["weights"]
+            intent_explanation = weights_result["explanation"]
+
+            print(f"✅ IntentAgent: {intent_explanation}")
+            print(f"   Weights: α={weights['alpha']:.2f}, β={weights['beta']:.2f}, γ={weights['gamma']:.2f}")
+
+            # Step 2: LocalPlacerAgent runs optimization with the weights
+            print("🔧 LocalPlacerAgent: Running optimization...")
+            placement_result = await self.local_placer_agent.process(
+                placement, weights, max_time_ms=500.0, callback=callback
+            )
+
+            if not placement_result["success"]:
+                return {
+                    "success": False,
+                    "error": f"LocalPlacerAgent failed: {placement_result.get('error', 'Unknown error')}"
+                }
+
+            optimized_placement = placement_result["placement"]
+            final_score = placement_result["score"]
+            stats = placement_result["stats"]
+
+            print(f"✅ LocalPlacerAgent: Score = {final_score:.4f}")
+
+            # Step 3: VerifierAgent checks design rules
+            print("🔍 VerifierAgent: Checking design rules...")
+            verification_result = await self.verifier_agent.process(optimized_placement)
+
+            passed = len(verification_result.get("violations", [])) == 0
+            print(f"✅ VerifierAgent: {'PASSED' if passed else 'FAILED'} ({len(verification_result.get('violations', []))} violations)")
+
+            verification_result["passed"] = passed
+
             return {
                 "success": True,
-                "placement": placement,  # Would be updated from MCP response
-                "score": 0.0,  # Would be extracted from MCP response
-                "weights": {"alpha": 0.5, "beta": 0.3, "gamma": 0.2},  # Would be extracted
-                "intent_explanation": user_intent,
-                "stats": {"method": "dedalus_mcp", "time_ms": 150},
-                "verification": {"passed": True},
-                "dedalus_output": result["output"]
+                "placement": optimized_placement,
+                "score": final_score,
+                "weights": weights,
+                "intent_explanation": intent_explanation,
+                "stats": stats,
+                "verification": verification_result,
+                "agents_used": ["IntentAgent", "LocalPlacerAgent", "VerifierAgent"],
+                "method": "direct_ai_agents"
             }
 
         except Exception as e:
             return {
                 "success": False,
-                "error": f"Fast optimization failed: {str(e)}"
+                "error": f"Agent orchestration failed: {str(e)}"
             }
     
     async def optimize_quality(

@@ -10,13 +10,18 @@ import numpy as np
 from typing import Dict, Any
 
 from openmcp import MCPServer, tool
-from backend.scoring.scorer import WorldModelScorer, ScoreWeights
-from backend.scoring.incremental_scorer import IncrementalScorer
-from backend.geometry.placement import Placement
+try:
+    from backend.scoring.scorer import WorldModelScorer, ScoreWeights
+    from backend.scoring.incremental_scorer import IncrementalScorer
+    from backend.geometry.placement import Placement
+except ImportError:
+    from src.backend.scoring.scorer import WorldModelScorer, ScoreWeights
+    from src.backend.scoring.incremental_scorer import IncrementalScorer
+    from src.backend.geometry.placement import Placement
 
 
 # Create openmcp server
-server = MCPServer("neuro-geometric-placer")
+server = MCPServer("dielectric-mcp-server")
 
 # Register tools within binding context
 with server.binding():

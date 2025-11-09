@@ -214,16 +214,16 @@ class KiCadExporter:
         
         # Two pads for 0805
         pad_positions = [(-0.95, 0), (0.95, 0)]
-        for i, px in enumerate(pad_positions):
+        for i, (px, py) in enumerate(pad_positions):
             pin_name = f"pin{i+1}" if i < len(pins) else f"pad{i+1}"
             net_name = None
-            if i < len(pins):
+            if i < len(pins) and isinstance(pins[i], dict):
                 net_name = pins[i].get("net", "")
             
             net_num = net_map.get(net_name, 0) if net_name else 0
             
             lines.extend([
-                f'    (pad "{pin_name}" smd roundrect (at {px:.3f} 0 {angle}) (size 0.8 1.3) (layers "F.Cu" "F.Paste" "F.Mask")',
+                f'    (pad "{pin_name}" smd roundrect (at {px:.3f} {py:.3f} {angle}) (size 0.8 1.3) (layers "F.Cu" "F.Paste" "F.Mask")',
                 f"      (roundrect_rratio 0.25) (net {net_num} \"{net_name or ''}\")",
                 "    )"
             ])

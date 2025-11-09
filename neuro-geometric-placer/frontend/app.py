@@ -29,7 +29,21 @@ st.markdown("*Powered by xAI Agents + Computational Geometry*")
 if "results" not in st.session_state:
     st.session_state.results = None
 if "board_data" not in st.session_state:
-    st.session_state.board_data = None
+    # Auto-load LED circuit example
+    st.session_state.board_data = {
+        "board": {"width": 80, "height": 60, "clearance": 0.5},
+        "components": [
+            {"name": "U1", "package": "SOIC-8", "width": 5, "height": 4, "power": 0.5, "x": 20, "y": 20, "angle": 0, "placed": True},
+            {"name": "LED1", "package": "LED-5MM", "width": 5, "height": 5, "power": 0.1, "x": 50, "y": 30, "angle": 0, "placed": True},
+            {"name": "R1", "package": "0805", "width": 2, "height": 1.25, "power": 0.0, "x": 35, "y": 25, "angle": 0, "placed": True},
+            {"name": "C1", "package": "0805", "width": 2, "height": 1.25, "power": 0.0, "x": 35, "y": 35, "angle": 0, "placed": True},
+        ],
+        "nets": [
+            {"name": "VCC", "pins": [["U1", "pin8"], ["LED1", "anode"], ["C1", "pin1"]]},
+            {"name": "GND", "pins": [["U1", "pin4"], ["LED1", "cathode"], ["C1", "pin2"]]},
+            {"name": "SIGNAL", "pins": [["U1", "pin1"], ["R1", "pin1"], ["LED1", "anode"]]},
+        ]
+    }
 
 # Sidebar with natural language input
 with st.sidebar:
@@ -37,7 +51,7 @@ with st.sidebar:
 
     user_intent = st.text_area(
         "Describe Your PCB Design",
-        value="Design a simple LED circuit with thermal management - minimize trace length but keep components cool",
+        value="Design a simple LED driver circuit with excellent thermal management - prioritize cooling over trace length",
         height=100,
         help="Describe your circuit requirements, optimization goals, and constraints in natural language"
     )
@@ -46,9 +60,9 @@ with st.sidebar:
 
     col1, col2 = st.columns(2)
     with col1:
-        board_width = st.slider("Board Width (mm)", 50, 300, 100, 10)
+        board_width = st.slider("Board Width (mm)", 50, 300, 80, 10)
     with col2:
-        board_height = st.slider("Board Height (mm)", 50, 300, 100, 10)
+        board_height = st.slider("Board Height (mm)", 50, 300, 60, 10)
 
     # Load example designs
     st.header("📋 Example Designs")
@@ -109,16 +123,26 @@ with tab1:
             with st.spinner("🤖 AI Agents working... Converting natural language to PCB layout..."):
                 try:
                     # Prepare request data
+                    initial_components = st.session_state.board_data["components"] if st.session_state.board_data else [
+                        {"name": "U1", "package": "BGA", "width": 10, "height": 10, "power": 2.0, "x": 20, "y": 20, "angle": 0, "placed": True}
+                    ]
+                    initial_nets = st.session_state.board_data["nets"] if st.session_state.board_data else []
+
                     request_data = {
                         "board": {
                             "width": board_width,
                             "height": board_height
                         },
-                        "components": st.session_state.board_data["components"] if st.session_state.board_data else [
-                            {"name": "U1", "package": "BGA", "width": 10, "height": 10, "power": 2.0, "x": 20, "y": 20, "angle": 0, "placed": True}
-                        ],
-                        "nets": st.session_state.board_data["nets"] if st.session_state.board_data else [],
+                        "components": initial_components,
+                        "nets": initial_nets,
                         "intent": user_intent
+                    }
+
+                    # Save initial placement for comparison
+                    st.session_state.initial_placement = {
+                        "board": {"width": board_width, "height": board_height, "clearance": 0.5},
+                        "components": [comp.copy() for comp in initial_components],
+                        "nets": [net.copy() for net in initial_nets]
                     }
 
                     # Call AI optimization API
@@ -132,7 +156,6 @@ with tab1:
                         results = response.json()
                         st.session_state.results = results
                         st.success("🎉 AI optimization completed!")
-                        st.balloons()
                     else:
                         st.error(f"API Error: {response.status_code}")
                         st.error(response.text)
@@ -207,12 +230,38 @@ with tab2:
                 st.markdown("### 📊 Performance Stats")
                 stats = results.get("stats", {})
                 if stats:
+                    # Filter to only numeric scalar values
+                    numeric_stats = {}
                     for key, value in stats.items():
-                        # Only show numeric metrics, skip lists/arrays
                         if isinstance(value, (int, float)) and not isinstance(value, bool):
+                            # Additional check to ensure it's not a numpy array or list
+                            try:
+                                # This will fail for lists/arrays
+                                float(value)
+                                numeric_stats[key] = value
+                            except (TypeError, ValueError):
+                                continue  # Skip non-numeric values
+
+                    if numeric_stats:
+                        for key, value in numeric_stats.items():
                             st.metric(key.replace("_", " ").title(), f"{value:.3f}" if isinstance(value, float) else value)
+                    else:
+                        st.info("No numeric performance metrics available")
                 else:
                     st.info("Detailed stats not available")
+
+        # Show score improvement
+        initial_score = results.get("stats", {}).get("initial_score", 0)
+        final_score = results.get("score", 0)
+        improvement = initial_score - final_score if initial_score > 0 else 0
+
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("Initial Score", f"{initial_score:.3f}")
+        with col2:
+            st.metric("Final Score", f"{final_score:.3f}")
+        with col3:
+            st.metric("Improvement", f"{improvement:.3f}", delta=f"{improvement:.3f}")
 
         # Visual comparison
         st.subheader("📊 Before vs After Comparison")
@@ -222,15 +271,17 @@ with tab2:
         with col1:
             st.markdown("### Before (Initial)")
             # Show original placement
-            if st.session_state.board_data:
+            if "initial_placement" in st.session_state:
+                initial_data = st.session_state.initial_placement
                 fig, ax = plt.subplots(figsize=(6, 6))
-                ax.set_xlim(0, board_width)
-                ax.set_ylim(0, board_height)
+                board = initial_data["board"]
+                ax.set_xlim(0, board["width"])
+                ax.set_ylim(0, board["height"])
                 ax.set_aspect('equal')
                 ax.grid(True, alpha=0.3)
                 ax.set_title("Initial Placement")
 
-                for comp in st.session_state.board_data["components"]:
+                for comp in initial_data["components"]:
                     x, y = comp["x"], comp["y"]
                     w, h = comp["width"], comp["height"]
                     rect = plt.Rectangle((x - w/2, y - h/2), w, h,
@@ -239,6 +290,8 @@ with tab2:
                     ax.text(x, y, comp["name"], ha='center', va='center', fontsize=8, fontweight='bold')
 
                 st.pyplot(fig)
+            else:
+                st.info("No initial placement data available")
 
         with col2:
             st.markdown("### After (AI Optimized)")
@@ -252,15 +305,31 @@ with tab2:
                 ax.grid(True, alpha=0.3)
                 ax.set_title("AI Optimized Placement")
 
+                # Check if components moved
+                moved_components = []
+                if "initial_placement" in st.session_state:
+                    initial_comps = {c["name"]: (c["x"], c["y"]) for c in st.session_state.initial_placement["components"]}
+                    for comp in results["placement"]["components"]:
+                        initial_pos = initial_comps.get(comp["name"])
+                        if initial_pos and (abs(comp["x"] - initial_pos[0]) > 1 or abs(comp["y"] - initial_pos[1]) > 1):
+                            moved_components.append(comp["name"])
+
                 for comp in results["placement"]["components"]:
                     x, y = comp["x"], comp["y"]
                     w, h = comp["width"], comp["height"]
+                    # Highlight moved components
+                    color = 'blue' if comp["name"] in moved_components else 'green'
                     rect = plt.Rectangle((x - w/2, y - h/2), w, h,
-                                        fill=True, alpha=0.5, edgecolor='green', linewidth=2)
+                                        fill=True, alpha=0.5, edgecolor=color, linewidth=2)
                     ax.add_patch(rect)
                     ax.text(x, y, comp["name"], ha='center', va='center', fontsize=8, fontweight='bold')
 
                 st.pyplot(fig)
+
+                if moved_components:
+                    st.info(f"🔄 Components that moved: {', '.join(moved_components)}")
+                else:
+                    st.warning("⚠️ No components moved significantly. Try a design with multiple components or different optimization goals.")
 
 with tab3:
     st.header("📤 Export for Simulators")
@@ -301,7 +370,8 @@ with tab3:
                             data=kicad_content,
                             file_name=filename,
                             mime="text/plain",
-                            use_container_width=True
+                            use_container_width=True,
+                            key="kicad_download"
                         )
                         st.success(f"✅ KiCad file generated ({export_data['size_bytes']} bytes)")
                     else:

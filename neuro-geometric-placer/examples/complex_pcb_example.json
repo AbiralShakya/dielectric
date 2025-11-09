@@ -1,0 +1,190 @@
+{
+  "board": {
+    "width": 150,
+    "height": 100,
+    "thickness": 1.6,
+    "layers": 4
+  },
+  "components": [
+    {
+      "name": "PWR_IC",
+      "package": "QFN-16",
+      "x": 20,
+      "y": 20,
+      "angle": 0,
+      "width": 4,
+      "height": 4,
+      "category": "power",
+      "pins": [
+        {"name": "VIN", "net": "VCC_12V", "x_offset": -1.5, "y_offset": -1.5},
+        {"name": "VOUT", "net": "VCC_3V3", "x_offset": 1.5, "y_offset": -1.5},
+        {"name": "GND", "net": "GND", "x_offset": 0, "y_offset": 1.5},
+        {"name": "EN", "net": "ENABLE", "x_offset": -1.5, "y_offset": 1.5}
+      ]
+    },
+    {
+      "name": "MCU",
+      "package": "BGA",
+      "x": 80,
+      "y": 50,
+      "angle": 0,
+      "width": 10,
+      "height": 10,
+      "category": "digital",
+      "pins": [
+        {"name": "VDD", "net": "VCC_3V3", "x_offset": 0, "y_offset": 0},
+        {"name": "GND", "net": "GND", "x_offset": 0, "y_offset": 0},
+        {"name": "GPIO1", "net": "SIGNAL_1", "x_offset": 0, "y_offset": 0},
+        {"name": "GPIO2", "net": "SIGNAL_2", "x_offset": 0, "y_offset": 0}
+      ]
+    },
+    {
+      "name": "OPAMP",
+      "package": "SOIC-8",
+      "x": 120,
+      "y": 30,
+      "angle": 0,
+      "width": 5,
+      "height": 6,
+      "category": "analog",
+      "pins": [
+        {"name": "V+", "net": "VCC_3V3", "x_offset": 0, "y_offset": 0},
+        {"name": "V-", "net": "GND", "x_offset": 0, "y_offset": 0},
+        {"name": "IN+", "net": "ANALOG_IN", "x_offset": 0, "y_offset": 0},
+        {"name": "OUT", "net": "ANALOG_OUT", "x_offset": 0, "y_offset": 0}
+      ]
+    },
+    {
+      "name": "C_PWR_1",
+      "package": "0805",
+      "x": 25,
+      "y": 15,
+      "angle": 0,
+      "width": 2,
+      "height": 1.25,
+      "category": "passive",
+      "pins": [
+        {"name": "pin1", "net": "VCC_12V", "x_offset": -0.95, "y_offset": 0},
+        {"name": "pin2", "net": "GND", "x_offset": 0.95, "y_offset": 0}
+      ]
+    },
+    {
+      "name": "C_PWR_2",
+      "package": "0805",
+      "x": 25,
+      "y": 25,
+      "angle": 0,
+      "width": 2,
+      "height": 1.25,
+      "category": "passive",
+      "pins": [
+        {"name": "pin1", "net": "VCC_3V3", "x_offset": -0.95, "y_offset": 0},
+        {"name": "pin2", "net": "GND", "x_offset": 0.95, "y_offset": 0}
+      ]
+    },
+    {
+      "name": "R_FEEDBACK",
+      "package": "0805",
+      "x": 115,
+      "y": 35,
+      "angle": 0,
+      "width": 2,
+      "height": 1.25,
+      "category": "passive",
+      "pins": [
+        {"name": "pin1", "net": "ANALOG_OUT", "x_offset": -0.95, "y_offset": 0},
+        {"name": "pin2", "net": "ANALOG_IN", "x_offset": 0.95, "y_offset": 0}
+      ]
+    },
+    {
+      "name": "L_FILTER",
+      "package": "INDUCTOR-10MM",
+      "x": 30,
+      "y": 20,
+      "angle": 0,
+      "width": 10,
+      "height": 10,
+      "category": "passive",
+      "pins": [
+        {"name": "pin1", "net": "VCC_3V3", "x_offset": -5, "y_offset": 0},
+        {"name": "pin2", "net": "VCC_3V3_FILTERED", "x_offset": 5, "y_offset": 0}
+      ]
+    },
+    {
+      "name": "LED_STATUS",
+      "package": "LED-5MM",
+      "x": 140,
+      "y": 80,
+      "angle": 0,
+      "width": 5,
+      "height": 5,
+      "category": "passive",
+      "pins": [
+        {"name": "anode", "net": "SIGNAL_1", "x_offset": -2.5, "y_offset": 0},
+        {"name": "cathode", "net": "GND", "x_offset": 2.5, "y_offset": 0}
+      ]
+    }
+  ],
+  "nets": [
+    {
+      "name": "VCC_12V",
+      "pins": [["PWR_IC", "VIN"], ["C_PWR_1", "pin1]]],
+      "signal_type": "power",
+      "voltage": 12.0,
+      "current": 2.0
+    },
+    {
+      "name": "VCC_3V3",
+      "pins": [["PWR_IC", "VOUT"], ["MCU", "VDD"], ["OPAMP", "V+"], ["C_PWR_2", "pin1"], ["L_FILTER", "pin1"]],
+      "signal_type": "power",
+      "voltage": 3.3,
+      "current": 1.0
+    },
+    {
+      "name": "GND",
+      "pins": [["PWR_IC", "GND"], ["MCU", "GND"], ["OPAMP", "V-"], ["C_PWR_1", "pin2"], ["C_PWR_2", "pin2"], ["LED_STATUS", "cathode"]],
+      "signal_type": "ground"
+    },
+    {
+      "name": "SIGNAL_1",
+      "pins": [["MCU", "GPIO1"], ["LED_STATUS", "anode"]],
+      "signal_type": "signal"
+    },
+    {
+      "name": "SIGNAL_2",
+      "pins": [["MCU", "GPIO2"]],
+      "signal_type": "signal"
+    },
+    {
+      "name": "ANALOG_IN",
+      "pins": [["OPAMP", "IN+"], ["R_FEEDBACK", "pin2"]],
+      "signal_type": "signal",
+      "impedance": 50
+    },
+    {
+      "name": "ANALOG_OUT",
+      "pins": [["OPAMP", "OUT"], ["R_FEEDBACK", "pin1"]],
+      "signal_type": "signal",
+      "impedance": 50
+    },
+    {
+      "name": "VCC_3V3_FILTERED",
+      "pins": [["L_FILTER", "pin2"]],
+      "signal_type": "power",
+      "voltage": 3.3
+    },
+    {
+      "name": "ENABLE",
+      "pins": [["PWR_IC", "EN"]],
+      "signal_type": "signal"
+    }
+  ],
+  "fabrication_constraints": {
+    "min_trace_width": 0.15,
+    "min_trace_spacing": 0.15,
+    "min_pad_to_pad_clearance": 0.2,
+    "board_thickness": 1.6,
+    "layer_count": 4
+  }
+}
+

@@ -11,6 +11,15 @@ import numpy as np
 import plotly.graph_objects as go
 from typing import Dict, Any, List, Optional
 import time
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from geometry_visualizer import (
+    visualize_voronoi_diagram,
+    visualize_minimum_spanning_tree,
+    visualize_convex_hull,
+    create_geometry_dashboard
+)
 
 API_BASE = "http://localhost:8000"
 
@@ -378,13 +387,144 @@ else:  # Optimize Design
             with col1:
                 st.markdown("#### Before")
                 fig = create_pcb_plot(st.session_state.design_data, "Initial Design")
-                st.plotly_chart(fig, use_container_width=True)
+                st.plotly_chart(fig, width='stretch')
             
             with col2:
                 st.markdown("#### After")
                 if st.session_state.optimization_results.get("placement"):
                     fig = create_pcb_plot(st.session_state.optimization_results["placement"], "Optimized Design")
-                    st.plotly_chart(fig, use_container_width=True)
+                    st.plotly_chart(fig, width='stretch')
+            
+            # Multi-Agent Workflow Status
+            agents_used = st.session_state.optimization_results.get("agents_used", [])
+            if agents_used:
+                st.markdown("---")
+                st.markdown("### 🤖 Multi-Agent Workflow")
+                st.markdown("**Why this matters:** Each agent specializes in one task, working together like a team of engineers.")
+                
+                agent_descriptions = {
+                    "IntentAgent": "🧠 Understands your goals using computational geometry + xAI",
+                    "LocalPlacerAgent": "⚡ Optimizes placement (deterministic, fast)",
+                    "VerifierAgent": "✅ Validates design rules and constraints",
+                    "ErrorFixerAgent": "🔧 Automatically fixes violations (agentic!)",
+                    "DesignGeneratorAgent": "🎨 Creates designs from natural language"
+                }
+                
+                cols = st.columns(len(agents_used))
+                for i, agent in enumerate(agents_used):
+                    with cols[i]:
+                        st.markdown(f"**{agent}**")
+                        if agent in agent_descriptions:
+                            st.caption(agent_descriptions[agent])
+                        st.success("✅ Active")
+            
+            # Computational Geometry Visualizations - THE MAIN DIFFERENTIATOR
+            geometry_data = st.session_state.optimization_results.get("geometry_data")
+            placement_data = st.session_state.optimization_results.get("placement", st.session_state.design_data)
+            
+            if placement_data and len(placement_data.get("components", [])) >= 2:
+                st.markdown("---")
+                st.markdown("### 🔬 Computational Geometry Analysis")
+                st.markdown("**This is what makes Dielectric unique:** We use computational geometry to understand PCB layouts, then feed this structured data to xAI for reasoning.")
+                
+                # Geometry metrics
+                if geometry_data:
+                    col1, col2, col3, col4 = st.columns(4)
+                    with col1:
+                        st.metric("MST Length", f"{geometry_data.get('mst_length', 0):.1f} mm",
+                                 help="Minimum Spanning Tree - optimal trace length estimate")
+                    with col2:
+                        st.metric("Voronoi Variance", f"{geometry_data.get('voronoi_variance', 0):.2f}",
+                                 help="Component distribution uniformity (lower = better)")
+                    with col3:
+                        st.metric("Thermal Hotspots", f"{geometry_data.get('thermal_hotspots', 0)}",
+                                 help="High-power component regions")
+                    with col4:
+                        st.metric("Net Crossings", f"{geometry_data.get('net_crossings', 0)}",
+                                 help="Potential routing conflicts")
+                
+                # Geometry visualizations
+                viz_tabs = st.tabs(["Dashboard", "Voronoi", "MST", "Convex Hull"])
+                
+                with viz_tabs[0]:
+                    st.markdown("#### Complete Geometry Dashboard")
+                    
+                    # Interpretation guide
+                    with st.expander("📖 How to Read This Dashboard", expanded=False):
+                        st.markdown("""
+                        **What Each Visualization Shows:**
+                        
+                        **1. Voronoi Diagram (Top-Left)**
+                        - **Purpose**: Shows component distribution and identifies modules
+                        - **What to look for**: 
+                          - Large regions = sparse areas (good for routing)
+                          - Small regions = dense clusters (potential thermal issues)
+                          - Uniform regions = balanced layout
+                        - **Action**: If regions are very uneven, components may need repositioning
+                        
+                        **2. Minimum Spanning Tree (Top-Right)**
+                        - **Purpose**: Shows optimal trace routing paths
+                        - **What to look for**:
+                          - Short lines = components are well-connected
+                          - Long lines = components are far apart (increases trace length)
+                          - Crossed lines = potential routing conflicts
+                        - **Action**: Minimize total MST length for better signal integrity
+                        
+                        **3. Convex Hull (Bottom-Left)**
+                        - **Purpose**: Shows board space utilization
+                        - **What to look for**:
+                          - Small hull = efficient space usage
+                          - Large hull with empty center = wasted space
+                        - **Action**: Optimize component placement to reduce wasted board area
+                        
+                        **4. Thermal Heatmap (Bottom-Right)**
+                        - **Purpose**: Shows temperature distribution from power-dissipating components
+                        - **Color scale**: 
+                          - 🔴 **Red/Hot** = High temperature zones (thermal hotspots)
+                          - 🟡 **Yellow** = Moderate temperature
+                          - 🔵 **Blue/Cold** = Low temperature (good for sensitive components)
+                        - **What to look for**:
+                          - Concentrated red spots = thermal hotspots (needs cooling)
+                          - Even distribution = good thermal management
+                        - **Action**: 
+                          - Move high-power components apart
+                          - Add thermal vias or heat sinks in red zones
+                          - Keep sensitive components in blue zones
+                        """)
+                    
+                    fig = create_geometry_dashboard(placement_data, geometry_data)
+                    st.plotly_chart(fig, width='stretch')
+                
+                with viz_tabs[1]:
+                    st.markdown("#### Voronoi Diagram - Component Distribution")
+                    st.caption("Shows component clustering and distribution uniformity. Used to identify modules automatically.")
+                    fig = visualize_voronoi_diagram(
+                        placement_data.get("components", []),
+                        placement_data.get("board", {}).get("width", 100),
+                        placement_data.get("board", {}).get("height", 100)
+                    )
+                    st.plotly_chart(fig, width='stretch')
+                
+                with viz_tabs[2]:
+                    st.markdown("#### Minimum Spanning Tree - Optimal Routing")
+                    st.caption("Shows the minimum trace length needed to connect all components. Used to optimize routing.")
+                    fig = visualize_minimum_spanning_tree(
+                        placement_data.get("components", []),
+                        placement_data.get("nets", []),
+                        placement_data.get("board", {}).get("width", 100),
+                        placement_data.get("board", {}).get("height", 100)
+                    )
+                    st.plotly_chart(fig, width='stretch')
+                
+                with viz_tabs[3]:
+                    st.markdown("#### Convex Hull - Board Utilization")
+                    st.caption("Shows how efficiently the board space is used. Helps identify wasted space.")
+                    fig = visualize_convex_hull(
+                        placement_data.get("components", []),
+                        placement_data.get("board", {}).get("width", 100),
+                        placement_data.get("board", {}).get("height", 100)
+                    )
+                    st.plotly_chart(fig, width='stretch')
             
             # Quality metrics
             quality = st.session_state.optimization_results.get("quality", {})

@@ -114,9 +114,29 @@ async def export_kicad(request: Dict[str, Any]):
         raise HTTPException(status_code=400, detail=error_detail)
 
 def generate_kicad_pcb(placement_data: Dict[str, Any]) -> str:
-    """Generate professional KiCad PCB file from placement data"""
-    exporter = KiCadExporter()
-    return exporter.export(placement_data, include_nets=True)
+    """Generate professional KiCad PCB file from placement data.
+    
+    Tries to use KiCAD Python API (via KiCAD-MCP-Server) first,
+    falls back to manual file generation if KiCAD is not available.
+    """
+    # Try KiCAD MCP exporter first (uses pcbnew API)
+    try:
+        from src.backend.export.kicad_mcp_exporter import KiCadMCPExporter
+        mcp_exporter = KiCadMCPExporter()
+        output_path = mcp_exporter.export(placement_data)
+        content = mcp_exporter.get_file_content(output_path)
+        mcp_exporter.cleanup()
+        return content
+    except ImportError as e:
+        print(f"KiCAD Python API not available, using manual exporter: {e}")
+        # Fallback to manual exporter
+        exporter = KiCadExporter()
+        return exporter.export(placement_data, include_nets=True)
+    except Exception as e:
+        print(f"KiCAD MCP export failed, using manual exporter: {e}")
+        # Fallback to manual exporter
+        exporter = KiCadExporter()
+        return exporter.export(placement_data, include_nets=True)
 
 @app.post("/optimize")
 async def optimize_placement(request: Dict[str, Any]):

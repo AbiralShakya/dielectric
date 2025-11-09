@@ -42,3 +42,7 @@ websockets>=12.0
 aiofiles>=23.2.0
 python-multipart>=0.0.6
 
+# KiCAD MCP Server Integration
+# Note: KiCAD Python API (pcbnew) must be installed separately via KiCAD installation
+# The kicad-mcp-server is cloned as a subdirectory and used directly
+

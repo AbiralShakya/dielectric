@@ -153,6 +153,26 @@ class KiCadExporter:
             angle = comp.get("angle", 0)
             pins = comp.get("pins", [])
             
+            # If no pins defined, try to infer from nets
+            if not pins and include_nets:
+                # Find all nets that reference this component
+                component_nets = {}
+                for (comp_name, pin_name), net_name in comp_pin_to_net.items():
+                    if comp_name == name:
+                        component_nets[pin_name] = net_name
+                
+                # Create default pins from nets
+                if component_nets:
+                    pins = []
+                    for i, (pin_name, net_name) in enumerate(component_nets.items()):
+                        # Default pin positions (will be adjusted by footprint)
+                        pins.append({
+                            "name": pin_name,
+                            "x_offset": 0,
+                            "y_offset": 0,
+                            "net": net_name
+                        })
+            
             # Get footprint generator with proper net mapping
             footprint_gen = self.footprint_templates.get(package, self._generic_footprint)
             footprint_lines = footprint_gen(name, x, y, angle, pins, comp, net_map, comp_pin_to_net)
@@ -492,15 +512,69 @@ class KiCadExporter:
             f"    (at {x:.3f} {y:.3f} {angle})",
             f'    (descr "{package_type} - Dielectric optimized")',
             '    (tags "dielectric")',
+            # Add reference designator
+            f'    (property "Reference" "U" (at 0 {-height/2 - 1:.3f} {angle})',
+            '      (layer "F.SilkS")',
+            '      (effects (font (size 1 1) (thickness 0.15)))',
+            "    )",
+            # Add value/name
+            f'    (property "Value" "{name}" (at 0 {height/2 + 1:.3f} {angle})',
+            '      (layer "F.Fab")',
+            '      (effects (font (size 1 1) (thickness 0.15)))',
+            "    )",
+            # Add component outline
+            f'    (fp_line (start {-width/2:.3f} {-height/2:.3f}) (end {width/2:.3f} {-height/2:.3f})',
+            '      (layer "F.Fab") (width 0.1)',
+            "    )",
+            f'    (fp_line (start {width/2:.3f} {-height/2:.3f}) (end {width/2:.3f} {height/2:.3f})',
+            '      (layer "F.Fab") (width 0.1)',
+            "    )",
+            f'    (fp_line (start {width/2:.3f} {height/2:.3f}) (end {-width/2:.3f} {height/2:.3f})',
+            '      (layer "F.Fab") (width 0.1)',
+            "    )",
+            f'    (fp_line (start {-width/2:.3f} {height/2:.3f}) (end {-width/2:.3f} {-height/2:.3f})',
+            '      (layer "F.Fab") (width 0.1)',
+            "    )",
             ""
         ]
         
         # Add pads based on pins
-        if pins:
+        if pins and len(pins) > 0:
+            pad_size = min(width, height) * 0.2
+            pad_size = max(0.5, min(pad_size, 1.0))  # Clamp between 0.5 and 1.0mm
+            
             for i, pin in enumerate(pins):
                 pin_name = pin.get("name", f"pin{i+1}") if isinstance(pin, dict) else f"pin{i+1}"
-                x_offset = pin.get("x_offset", 0) if isinstance(pin, dict) else 0
-                y_offset = pin.get("y_offset", 0) if isinstance(pin, dict) else 0
+                
+                # Calculate pin position
+                if isinstance(pin, dict) and pin.get("x_offset") is not None and pin.get("y_offset") is not None:
+                    x_offset = pin.get("x_offset", 0)
+                    y_offset = pin.get("y_offset", 0)
+                else:
+                    # Default: distribute pins along edges
+                    num_pins = len(pins)
+                    if num_pins == 1:
+                        x_offset, y_offset = 0, 0
+                    elif num_pins == 2:
+                        x_offset = (-width/4 if i == 0 else width/4)
+                        y_offset = 0
+                    else:
+                        # Distribute around perimeter
+                        perim = 2 * (width + height)
+                        pin_spacing = perim / num_pins
+                        pos = i * pin_spacing
+                        if pos < width:
+                            x_offset = pos - width/2
+                            y_offset = -height/2
+                        elif pos < width + height:
+                            x_offset = width/2
+                            y_offset = (pos - width) - height/2
+                        elif pos < 2*width + height:
+                            x_offset = width/2 - (pos - width - height)
+                            y_offset = height/2
+                        else:
+                            x_offset = -width/2
+                            y_offset = height/2 - (pos - 2*width - height)
                 
                 net_name = None
                 net_num = 0
@@ -513,30 +587,45 @@ class KiCadExporter:
                 if not net_name and isinstance(pin, dict):
                     net_name = pin.get("net", "")
                 
-                if net_name:
+                if net_name and net_name.strip():
                     net_num = net_map.get(net_name, 0)
                 
                 if net_num > 0:
                     lines.extend([
-                        f'    (pad "{pin_name}" smd roundrect (at {x_offset:.3f} {y_offset:.3f} {angle}) (size 0.8 0.8) (layers "F.Cu" "F.Paste" "F.Mask")',
+                        f'    (pad "{pin_name}" smd roundrect (at {x_offset:.3f} {y_offset:.3f} {angle}) (size {pad_size:.2f} {pad_size:.2f}) (layers "F.Cu" "F.Paste" "F.Mask")',
                         f"      (roundrect_rratio 0.25) (net {net_num} \"{net_name}\")",
                         "    )"
                     ])
                 else:
                     lines.extend([
-                        f'    (pad "{pin_name}" smd roundrect (at {x_offset:.3f} {y_offset:.3f} {angle}) (size 0.8 0.8) (layers "F.Cu" "F.Paste" "F.Mask")',
+                        f'    (pad "{pin_name}" smd roundrect (at {x_offset:.3f} {y_offset:.3f} {angle}) (size {pad_size:.2f} {pad_size:.2f}) (layers "F.Cu" "F.Paste" "F.Mask")',
                         "      (roundrect_rratio 0.25)",
                         "    )"
                     ])
         else:
-            # Default: two pads
+            # Default: two pads (for 2-pin components)
             pad_size = min(width, height) * 0.3
+            pad_size = max(0.5, min(pad_size, 1.0))
+            
+            # Try to find nets for this component
+            pad1_net = None
+            pad2_net = None
+            if comp_pin_to_net:
+                pad1_net = comp_pin_to_net.get((name, "pin1")) or comp_pin_to_net.get((name, "1"))
+                pad2_net = comp_pin_to_net.get((name, "pin2")) or comp_pin_to_net.get((name, "2"))
+            
+            net1_num = net_map.get(pad1_net, 0) if pad1_net else 0
+            net2_num = net_map.get(pad2_net, 0) if pad2_net else 0
+            
+            pad1_net_str = f' (net {net1_num} "{pad1_net}")' if net1_num > 0 else ""
+            pad2_net_str = f' (net {net2_num} "{pad2_net}")' if net2_num > 0 else ""
+            
             lines.extend([
                 f'    (pad "1" smd roundrect (at {-width/4:.3f} 0 {angle}) (size {pad_size:.2f} {pad_size:.2f}) (layers "F.Cu" "F.Paste" "F.Mask")',
-                '      (roundrect_rratio 0.25) (net 0 "")',
+                f"      (roundrect_rratio 0.25){pad1_net_str}",
                 "    )",
                 f'    (pad "2" smd roundrect (at {width/4:.3f} 0 {angle}) (size {pad_size:.2f} {pad_size:.2f}) (layers "F.Cu" "F.Paste" "F.Mask")',
-                '      (roundrect_rratio 0.25) (net 0 "")',
+                f"      (roundrect_rratio 0.25){pad2_net_str}",
                 "    )"
             ])
         

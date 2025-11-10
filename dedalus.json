@@ -1,0 +1,32 @@
+{
+  "name": "dielectric-mcp-server",
+  "version": "1.0.0",
+  "description": "Dielectric MCP Server for PCB Design Automation",
+  "type": "mcp-server",
+  "runtime": {
+    "type": "python",
+    "version": "3.12"
+  },
+  "entrypoint": "dedalus_entrypoint.py",
+  "dependencies": [
+    "fastapi",
+    "uvicorn",
+    "numpy",
+    "scipy",
+    "shapely",
+    "plotly",
+    "requests"
+  ],
+  "environment": {
+    "XAI_API_KEY": "${XAI_API_KEY}",
+    "DEDALUS_API_KEY": "${DEDALUS_API_KEY}"
+  },
+  "tools": [
+    "optimize_pcb_placement",
+    "analyze_geometry",
+    "generate_weights",
+    "export_kicad",
+    "run_simulation"
+  ]
+}
+

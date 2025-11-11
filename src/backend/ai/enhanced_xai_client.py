@@ -22,16 +22,21 @@ class EnhancedXAIClient:
     def __init__(self, api_key: Optional[str] = None):
         """Initialize enhanced xAI client."""
         self.api_key = api_key or os.getenv("XAI_API_KEY")
-        if not self.api_key:
-            raise ValueError("XAI_API_KEY not found in environment")
-        
         self.endpoint = "https://api.x.ai/v1/chat/completions"
-        self.headers = {
-            "Authorization": f"Bearer {self.api_key}",
-            "Content-Type": "application/json"
-        }
         self.call_count = 0
-        print(f"✅ Enhanced xAI Client initialized (endpoint: {self.endpoint})")
+        
+        if not self.api_key:
+            print("⚠️  XAI_API_KEY not found in environment. LLM features will use fallback behavior.")
+            print("   Set it with: export XAI_API_KEY=your_key")
+            self.headers = None
+            self.enabled = False
+        else:
+            self.headers = {
+                "Authorization": f"Bearer {self.api_key}",
+                "Content-Type": "application/json"
+            }
+            self.enabled = True
+            print(f"✅ Enhanced xAI Client initialized (endpoint: {self.endpoint})")
     
     def _call_api(
         self,
@@ -41,6 +46,11 @@ class EnhancedXAIClient:
         max_tokens: int = 2000
     ) -> Dict:
         """Make API call to xAI with extensive logging."""
+        if not self.enabled or not self.headers:
+            error_msg = "xAI API key not configured. Using fallback behavior."
+            print(f"   ⚠️  {error_msg}")
+            return {"error": error_msg, "choices": []}
+        
         self.call_count += 1
         data = {
             "model": model,

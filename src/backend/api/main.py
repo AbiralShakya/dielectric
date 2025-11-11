@@ -4,15 +4,15 @@ FastAPI Backend Server
 Low-latency API for Dielectric.
 """
 
-import os
-import uuid
-import time
-from typing import Optional, Dict, Any
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 import sys
+import os
+import uuid
+import time
+from typing import Optional, Dict, Any
 
 # Add project root to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
@@ -67,9 +67,12 @@ async def root():
         "endpoints": {
             "generate": "/generate",
             "upload": "/upload",
+            "upload_pcb": "/upload/pcb",  # New: Smart PCB file upload
             "optimize": "/optimize",
             "optimize_fast": "/optimize_fast",
+            "optimize_production": "/optimize/production",  # New: Production workflow
             "export_kicad": "/export/kicad",
+            "simulate": "/simulate",  # New: Simulation endpoints
             "results": "/results/{task_id}",
             "health": "/health"
         }
@@ -297,6 +300,239 @@ async def generate_design(request: Dict[str, Any]):
         import traceback
         error_detail = f"{str(e)}\n{traceback.format_exc()}"
         raise HTTPException(status_code=400, detail=error_detail)
+
+
+@app.post("/upload/pcb")
+async def upload_pcb_file(
+    file: UploadFile = File(...),
+    optimization_intent: Optional[str] = None
+):
+    """
+    Upload PCB file (.kicad_pcb or .json) and build rich context.
+    
+    Uses:
+    - Smart parser to understand design
+    - Knowledge graph for hierarchy
+    - Computational geometry analysis
+    - xAI to understand design context
+    
+    Optionally optimizes if optimization_intent is provided.
+    """
+    try:
+        from src.backend.api.pcb_upload import upload_and_analyze_pcb
+        return await upload_and_analyze_pcb(file, optimization_intent)
+    except ImportError:
+        from backend.api.pcb_upload import upload_and_analyze_pcb
+        return await upload_and_analyze_pcb(file, optimization_intent)
+
+
+@app.post("/simulate/thermal")
+async def simulate_thermal(request: Dict[str, Any]):
+    """Run thermal simulation on PCB design."""
+    try:
+        from src.backend.simulation.pcb_simulator import PCBSimulator
+        from src.backend.geometry.placement import Placement
+    except ImportError:
+        from backend.simulation.pcb_simulator import PCBSimulator
+        from backend.geometry.placement import Placement
+    
+    try:
+        placement_data = request.get("placement")
+        if not placement_data:
+            raise HTTPException(status_code=400, detail="No placement data provided")
+        
+        placement = Placement.from_dict(placement_data)
+        simulator = PCBSimulator()
+        
+        ambient_temp = request.get("ambient_temp", 25.0)
+        board_material = request.get("board_material", "FR4")
+        
+        result = simulator.simulate_thermal(placement, ambient_temp, board_material)
+        
+        return {
+            "success": True,
+            "component_temperatures": result.component_temperatures,
+            "max_temperature": result.max_temperature,
+            "thermal_gradient": result.thermal_gradient,
+            "hotspots": result.hotspots,
+            "recommendations": result.cooling_recommendations
+        }
+    except Exception as e:
+        import traceback
+        raise HTTPException(status_code=400, detail=f"Simulation failed: {str(e)}\n{traceback.format_exc()}")
+
+
+@app.post("/simulate/signal-integrity")
+async def simulate_signal_integrity(request: Dict[str, Any]):
+    """Run signal integrity analysis."""
+    try:
+        from src.backend.simulation.pcb_simulator import PCBSimulator
+        from src.backend.geometry.placement import Placement
+    except ImportError:
+        from backend.simulation.pcb_simulator import PCBSimulator
+        from backend.geometry.placement import Placement
+    
+    try:
+        placement_data = request.get("placement")
+        if not placement_data:
+            raise HTTPException(status_code=400, detail="No placement data provided")
+        
+        placement = Placement.from_dict(placement_data)
+        simulator = PCBSimulator()
+        
+        frequency = request.get("frequency", 100e6)  # 100 MHz default
+        
+        result = simulator.analyze_signal_integrity(placement, frequency)
+        
+        return {
+            "success": True,
+            "net_impedance": result.net_impedance,
+            "crosstalk_risks": result.crosstalk_risks,
+            "reflection_risks": result.reflection_risks,
+            "timing_violations": result.timing_violations,
+            "recommendations": result.recommendations
+        }
+    except Exception as e:
+        import traceback
+        raise HTTPException(status_code=400, detail=f"Simulation failed: {str(e)}\n{traceback.format_exc()}")
+
+
+@app.post("/simulate/pdn")
+async def simulate_pdn(request: Dict[str, Any]):
+    """Run Power Distribution Network analysis."""
+    try:
+        from src.backend.simulation.pcb_simulator import PCBSimulator
+        from src.backend.geometry.placement import Placement
+    except ImportError:
+        from backend.simulation.pcb_simulator import PCBSimulator
+        from backend.geometry.placement import Placement
+    
+    try:
+        placement_data = request.get("placement")
+        if not placement_data:
+            raise HTTPException(status_code=400, detail="No placement data provided")
+        
+        placement = Placement.from_dict(placement_data)
+        simulator = PCBSimulator()
+        
+        supply_voltage = request.get("supply_voltage", 5.0)
+        
+        result = simulator.analyze_pdn(placement, supply_voltage)
+        
+        return {
+            "success": True,
+            "voltage_drop": result.voltage_drop,
+            "power_loss": result.power_loss,
+            "decoupling_effectiveness": result.decoupling_effectiveness,
+            "recommendations": result.recommendations
+        }
+    except Exception as e:
+        import traceback
+        raise HTTPException(status_code=400, detail=f"Simulation failed: {str(e)}\n{traceback.format_exc()}")
+
+
+@app.post("/optimize/production")
+async def optimize_for_production(request: Dict[str, Any]):
+    """
+    Complete production optimization workflow.
+    
+    Workflow:
+    1. Placement optimization
+    2. Trace routing
+    3. DFM validation
+    4. Error fixing (if needed)
+    5. Production file export
+    
+    Args:
+        request: {
+            "placement": Dict - Placement data
+            "optimization_intent": str - Natural language optimization intent
+            "auto_fix": bool - Auto-fix violations (default: True)
+            "fabrication_constraints": Dict - Optional custom constraints
+        }
+    
+    Returns:
+        {
+            "success": bool,
+            "production_ready": bool,
+            "dfm_score": float,
+            "placement": Dict,
+            "routing_stats": Dict,
+            "verification": Dict,
+            "export_files": Dict,
+            "workflow_stats": Dict
+        }
+    """
+    try:
+        from src.backend.workflows.production_workflow import ProductionWorkflow
+        from src.backend.constraints.pcb_fabrication import FabricationConstraints
+        from src.backend.geometry.placement import Placement
+    except ImportError:
+        from backend.workflows.production_workflow import ProductionWorkflow
+        from backend.constraints.pcb_fabrication import FabricationConstraints
+        from backend.geometry.placement import Placement
+    
+    try:
+        placement_data = request.get("placement", {})
+        if not placement_data:
+            raise HTTPException(status_code=400, detail="No placement data provided")
+        
+        # Parse placement
+        placement = Placement.from_dict(placement_data)
+        
+        # Get optimization intent
+        optimization_intent = request.get(
+            "optimization_intent",
+            "Optimize for production: ensure manufacturing constraints, proper routing, and DFM compliance"
+        )
+        
+        # Get fabrication constraints (optional)
+        constraints = None
+        if "fabrication_constraints" in request:
+            constraint_data = request["fabrication_constraints"]
+            constraints = FabricationConstraints(**constraint_data)
+        
+        # Create production workflow
+        workflow = ProductionWorkflow(constraints=constraints)
+        
+        # Run production optimization
+        auto_fix = request.get("auto_fix", True)
+        max_fix_iterations = request.get("max_fix_iterations", 5)
+        
+        result = await workflow.optimize_for_production(
+            placement,
+            optimization_intent,
+            auto_fix=auto_fix,
+            max_fix_iterations=max_fix_iterations
+        )
+        
+        if not result.get("success"):
+            raise HTTPException(
+                status_code=500,
+                detail=f"Production workflow failed: {result.get('error')}"
+            )
+        
+        # Convert placement to dict for JSON response
+        placement_dict = result["placement"].to_dict() if result.get("placement") else None
+        
+        return convert_numpy_types({
+            "success": True,
+            "production_ready": result.get("production_ready", False),
+            "dfm_score": result.get("dfm_score", 0.0),
+            "production_readiness_score": workflow.calculate_production_readiness_score(result),
+            "placement": placement_dict,
+            "routing_stats": result.get("routing_stats", {}),
+            "verification": result.get("verification", {}),
+            "export_files": result.get("export_files", {}),
+            "workflow_stats": result.get("workflow_stats", {})
+        })
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        import traceback
+        error_detail = f"Production workflow failed: {str(e)}\n{traceback.format_exc()}"
+        raise HTTPException(status_code=500, detail=error_detail)
 
 
 @app.post("/export/kicad")

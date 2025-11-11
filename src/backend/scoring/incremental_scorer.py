@@ -94,10 +94,16 @@ class IncrementalScorer:
             placement, component_name, old_x, old_y, old_angle, new_x, new_y, new_angle
         )
         
-        # Compute total delta
+        # Compute delta for DFM (local region only)
+        delta_DFM = self._compute_local_dfm_delta(
+            placement, component_name, old_x, old_y, new_x, new_y
+        )
+        
+        # Compute total delta with DFM
         delta_score = (self.base_scorer.weights.alpha * delta_L +
                       self.base_scorer.weights.beta * delta_D +
-                      self.base_scorer.weights.gamma * delta_C)
+                      self.base_scorer.weights.gamma * delta_C +
+                      self.base_scorer.weights.delta * delta_DFM)
         
         return delta_score
     
@@ -209,6 +215,66 @@ class IncrementalScorer:
                 delta -= 5.0  # Fixed overlap
             elif not old_overlap and new_overlap:
                 delta += 5.0  # Created overlap
+        
+        return delta
+    
+    def _compute_local_dfm_delta(
+        self,
+        placement: Placement,
+        comp_name: str,
+        old_x: float,
+        old_y: float,
+        new_x: float,
+        new_y: float
+    ) -> float:
+        """Compute DFM penalty delta for local region."""
+        try:
+            from src.backend.constraints.pcb_fabrication import FabricationConstraints
+        except ImportError:
+            try:
+                from backend.constraints.pcb_fabrication import FabricationConstraints
+            except ImportError:
+                return 0.0
+        
+        constraints = FabricationConstraints()
+        comp = placement.get_component(comp_name)
+        if not comp:
+            return 0.0
+        
+        delta = 0.0
+        
+        # Check edge clearance
+        edge_margin = constraints.min_pad_to_pad_clearance
+        old_edge_violation = (old_x < edge_margin or old_x > placement.board.width - edge_margin or
+                             old_y < edge_margin or old_y > placement.board.height - edge_margin)
+        new_edge_violation = (new_x < edge_margin or new_x > placement.board.width - edge_margin or
+                             new_y < edge_margin or new_y > placement.board.height - edge_margin)
+        
+        if old_edge_violation and not new_edge_violation:
+            delta -= 2.0  # Fixed edge violation
+        elif not old_edge_violation and new_edge_violation:
+            delta += 2.0  # Created edge violation
+        
+        # Check spacing with nearby components
+        comp_list = list(placement.components.values())
+        for other in comp_list:
+            if other.name == comp_name:
+                continue
+            
+            old_dist = np.sqrt((old_x - other.x)**2 + (old_y - other.y)**2)
+            new_dist = np.sqrt((new_x - other.x)**2 + (new_y - other.y)**2)
+            
+            min_clearance = constraints.min_pad_to_pad_clearance
+            min_distance = (comp.width + other.width) / 2 + min_clearance
+            
+            old_violation = old_dist < min_distance
+            new_violation = new_dist < min_distance
+            
+            if old_violation and not new_violation:
+                delta -= 5.0  # Fixed spacing violation
+            elif not old_violation and new_violation:
+                violation = min_distance - new_dist
+                delta += violation * 5.0  # Created spacing violation
         
         return delta
     

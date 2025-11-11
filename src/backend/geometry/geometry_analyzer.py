@@ -7,7 +7,7 @@ geometric data structures for xAI reasoning.
 
 import numpy as np
 from typing import Dict, List, Tuple, Optional, Any
-from scipy.spatial import Voronoi, ConvexHull, distance_matrix
+from scipy.spatial import Voronoi, ConvexHull, distance_matrix, Delaunay
 from scipy.sparse.csgraph import minimum_spanning_tree
 try:
     from backend.geometry.placement import Placement
@@ -203,19 +203,31 @@ class GeometryAnalyzer:
     
     def compute_net_crossings(self) -> Dict:
         """
-        Estimate net crossings using component positions and nets.
+        Estimate net crossings and routing complexity using component positions and nets.
+        
+        Mathematical foundation:
+        - Graph crossing number problem (NP-hard)
+        - Bounding box intersection for fast estimation
+        - Net fanout analysis for routing complexity
         
         Returns:
-            Dictionary with crossing count
+            Dictionary with crossing count and routing complexity metrics
         """
         if not self.placement.nets:
-            return {"net_crossings": 0}
+            return {
+                "net_crossings": 0,
+                "routing_complexity": 0.0,
+                "max_fanout": 0,
+                "avg_fanout": 0.0,
+                "high_fanout_nets": []
+            }
         
-        # Simplified: count potential crossings based on component positions
         crossings = 0
         net_positions = []
+        net_fanouts = []
+        high_fanout_nets = []
         
-        for net in self.placement.nets.values():
+        for net_name, net in self.placement.nets.items():
             net_comps = []
             for pin_ref in net.pins:
                 comp_name = pin_ref[0]
@@ -223,32 +235,208 @@ class GeometryAnalyzer:
                 if comp:
                     net_comps.append([comp.x, comp.y])
             
-            if len(net_comps) >= 2:
-                net_positions.append(net_comps)
+            fanout = len(net_comps)
+            net_fanouts.append(fanout)
+            
+            if fanout >= 2:
+                net_positions.append({
+                    "name": net_name,
+                    "positions": net_comps,
+                    "fanout": fanout,
+                    "bbox": self._compute_bbox(net_comps) if len(net_comps) >= 2 else None
+                })
+            
+            # Track high fanout nets (routing complexity indicator)
+            if fanout > 5:
+                high_fanout_nets.append({
+                    "net": net_name,
+                    "fanout": fanout,
+                    "components": [pin[0] for pin in net.pins]
+                })
         
-        # Count potential crossings (simplified heuristic)
-        for i, net1 in enumerate(net_positions):
-            for net2 in net_positions[i+1:]:
-                if len(net1) >= 2 and len(net2) >= 2:
-                    # Check if bounding boxes overlap
-                    net1_bbox = [
-                        min(p[0] for p in net1), max(p[0] for p in net1),
-                        min(p[1] for p in net1), max(p[1] for p in net1)
-                    ]
-                    net2_bbox = [
-                        min(p[0] for p in net2), max(p[0] for p in net2),
-                        min(p[1] for p in net2), max(p[1] for p in net2)
-                    ]
-                    
-                    if not (net1_bbox[1] < net2_bbox[0] or net2_bbox[1] < net1_bbox[0] or
-                            net1_bbox[3] < net2_bbox[2] or net2_bbox[3] < net1_bbox[2]):
+        # Count potential crossings using bounding box intersection
+        for i, net1_data in enumerate(net_positions):
+            for net2_data in net_positions[i+1:]:
+                if net1_data["bbox"] and net2_data["bbox"]:
+                    if self._bboxes_intersect(net1_data["bbox"], net2_data["bbox"]):
                         crossings += 1
         
-        return {"net_crossings": crossings}
+        # Calculate routing complexity score
+        # Factors: crossings, fanout, net count
+        avg_fanout = np.mean(net_fanouts) if net_fanouts else 0.0
+        max_fanout = max(net_fanouts) if net_fanouts else 0
+        
+        # Routing complexity: combines crossings, fanout, and net density
+        net_density = len(self.placement.nets) / (self.placement.board.width * self.placement.board.height)
+        routing_complexity = (
+            crossings * 0.4 +  # Crossing penalty
+            avg_fanout * 0.3 +  # Fanout penalty
+            net_density * 100 * 0.3  # Density penalty
+        )
+        
+        return {
+            "net_crossings": crossings,
+            "routing_complexity": float(routing_complexity),
+            "max_fanout": int(max_fanout),
+            "avg_fanout": float(avg_fanout),
+            "high_fanout_nets": high_fanout_nets,
+            "total_nets": len(self.placement.nets),
+            "net_density": float(net_density)
+        }
+    
+    def _compute_bbox(self, positions: List[List[float]]) -> List[float]:
+        """Compute bounding box for net positions."""
+        if not positions:
+            return None
+        return [
+            min(p[0] for p in positions),  # x_min
+            max(p[0] for p in positions),  # x_max
+            min(p[1] for p in positions),  # y_min
+            max(p[1] for p in positions)   # y_max
+        ]
+    
+    def _bboxes_intersect(self, bbox1: List[float], bbox2: List[float]) -> bool:
+        """Check if two bounding boxes intersect."""
+        return not (bbox1[1] < bbox2[0] or bbox2[1] < bbox1[0] or
+                   bbox1[3] < bbox2[2] or bbox2[3] < bbox1[2])
+    
+    def compute_delaunay_triangulation(self) -> Dict:
+        """
+        Compute Delaunay triangulation for component centers.
+        
+        Delaunay triangulation is the dual of Voronoi diagram and provides:
+        - Connectivity information between components
+        - Triangle quality metrics
+        - Edge length statistics
+        
+        Returns:
+            Dictionary with triangulation data
+        """
+        if len(self.positions) < 3:
+            return {"triangles": [], "num_triangles": 0, "avg_edge_length": 0.0}
+        
+        try:
+            tri = Delaunay(self.positions)
+            
+            # Extract triangles
+            triangles = []
+            edge_lengths = []
+            
+            for simplex in tri.simplices:
+                # Get triangle vertices
+                p1, p2, p3 = self.positions[simplex]
+                
+                # Compute edge lengths
+                e1 = np.linalg.norm(p2 - p1)
+                e2 = np.linalg.norm(p3 - p2)
+                e3 = np.linalg.norm(p1 - p3)
+                
+                edge_lengths.extend([e1, e2, e3])
+                
+                # Compute triangle area using Heron's formula
+                s = (e1 + e2 + e3) / 2
+                area = np.sqrt(max(0, s * (s - e1) * (s - e2) * (s - e3)))
+                
+                triangles.append({
+                    "vertices": [int(v) for v in simplex],
+                    "edge_lengths": [float(e1), float(e2), float(e3)],
+                    "area": float(area),
+                    "perimeter": float(e1 + e2 + e3)
+                })
+            
+            avg_edge_length = np.mean(edge_lengths) if edge_lengths else 0.0
+            
+            return {
+                "triangles": triangles,
+                "num_triangles": len(triangles),
+                "avg_edge_length": float(avg_edge_length),
+                "max_edge_length": float(np.max(edge_lengths)) if edge_lengths else 0.0,
+                "min_edge_length": float(np.min(edge_lengths)) if edge_lengths else 0.0
+            }
+        except Exception as e:
+            return {"triangles": [], "num_triangles": 0, "avg_edge_length": 0.0, "error": str(e)}
+    
+    def compute_force_directed_layout_metrics(self) -> Dict:
+        """
+        Compute metrics for force-directed layout analysis.
+        
+        Uses spring-force model to analyze component distribution:
+        - Attractive forces: components on same net
+        - Repulsive forces: all components (to avoid overlap)
+        - Equilibrium analysis
+        
+        Returns:
+            Dictionary with force metrics
+        """
+        if len(self.components) < 2:
+            return {"total_force": 0.0, "max_force": 0.0, "equilibrium_score": 1.0}
+        
+        try:
+            forces = []
+            comp_list = list(self.components)
+            
+            for i, comp1_name in enumerate(comp_list):
+                comp1 = self.placement.get_component(comp1_name)
+                if not comp1:
+                    continue
+                
+                net_force_x, net_force_y = 0.0, 0.0
+                
+                # Attractive forces from nets (components on same net attract)
+                comp1_nets = self.placement.get_affected_nets(comp1_name)
+                for net_name in comp1_nets:
+                    net = self.placement.nets.get(net_name)
+                    if net:
+                        for other_comp_name, _ in net.pins:
+                            if other_comp_name != comp1_name:
+                                comp2 = self.placement.get_component(other_comp_name)
+                                if comp2:
+                                    dx = comp2.x - comp1.x
+                                    dy = comp2.y - comp1.y
+                                    dist = np.sqrt(dx**2 + dy**2)
+                                    if dist > 0:
+                                        # Attractive force (spring force)
+                                        force_magnitude = dist * 0.1  # Spring constant
+                                        net_force_x += force_magnitude * (dx / dist)
+                                        net_force_y += force_magnitude * (dy / dist)
+                
+                # Repulsive forces from all components (to avoid overlap)
+                for comp2_name in comp_list[i+1:]:
+                    comp2 = self.placement.get_component(comp2_name)
+                    if comp2:
+                        dx = comp1.x - comp2.x
+                        dy = comp1.y - comp2.y
+                        dist = np.sqrt(dx**2 + dy**2)
+                        if dist > 0:
+                            # Repulsive force (inverse square)
+                            min_dist = (comp1.width + comp2.width) / 2 + (comp1.height + comp2.height) / 2
+                            force_magnitude = (min_dist / dist)**2 * 10.0
+                            net_force_x += force_magnitude * (dx / dist)
+                            net_force_y += force_magnitude * (dy / dist)
+                
+                force_magnitude = np.sqrt(net_force_x**2 + net_force_y**2)
+                forces.append(force_magnitude)
+            
+            total_force = np.sum(forces) if forces else 0.0
+            max_force = np.max(forces) if forces else 0.0
+            avg_force = np.mean(forces) if forces else 0.0
+            
+            # Equilibrium score: lower forces = better equilibrium
+            equilibrium_score = 1.0 / (1.0 + avg_force)
+            
+            return {
+                "total_force": float(total_force),
+                "max_force": float(max_force),
+                "avg_force": float(avg_force),
+                "equilibrium_score": float(equilibrium_score),
+                "num_forces": len(forces)
+            }
+        except Exception as e:
+            return {"total_force": 0.0, "max_force": 0.0, "equilibrium_score": 1.0, "error": str(e)}
     
     def compute_overlap_risk(self) -> Dict:
         """
-        Compute risk of component overlap.
+        Compute risk of component overlap using improved geometric analysis.
         
         Returns:
             Dictionary with overlap risk score
@@ -257,19 +445,33 @@ class GeometryAnalyzer:
             return {"overlap_risk": 0.0}
         
         min_distance = float('inf')
+        overlap_pairs = []
+        
         for i, c1 in enumerate(self.components):
             for c2 in self.components[i+1:]:
                 dist = np.sqrt((c1.x - c2.x)**2 + (c1.y - c2.y)**2)
                 min_clearance = (c1.width + c2.width) / 2 + (c1.height + c2.height) / 2
                 if dist < min_clearance:
                     min_distance = min(min_distance, dist)
+                    overlap_pairs.append({
+                        "comp1": c1.name,
+                        "comp2": c2.name,
+                        "distance": float(dist),
+                        "min_clearance": float(min_clearance),
+                        "violation": float(min_clearance - dist)
+                    })
         
         if min_distance == float('inf'):
-            return {"overlap_risk": 0.0}
+            return {"overlap_risk": 0.0, "overlap_pairs": []}
         
         # Risk is inverse of minimum distance
         risk = 1.0 / (min_distance + 1.0)
-        return {"overlap_risk": float(risk)}
+        return {
+            "overlap_risk": float(risk),
+            "min_distance": float(min_distance),
+            "overlap_pairs": overlap_pairs,
+            "num_overlaps": len(overlap_pairs)
+        }
     
     def analyze(self) -> Dict:
         """
@@ -287,6 +489,8 @@ class GeometryAnalyzer:
         thermal = self.compute_thermal_hotspots()
         crossings = self.compute_net_crossings()
         overlap = self.compute_overlap_risk()
+        delaunay = self.compute_delaunay_triangulation()
+        forces = self.compute_force_directed_layout_metrics()
         
         result = {
             "density": float(density),
@@ -295,12 +499,24 @@ class GeometryAnalyzer:
             "mst_length": mst.get("mst_length", 0.0),
             "thermal_hotspots": thermal.get("thermal_hotspots", 0),
             "net_crossings": crossings.get("net_crossings", 0),
+            "routing_complexity": crossings.get("routing_complexity", 0.0),  # NEW
+            "max_fanout": crossings.get("max_fanout", 0),  # NEW
+            "avg_fanout": crossings.get("avg_fanout", 0.0),  # NEW
             "overlap_risk": overlap.get("overlap_risk", 0.0),
+            # Advanced computational geometry
+            "delaunay_triangles": delaunay.get("num_triangles", 0),
+            "delaunay_avg_edge_length": delaunay.get("avg_edge_length", 0.0),
+            "force_equilibrium_score": forces.get("equilibrium_score", 1.0),
+            "total_force": forces.get("total_force", 0.0),
             # Additional geometric data for visualization
             "voronoi_data": voronoi,
             "mst_edges": mst.get("edges", []),
             "hull_vertices": hull.get("vertices", []),
-            "hotspot_locations": thermal.get("hotspot_locations", [])
+            "hotspot_locations": thermal.get("hotspot_locations", []),
+            "delaunay_data": delaunay,
+            "force_data": forces,
+            "overlap_pairs": overlap.get("overlap_pairs", []),
+            "routing_data": crossings  # NEW: Full routing complexity data
         }
         
         # Convert all numpy types to native Python types for JSON serialization

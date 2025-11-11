@@ -8,6 +8,7 @@ from .local_placer_agent import LocalPlacerAgent
 from .global_optimizer_agent import GlobalOptimizerAgent
 from .verifier_agent import VerifierAgent
 from .exporter_agent import ExporterAgent
+from .physics_simulation_agent import PhysicsSimulationAgent
 from .orchestrator import AgentOrchestrator
 
 __all__ = [
@@ -17,6 +18,7 @@ __all__ = [
     "GlobalOptimizerAgent",
     "VerifierAgent",
     "ExporterAgent",
+    "PhysicsSimulationAgent",
     "AgentOrchestrator"
 ]
 

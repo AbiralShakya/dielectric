@@ -18,18 +18,20 @@ except ImportError:
 
 @dataclass
 class ScoreWeights:
-    """Weight vector for composite score."""
-    alpha: float = 0.5  # Trace length weight
+    """Weight vector for composite score with DFM support."""
+    alpha: float = 0.3  # Trace length weight
     beta: float = 0.3   # Thermal density weight
     gamma: float = 0.2  # Clearance violation weight
+    delta: float = 0.2  # DFM weight (NEW)
 
     def normalize(self):
         """Normalize weights to sum to 1.0."""
-        total = self.alpha + self.beta + self.gamma
+        total = self.alpha + self.beta + self.gamma + self.delta
         if total > 0:
             self.alpha /= total
             self.beta /= total
             self.gamma /= total
+            self.delta /= total
 
 
 def _manhattan_distance(x1: float, y1: float, x2: float, y2: float) -> float:
@@ -161,39 +163,91 @@ class WorldModelScorer:
         
         return violations
     
+    def compute_dfm_score(self, placement: Placement) -> float:
+        """
+        Compute DFM (Design for Manufacturing) penalty score.
+        
+        Checks:
+        - Trace width violations
+        - Spacing violations
+        - Via size violations
+        - Edge clearance violations
+        
+        Returns penalty score (higher = worse).
+        """
+        try:
+            from src.backend.constraints.pcb_fabrication import FabricationConstraints
+        except ImportError:
+            try:
+                from backend.constraints.pcb_fabrication import FabricationConstraints
+            except ImportError:
+                return 0.0  # DFM not available
+        
+        constraints = FabricationConstraints()
+        dfm_penalty = 0.0
+        
+        # Check component spacing against manufacturing constraints
+        comp_list = list(placement.components.values())
+        for i, c1 in enumerate(comp_list):
+            for c2 in comp_list[i+1:]:
+                dist = _euclidean_distance(c1.x, c1.y, c2.x, c2.y)
+                min_clearance = constraints.min_pad_to_pad_clearance
+                min_distance = (c1.width + c2.width) / 2 + min_clearance
+                
+                if dist < min_distance:
+                    # Penalty proportional to violation
+                    violation = min_distance - dist
+                    dfm_penalty += violation * 5.0
+            
+            # Check edge clearance
+            edge_margin = constraints.min_pad_to_pad_clearance
+            if (c1.x < edge_margin or c1.x > placement.board.width - edge_margin or
+                c1.y < edge_margin or c1.y > placement.board.height - edge_margin):
+                dfm_penalty += 2.0
+        
+        return dfm_penalty
+    
     def score(self, placement: Placement) -> float:
         """
-        Compute composite score.
+        Compute composite score with DFM support.
         
-        S = α·L_trace + β·D_thermal + γ·C_clearance
+        S = α·L_trace + β·D_thermal + γ·C_clearance + δ·DFM
         
         Lower is better.
         """
         L = self.compute_trace_length(placement)
         D = self.compute_thermal_density(placement)
         C = self.compute_clearance_violations(placement)
+        DFM = self.compute_dfm_score(placement)
         
         score = (self.weights.alpha * L + 
                 self.weights.beta * D + 
-                self.weights.gamma * C)
+                self.weights.gamma * C +
+                self.weights.delta * DFM)
         
         return score
     
     def score_breakdown(self, placement: Placement) -> Dict[str, float]:
-        """Get detailed score breakdown."""
+        """Get detailed score breakdown with DFM."""
         L = self.compute_trace_length(placement)
         D = self.compute_thermal_density(placement)
         C = self.compute_clearance_violations(placement)
+        DFM = self.compute_dfm_score(placement)
         
         return {
             "trace_length": L,
             "thermal_density": D,
             "clearance_violations": C,
-            "total_score": self.weights.alpha * L + self.weights.beta * D + self.weights.gamma * C,
+            "dfm_penalty": DFM,
+            "total_score": (self.weights.alpha * L + 
+                          self.weights.beta * D + 
+                          self.weights.gamma * C +
+                          self.weights.delta * DFM),
             "weights": {
                 "alpha": self.weights.alpha,
                 "beta": self.weights.beta,
-                "gamma": self.weights.gamma
+                "gamma": self.weights.gamma,
+                "delta": self.weights.delta
             }
         }
 

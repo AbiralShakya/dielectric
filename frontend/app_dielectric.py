@@ -252,6 +252,174 @@ with st.sidebar:
         help="Generate: Create new PCB from natural language\nOptimize: Optimize existing design"
     )
 
+def process_zip_file(zip_file):
+    """Process a single zip file with progress indicators."""
+    st.session_state.processing_status = "processing"
+    
+    progress_bar = st.progress(0)
+    status_text = st.empty()
+    
+    try:
+        status_text.info("**Step 1/4:** Uploading zip file to server...")
+        progress_bar.progress(10)
+        
+        files = {'file': (zip_file.name, zip_file.getvalue(), zip_file.type)}
+        
+        status_text.info("**Step 2/4:** Extracting and scanning folder structure...")
+        progress_bar.progress(30)
+        
+        response = requests.post(f"{API_BASE}/upload/pcb", files=files, timeout=180)
+        
+        status_text.info("**Step 3/4:** Parsing PCB design files...")
+        progress_bar.progress(60)
+        
+        if response.status_code == 200:
+            result = response.json()
+            parsed_placement = result.get("parsed_placement", {})
+            
+            status_text.info("**Step 4/4:** Finalizing...")
+            progress_bar.progress(90)
+            
+            if parsed_placement and parsed_placement.get("components"):
+                st.session_state.design_data = parsed_placement
+                st.session_state.processing_status = "complete"
+                
+                # Show success with details
+                components_count = len(parsed_placement.get("components", []))
+                nets_count = len(parsed_placement.get("nets", []))
+                board = parsed_placement.get("board", {})
+                
+                progress_bar.progress(100)
+                status_text.success("**Folder parsed successfully!**")
+                
+                st.info(f"""
+                **Design Loaded:**
+                - **{components_count}** components
+                - **{nets_count}** nets
+                - Board size: {board.get('width', 'N/A')}×{board.get('height', 'N/A')}mm
+                
+                *Scroll down to optimize this design with natural language.*
+                """)
+                
+                if "files_found" in result:
+                    with st.expander("Folder Analysis Details"):
+                        st.json(result.get("folder_structure", {}))
+                        st.json(result.get("files_found", {}))
+                        st.json(result.get("files_parsed", []))
+                
+                st.rerun()
+            else:
+                st.session_state.processing_status = "error"
+                progress_bar.progress(0)
+                status_text.warning("Folder parsed but no design data found. Check folder contents.")
+                if "files_found" in result:
+                    with st.expander("What was found in the folder"):
+                        st.json(result.get("files_found", {}))
+        else:
+            st.session_state.processing_status = "error"
+            progress_bar.progress(0)
+            try:
+                error_json = response.json()
+                error_detail = error_json.get("detail", response.text[:500])
+            except:
+                error_detail = response.text[:500] if hasattr(response, 'text') else f"HTTP {response.status_code}"
+            status_text.error(f"**Error {response.status_code}:** {error_detail}")
+            
+    except requests.exceptions.Timeout:
+        st.session_state.processing_status = "error"
+        progress_bar.progress(0)
+        status_text.error("**Timeout:** Processing took too long. Try with a smaller folder or check your connection.")
+    except Exception as e:
+        st.session_state.processing_status = "error"
+        progress_bar.progress(0)
+        status_text.error(f"**Error:** {str(e)}")
+        import traceback
+        with st.expander("Error Details"):
+            st.code(traceback.format_exc())
+
+
+def process_multiple_files(files):
+    """Process multiple files with progress indicators."""
+    st.session_state.processing_status = "processing"
+    
+    progress_bar = st.progress(0)
+    status_text = st.empty()
+    
+    try:
+        status_text.info(f"**Step 1/4:** Uploading {len(files)} files to server...")
+        progress_bar.progress(10)
+        
+        files_data = [('files', (f.name, f.getvalue(), f.type)) for f in files]
+        
+        status_text.info("**Step 2/4:** Scanning folder structure...")
+        progress_bar.progress(30)
+        
+        response = requests.post(f"{API_BASE}/upload/folder", files=files_data, timeout=180)
+        
+        status_text.info("**Step 3/4:** Parsing PCB design files...")
+        progress_bar.progress(60)
+        
+        if response.status_code == 200:
+            result = response.json()
+            parsed_placement = result.get("parsed_placement", {})
+            
+            status_text.info("**Step 4/4:** Finalizing...")
+            progress_bar.progress(90)
+            
+            if parsed_placement and parsed_placement.get("components"):
+                st.session_state.design_data = parsed_placement
+                st.session_state.processing_status = "complete"
+                
+                components_count = len(parsed_placement.get("components", []))
+                nets_count = len(parsed_placement.get("nets", []))
+                board = parsed_placement.get("board", {})
+                
+                progress_bar.progress(100)
+                status_text.success("**Folder parsed successfully!**")
+                
+                st.info(f"""
+                **Design Loaded:**
+                - **{components_count}** components
+                - **{nets_count}** nets
+                - Board size: {board.get('width', 'N/A')}×{board.get('height', 'N/A')}mm
+                
+                *Scroll down to optimize this design with natural language.*
+                """)
+                
+                if "files_found" in result:
+                    with st.expander("Folder Analysis Details"):
+                        st.json(result.get("folder_structure", {}))
+                        st.json(result.get("files_found", {}))
+                        st.json(result.get("files_parsed", []))
+                
+                st.rerun()
+            else:
+                st.session_state.processing_status = "error"
+                progress_bar.progress(0)
+                status_text.warning("Folder parsed but no design data found. Check folder contents.")
+        else:
+            st.session_state.processing_status = "error"
+            progress_bar.progress(0)
+            try:
+                error_json = response.json()
+                error_detail = error_json.get("detail", response.text[:500])
+            except:
+                error_detail = response.text[:500] if hasattr(response, 'text') else f"HTTP {response.status_code}"
+            status_text.error(f"**Error {response.status_code}:** {error_detail}")
+            
+    except requests.exceptions.Timeout:
+        st.session_state.processing_status = "error"
+        progress_bar.progress(0)
+        status_text.error("**Timeout:** Processing took too long. Try with fewer files or check your connection.")
+    except Exception as e:
+        st.session_state.processing_status = "error"
+        progress_bar.progress(0)
+        status_text.error(f"**Error:** {str(e)}")
+        import traceback
+        with st.expander("Error Details"):
+            st.code(traceback.format_exc())
+
+
 # Initialize session state early
 if "design_data" not in st.session_state:
     st.session_state.design_data = None
@@ -259,6 +427,10 @@ if "optimization_results" not in st.session_state:
     st.session_state.optimization_results = None
 if "example_description" not in st.session_state:
     st.session_state.example_description = ""
+if "last_uploaded_files" not in st.session_state:
+    st.session_state.last_uploaded_files = []
+if "processing_status" not in st.session_state:
+    st.session_state.processing_status = "idle"
 
 # Check backend connection
 try:
@@ -269,13 +441,13 @@ except:
 
 # Show import errors if any (after Streamlit is initialized)
 if _geometry_import_error:
-    st.warning(f"⚠️ Geometry visualizer import failed: {_geometry_import_error}")
+    st.warning(f"Geometry visualizer import failed: {_geometry_import_error}")
 if _circuit_import_error:
-    st.warning(f"⚠️ Circuit visualizer import failed: {_circuit_import_error}")
+    st.warning(f"Circuit visualizer import failed: {_circuit_import_error}")
 
 # Check backend connection
 if not backend_online:
-    st.error("⚠️ **Backend server is not running!**")
+    st.error("**Backend server is not running!**")
     st.info("Please start the backend server:\n```bash\ncd /Users/abiralshakya/Documents/hackprinceton2025/dielectric\nsource venv/bin/activate\nuvicorn src.backend.api.main:app --host 0.0.0.0 --port 8000 --reload\n```")
     st.stop()
 
@@ -391,7 +563,7 @@ if workflow == "Generate Design":
             st.metric("Board Size", f"{board.get('width', 0)}×{board.get('height', 0)}mm")
         with col4:
             # Export button for generated designs
-            if st.button("📥 Export to KiCad", type="primary", use_container_width=True):
+            if st.button("Export to KiCad", type="primary", use_container_width=True):
                 try:
                     response = requests.post(
                         f"{API_BASE}/export/kicad",
@@ -402,13 +574,13 @@ if workflow == "Generate Design":
                     if response.status_code == 200:
                         data = response.json()
                         st.download_button(
-                            "⬇️ Download KiCad File",
+                            "Download KiCad File",
                             data=data["content"],
                             file_name=data["filename"],
                             mime="text/plain",
                             use_container_width=True
                         )
-                        st.success("✅ KiCad file ready")
+                        st.success("KiCad file ready")
                     else:
                         st.error(f"Export failed: {response.status_code} - {response.text}")
                 except Exception as e:
@@ -422,16 +594,99 @@ else:  # Optimize Design
     
     with col1:
         st.markdown("### Load Design")
-        uploaded_file = st.file_uploader("Upload PCB Design (JSON)", type=["json"])
         
-        if uploaded_file:
-            try:
-                design_data = json.loads(uploaded_file.read().decode('utf-8'))
-                if "board" in design_data and "components" in design_data:
-                    st.session_state.design_data = design_data
-                    st.success(f"Loaded: {len(design_data.get('components', []))} components")
-            except Exception as e:
-                st.error(f"Error: {str(e)}")
+        upload_option = st.radio(
+            "Upload Type",
+            ["Single File", "Folder/Zip"],
+            horizontal=True,
+            help="Choose to upload a single PCB file or an entire folder/zip"
+        )
+        
+        if upload_option == "Single File":
+            uploaded_file = st.file_uploader("Upload PCB Design", type=["json", "kicad_pcb"])
+            
+            if uploaded_file:
+                try:
+                    if uploaded_file.name.endswith('.json'):
+                        design_data = json.loads(uploaded_file.read().decode('utf-8'))
+                        if "board" in design_data and "components" in design_data:
+                            st.session_state.design_data = design_data
+                            components_count = len(design_data.get("components", []))
+                            st.success(f"**File loaded successfully!** ({components_count} components)")
+                            st.rerun()  # Refresh UI
+                        else:
+                            st.error("Invalid design format")
+                    else:
+                        # KiCad file - upload to API
+                        with st.spinner("Parsing PCB file..."):
+                            try:
+                                files = {'file': (uploaded_file.name, uploaded_file.getvalue(), uploaded_file.type)}
+                                response = requests.post(f"{API_BASE}/upload/pcb", files=files, timeout=60)
+                                if response.status_code == 200:
+                                    result = response.json()
+                                    parsed_placement = result.get("parsed_placement", {})
+                                    if parsed_placement and parsed_placement.get("components"):
+                                        st.session_state.design_data = parsed_placement
+                                        components_count = len(parsed_placement.get("components", []))
+                                        st.success(f"**PCB file parsed successfully!** ({components_count} components)")
+                                        st.rerun()  # Refresh UI
+                                    else:
+                                        st.warning("File parsed but no design data found")
+                                else:
+                                    st.error(f"Error: {response.status_code}")
+                            except Exception as e:
+                                st.error(f"Error: {str(e)}")
+                except Exception as e:
+                    st.error(f"Error loading file: {str(e)}")
+        else:  # Folder/Zip
+            uploaded_files = st.file_uploader(
+                "Upload Folder/Zip",
+                type=None,  # Accept all file types for folder uploads
+                accept_multiple_files=True,
+                help="Upload a zip file or multiple files. Supports .zip, .kicad_pcb, .json, and other PCB file formats"
+            )
+            
+            # Store uploaded files in session state to detect changes
+            if uploaded_files:
+                # Check if files changed
+                file_names = [f.name for f in uploaded_files]
+                if 'last_uploaded_files' not in st.session_state or st.session_state.last_uploaded_files != file_names:
+                    st.session_state.last_uploaded_files = file_names
+                    st.session_state.files_to_process = uploaded_files
+                    st.session_state.processing_status = "ready"
+            
+            # Show uploaded files
+            if uploaded_files:
+                st.markdown("**Uploaded Files:**")
+                for f in uploaded_files:
+                    col1, col2 = st.columns([4, 1])
+                    with col1:
+                        st.text(f"{f.name} ({f.size / 1024 / 1024:.2f} MB)")
+                    with col2:
+                        if st.button("Remove", key=f"remove_{f.name}", use_container_width=True):
+                            st.session_state.last_uploaded_files = []
+                            st.rerun()
+            
+            # Process button - explicit trigger
+            if uploaded_files and st.session_state.get('files_to_process'):
+                st.markdown("---")
+                if st.button("Process Folder", type="primary", use_container_width=True):
+                    zip_files = [f for f in uploaded_files if f.name.endswith('.zip')]
+                    other_files = [f for f in uploaded_files if not f.name.endswith('.zip')]
+                    
+                    if zip_files and len(zip_files) == 1 and len(other_files) == 0:
+                        # Single zip file
+                        process_zip_file(zip_files[0])
+                    elif other_files:
+                        # Multiple files
+                        process_multiple_files(other_files)
+                    else:
+                        st.warning("Please upload either a single zip file or multiple PCB files")
+            
+            # Show processing status if in progress
+            if st.session_state.get('processing_status') == 'processing':
+                st.info("Processing folder... This may take a moment.")
+                st.progress(0.5)  # Indeterminate progress
         
         # Examples
         st.markdown("### Examples")
@@ -452,40 +707,69 @@ else:  # Optimize Design
             fig = create_pcb_plot(st.session_state.design_data, "Current Design")
             st.plotly_chart(fig, use_container_width=True)
     
-    # Optimization
+    # Optimization Section - Show prominently after upload
     if st.session_state.design_data:
         st.markdown("---")
+        
+        # Show design summary banner
+        components_count = len(st.session_state.design_data.get("components", []))
+        nets_count = len(st.session_state.design_data.get("nets", []))
+        board = st.session_state.design_data.get("board", {})
+        
+        st.markdown(f"""
+        ### Ready to Optimize
+        
+        **Current Design:** {components_count} components • {nets_count} nets • {board.get('width', 'N/A')}×{board.get('height', 'N/A')}mm
+        """)
+        
         st.markdown("### Optimization Settings")
         
-        optimization_intent = st.text_input(
-            "Optimization Intent",
-            value="Optimize for thermal management and signal integrity",
-            placeholder="e.g., Minimize trace length, prioritize thermal cooling, ensure design rule compliance",
-            help="Describe how you want to optimize the design"
-        )
+        col_opt1, col_opt2 = st.columns([2, 1])
         
-        if st.button("Run Optimization", type="primary", use_container_width=True):
-            with st.spinner("Optimizing design with AI agents..."):
-                try:
-                    response = requests.post(
-                        f"{API_BASE}/optimize",
-                        json={
-                            "board": st.session_state.design_data["board"],
-                            "components": st.session_state.design_data["components"],
-                            "nets": st.session_state.design_data.get("nets", []),
-                            "intent": optimization_intent
-                        },
-                        timeout=60
-                    )
-                    
-                    if response.status_code == 200:
-                        st.session_state.optimization_results = response.json()
-                        st.success("Optimization complete!")
-                        st.rerun()
-                    else:
-                        st.error(f"Error: {response.status_code}")
-                except Exception as e:
-                    st.error(f"Connection error: {str(e)}")
+        with col_opt1:
+            optimization_intent = st.text_area(
+                "Optimization Intent",
+                value="Optimize for thermal management and signal integrity",
+                placeholder="Describe how you want to optimize the design. Examples:\n- Minimize trace length and improve thermal distribution\n- Prioritize thermal cooling for high-power components\n- Ensure design rule compliance and reduce crosstalk\n- Optimize for manufacturing cost and assembly efficiency",
+                help="Describe your optimization goals in natural language",
+                height=100
+            )
+        
+        with col_opt2:
+            st.markdown("<br>", unsafe_allow_html=True)  # Spacing
+            if st.button("Run Optimization", type="primary", use_container_width=True):
+                with st.spinner("Optimizing design with AI agents..."):
+                    try:
+                        response = requests.post(
+                            f"{API_BASE}/optimize",
+                            json={
+                                "board": st.session_state.design_data.get("board", {}),
+                                "components": st.session_state.design_data.get("components", []),
+                                "nets": st.session_state.design_data.get("nets", []),
+                                "intent": optimization_intent
+                            },
+                            timeout=120  # Longer timeout for complex optimizations
+                        )
+                        
+                        if response.status_code == 200:
+                            st.session_state.optimization_results = response.json()
+                            st.success("Optimization complete!")
+                            st.balloons()  # Celebration!
+                            st.rerun()
+                        else:
+                            try:
+                                error_json = response.json()
+                                error_detail = error_json.get("detail", response.text[:500])
+                            except:
+                                error_detail = response.text[:500] if hasattr(response, 'text') else f"HTTP {response.status_code}"
+                            st.error(f"Error {response.status_code}: {error_detail}")
+                    except requests.exceptions.Timeout:
+                        st.error("Optimization timed out. Try simplifying your optimization intent or try again.")
+                    except Exception as e:
+                        st.error(f"Connection error: {str(e)}")
+                        import traceback
+                        with st.expander("Error Details"):
+                            st.code(traceback.format_exc())
         
         # Results
         if st.session_state.optimization_results:

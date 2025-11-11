@@ -12,6 +12,7 @@ import sys
 import os
 import uuid
 import time
+import logging
 from typing import Optional, Dict, Any
 
 # Add project root to path
@@ -29,6 +30,9 @@ except ImportError:
     from src.backend.geometry.geometry_analyzer import convert_numpy_types
 
 app = FastAPI(title="Dielectric API", version="0.1.0")
+
+# Logger
+logger = logging.getLogger(__name__)
 
 # CORS
 app.add_middleware(
@@ -169,19 +173,60 @@ async def optimize_placement(request: Dict[str, Any]):
             nets_data = request.get("nets", [])
             intent = request.get("intent", "Optimize placement")
             
-            # Create placement
-            placement = Placement.from_dict({
-                "board": board_data,
-                "components": components_data,
-                "nets": nets_data
-            })
+            # Validate input data
+            if not board_data:
+                raise HTTPException(status_code=400, detail="Missing 'board' data in request")
+            if not components_data or not isinstance(components_data, list):
+                raise HTTPException(status_code=400, detail="Missing or invalid 'components' data in request")
+            if not isinstance(nets_data, list):
+                nets_data = []
+            
+            # Ensure board has required fields
+            if "width" not in board_data or "height" not in board_data:
+                raise HTTPException(status_code=400, detail="Board data missing 'width' or 'height'")
+            
+            # Validate components
+            for i, comp in enumerate(components_data):
+                if not isinstance(comp, dict):
+                    raise HTTPException(status_code=400, detail=f"Component {i} is not a valid dictionary")
+                if "name" not in comp or "package" not in comp:
+                    raise HTTPException(status_code=400, detail=f"Component {i} missing 'name' or 'package'")
+                # Ensure required numeric fields have defaults
+                comp.setdefault("width", 5.0)
+                comp.setdefault("height", 5.0)
+                comp.setdefault("power", 0.0)
+                comp.setdefault("x", 0.0)
+                comp.setdefault("y", 0.0)
+                comp.setdefault("angle", 0.0)
+                comp.setdefault("placed", True)
+            
+            # Create placement with error handling
+            try:
+                placement = Placement.from_dict({
+                    "board": board_data,
+                    "components": components_data,
+                    "nets": nets_data
+                })
+            except Exception as e:
+                import traceback
+                error_detail = f"Failed to create Placement object: {str(e)}\n{traceback.format_exc()}"
+                logger.error(f"❌ Placement creation failed: {error_detail}")
+                raise HTTPException(status_code=400, detail=f"Invalid placement data: {str(e)}")
             
             # Run optimization
-            orchestrator = AgentOrchestrator()
-            result = await orchestrator.optimize_fast(placement, intent)
+            try:
+                orchestrator = AgentOrchestrator()
+                result = await orchestrator.optimize_fast(placement, intent)
+            except Exception as e:
+                import traceback
+                error_detail = f"Optimization failed: {str(e)}\n{traceback.format_exc()}"
+                logger.error(f"❌ Optimization error: {error_detail}")
+                raise HTTPException(status_code=500, detail=f"Optimization failed: {str(e)}")
             
             if not result.get("success", False):
-                raise HTTPException(status_code=500, detail=result.get("error", "Optimization failed"))
+                error_msg = result.get("error", "Optimization failed")
+                logger.error(f"❌ Optimization returned failure: {error_msg}")
+                raise HTTPException(status_code=500, detail=error_msg)
             
             # Return frontend-compatible format
             return convert_numpy_types({
@@ -234,7 +279,8 @@ async def optimize_placement(request: Dict[str, Any]):
     except Exception as e:
         import traceback
         error_detail = f"{str(e)}\n{traceback.format_exc()}"
-        raise HTTPException(status_code=500, detail=error_detail)
+        logger.error(f"❌ Unexpected error in optimize endpoint: {error_detail}")
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 
 @app.get("/results/{task_id}")
@@ -308,7 +354,11 @@ async def upload_pcb_file(
     optimization_intent: Optional[str] = None
 ):
     """
-    Upload PCB file (.kicad_pcb or .json) and build rich context.
+    Upload PCB file (.kicad_pcb, .json, or .zip folder) and build rich context.
+    
+    Supports:
+    - Single files: .kicad_pcb, .json
+    - Folders: .zip, .tgz (will be extracted and parsed)
     
     Uses:
     - Smart parser to understand design
@@ -324,6 +374,44 @@ async def upload_pcb_file(
     except ImportError:
         from backend.api.pcb_upload import upload_and_analyze_pcb
         return await upload_and_analyze_pcb(file, optimization_intent)
+    except HTTPException:
+        raise
+    except Exception as e:
+        import traceback
+        logger.error(f"❌ Upload endpoint error: {str(e)}\n{traceback.format_exc()}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Upload failed: {str(e)}"
+        )
+
+
+@app.post("/upload/folder")
+async def upload_pcb_folder(
+    files: list[UploadFile] = File(...),
+    optimization_intent: Optional[str] = None
+):
+    """
+    Upload a folder containing PCB design files.
+    
+    Intelligently parses through any folder structure to find:
+    - KiCad files (.kicad_pcb, .kicad_sch)
+    - Altium files (.PcbDoc, .SchDoc)
+    - JSON placement files
+    - Other PCB-related files
+    
+    Automatically:
+    - Finds the most relevant files
+    - Merges data from multiple sources
+    - Builds complete design context
+    
+    Optionally optimizes if optimization_intent is provided.
+    """
+    try:
+        from src.backend.api.pcb_upload import upload_folder
+        return await upload_folder(files, optimization_intent)
+    except ImportError:
+        from backend.api.pcb_upload import upload_folder
+        return await upload_folder(files, optimization_intent)
 
 
 @app.post("/simulate/thermal")

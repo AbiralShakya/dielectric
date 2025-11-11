@@ -105,20 +105,60 @@ class ComponentLibrary:
         Check JLCPCB parts database for component availability.
         
         Args:
-            part_number: Component part number
+            part_number: Component part number or LCSC number
         
         Returns:
             Part information if available, None otherwise
         """
-        # In production, would query JLCPCB API
-        # For now, return cached/common parts
+        try:
+            from src.backend.integrations.jlcpcb_parts import JLCPCBPartsManager
+            parts_manager = JLCPCBPartsManager()
+            
+            # Try as LCSC number first
+            part_info = parts_manager.get_part_info(part_number)
+            if part_info:
+                return {
+                    "available": part_info.get("stock", 0) > 0,
+                    "stock": part_info.get("stock", 0),
+                    "price": self._extract_price(part_info.get("prices", [])),
+                    "library_type": part_info.get("library_type", "Extended"),
+                    "lcsc": part_info.get("lcsc"),
+                    "description": part_info.get("description", "")
+                }
+            
+            # Try searching by description/package
+            results = parts_manager.search_parts(query=part_number, limit=1)
+            if results:
+                part_info = results[0]
+                return {
+                    "available": part_info.get("stock", 0) > 0,
+                    "stock": part_info.get("stock", 0),
+                    "price": self._extract_price(json.loads(part_info.get("price_json", "[]"))),
+                    "library_type": part_info.get("library_type", "Extended"),
+                    "lcsc": part_info.get("lcsc"),
+                    "description": part_info.get("description", "")
+                }
+        except ImportError:
+            # Fallback to cached/common parts if database not available
+            pass
+        except Exception as e:
+            logger.warning(f"JLCPCB lookup failed: {str(e)}")
+        
+        # Fallback: return cached/common parts
         common_jlcpcb_parts = {
-            "C0805": {"available": True, "price": 0.001, "stock": 10000},
-            "R0805": {"available": True, "price": 0.001, "stock": 10000},
-            "SOIC-8": {"available": True, "price": 0.01, "stock": 5000}
+            "C0805": {"available": True, "price": 0.001, "stock": 10000, "library_type": "Basic"},
+            "R0805": {"available": True, "price": 0.001, "stock": 10000, "library_type": "Basic"},
+            "SOIC-8": {"available": True, "price": 0.01, "stock": 5000, "library_type": "Basic"}
         }
         
         return common_jlcpcb_parts.get(part_number)
+    
+    def _extract_price(self, prices: List[Dict]) -> float:
+        """Extract unit price from price breaks."""
+        if not prices:
+            return 0.0
+        # Return price for quantity 1 (first break)
+        return float(prices[0].get("price", 0.0)) if isinstance(prices[0], dict) else 0.0
 
 
 class DesignGeneratorAgent:
@@ -174,12 +214,35 @@ class DesignGeneratorAgent:
             if hasattr(self.xai_client, 'generate_design_with_reasoning'):
                 logger.info("   Using Enhanced xAI Client for design generation")
                 loop = asyncio.get_event_loop()
-                with concurrent.futures.ThreadPoolExecutor() as executor:
-                    future = loop.run_in_executor(
-                        executor,
-                        lambda: self.xai_client.generate_design_with_reasoning(description, board_size)
-                    )
-                    result = await asyncio.wait_for(future, timeout=45.0)
+                
+                # Retry logic with exponential backoff
+                max_retries = 2
+                retry_delay = 1.0
+                
+                for attempt in range(max_retries + 1):
+                    try:
+                        with concurrent.futures.ThreadPoolExecutor() as executor:
+                            future = loop.run_in_executor(
+                                executor,
+                                lambda: self.xai_client.generate_design_with_reasoning(description, board_size)
+                            )
+                            # Increased timeout to 90 seconds to match HTTP timeout
+                            result = await asyncio.wait_for(future, timeout=90.0)
+                            break  # Success, exit retry loop
+                    except asyncio.TimeoutError:
+                        if attempt < max_retries:
+                            wait_time = retry_delay * (2 ** attempt)
+                            logger.warning(f"   ⚠️  xAI API timeout (attempt {attempt + 1}/{max_retries + 1}), retrying in {wait_time}s...")
+                            await asyncio.sleep(wait_time)
+                        else:
+                            raise
+                    except Exception as e:
+                        if attempt < max_retries:
+                            wait_time = retry_delay * (2 ** attempt)
+                            logger.warning(f"   ⚠️  xAI API error (attempt {attempt + 1}/{max_retries + 1}): {str(e)}, retrying in {wait_time}s...")
+                            await asyncio.sleep(wait_time)
+                        else:
+                            raise
                 
                 if result.get("success"):
                     design_data = result.get("design", {})
@@ -191,12 +254,35 @@ class DesignGeneratorAgent:
                 prompt = self._create_design_prompt(description, layer_count)
                 
                 loop = asyncio.get_event_loop()
-                with concurrent.futures.ThreadPoolExecutor() as executor:
-                    future = loop.run_in_executor(
-                        executor,
-                        lambda: self.xai_client._call_api([{"role": "user", "content": prompt}], max_tokens=2000)
-                    )
-                    response = await asyncio.wait_for(future, timeout=45.0)
+                
+                # Retry logic with exponential backoff
+                max_retries = 2
+                retry_delay = 1.0
+                
+                for attempt in range(max_retries + 1):
+                    try:
+                        with concurrent.futures.ThreadPoolExecutor() as executor:
+                            future = loop.run_in_executor(
+                                executor,
+                                lambda: self.xai_client._call_api([{"role": "user", "content": prompt}], max_tokens=2000)
+                            )
+                            # Increased timeout to 90 seconds
+                            response = await asyncio.wait_for(future, timeout=90.0)
+                            break  # Success, exit retry loop
+                    except asyncio.TimeoutError as e:
+                        if attempt < max_retries:
+                            wait_time = retry_delay * (2 ** attempt)
+                            logger.warning(f"   ⚠️  xAI API timeout (attempt {attempt + 1}/{max_retries + 1}), retrying in {wait_time}s...")
+                            await asyncio.sleep(wait_time)
+                        else:
+                            raise
+                    except Exception as e:
+                        if attempt < max_retries:
+                            wait_time = retry_delay * (2 ** attempt)
+                            logger.warning(f"   ⚠️  xAI API error (attempt {attempt + 1}/{max_retries + 1}): {str(e)}, retrying in {wait_time}s...")
+                            await asyncio.sleep(wait_time)
+                        else:
+                            raise
                 
                 if response.get("choices"):
                     content = response["choices"][0]["message"]["content"]
@@ -223,7 +309,7 @@ class DesignGeneratorAgent:
             }
             
         except asyncio.TimeoutError:
-            error_msg = "xAI API call timed out after 45 seconds."
+            error_msg = "xAI API call timed out after 90 seconds (with retries). The request may be too complex or the API is slow. Try simplifying the description or try again later."
             logger.error(f"❌ {error_msg}")
             raise Exception(error_msg)
         except Exception as e:

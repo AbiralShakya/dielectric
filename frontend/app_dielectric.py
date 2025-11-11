@@ -493,7 +493,7 @@ if workflow == "Generate Design":
                                 "description": design_description,
                                 "board_size": {"width": board_width, "height": board_height, "clearance": 0.5}
                             },
-                            timeout=90  # Increased timeout for xAI calls (90 seconds)
+                            timeout=180  # Increased timeout for xAI calls with extensive reasoning (3 minutes)
                         )
                         
                         if response.status_code == 200:

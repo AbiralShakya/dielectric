@@ -63,7 +63,7 @@ class XAIClient:
                 self.endpoint,
                 json=data,
                 headers=self.headers,
-                timeout=45  # Increased timeout for xAI calls
+                timeout=180  # Increased timeout for xAI calls (3 minutes for reasoning)
             )
             
             print(f"   Status: {response.status_code}")

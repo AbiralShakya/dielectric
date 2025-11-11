@@ -68,7 +68,7 @@ class EnhancedXAIClient:
                 self.endpoint,
                 json=data,
                 headers=self.headers,
-                timeout=60  # Longer timeout for complex reasoning
+                timeout=180  # Increased timeout for extensive reasoning (3 minutes)
             )
             
             print(f"   Status: {response.status_code}")

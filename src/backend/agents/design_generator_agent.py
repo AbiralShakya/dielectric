@@ -41,9 +41,9 @@ class ComponentLibrary:
             sys.path.insert(0, '/Users/abiralshakya/Documents/hackprinceton2025/dielectric/kicad-mcp-server/python')
             from commands.library import LibraryManager
             self.kicad_library_manager = LibraryManager()
-            logger.info("✅ ComponentLibrary: KiCad library manager initialized")
+            logger.info("ComponentLibrary: KiCad library manager initialized")
         except Exception as e:
-            logger.warning(f"⚠️  ComponentLibrary: KiCad library not available: {e}")
+            logger.warning(f"ComponentLibrary: KiCad library not available: {e}")
             self.kicad_library_manager = None
     
     def lookup_footprint(self, package: str, component_type: Optional[str] = None) -> Optional[str]:
@@ -208,7 +208,7 @@ class DesignGeneratorAgent:
         import concurrent.futures
         
         try:
-            logger.info(f"🚀 {self.name}: Generating design from description")
+            logger.info(f"{self.name}: Generating design from description")
             
             # Use enhanced xAI client for extensive reasoning
             if hasattr(self.xai_client, 'generate_design_with_reasoning'):
@@ -226,20 +226,20 @@ class DesignGeneratorAgent:
                                 executor,
                                 lambda: self.xai_client.generate_design_with_reasoning(description, board_size)
                             )
-                            # Increased timeout to 90 seconds to match HTTP timeout
-                            result = await asyncio.wait_for(future, timeout=90.0)
+                            # Increased timeout to 180 seconds to match HTTP timeout and allow for extensive reasoning
+                            result = await asyncio.wait_for(future, timeout=180.0)
                             break  # Success, exit retry loop
                     except asyncio.TimeoutError:
                         if attempt < max_retries:
                             wait_time = retry_delay * (2 ** attempt)
-                            logger.warning(f"   ⚠️  xAI API timeout (attempt {attempt + 1}/{max_retries + 1}), retrying in {wait_time}s...")
+                            logger.warning(f"   xAI API timeout (attempt {attempt + 1}/{max_retries + 1}), retrying in {wait_time}s...")
                             await asyncio.sleep(wait_time)
                         else:
                             raise
                     except Exception as e:
                         if attempt < max_retries:
                             wait_time = retry_delay * (2 ** attempt)
-                            logger.warning(f"   ⚠️  xAI API error (attempt {attempt + 1}/{max_retries + 1}): {str(e)}, retrying in {wait_time}s...")
+                            logger.warning(f"   xAI API error (attempt {attempt + 1}/{max_retries + 1}): {str(e)}, retrying in {wait_time}s...")
                             await asyncio.sleep(wait_time)
                         else:
                             raise
@@ -266,20 +266,20 @@ class DesignGeneratorAgent:
                                 executor,
                                 lambda: self.xai_client._call_api([{"role": "user", "content": prompt}], max_tokens=2000)
                             )
-                            # Increased timeout to 90 seconds
-                            response = await asyncio.wait_for(future, timeout=90.0)
+                            # Increased timeout to 180 seconds for extensive reasoning
+                            response = await asyncio.wait_for(future, timeout=180.0)
                             break  # Success, exit retry loop
                     except asyncio.TimeoutError as e:
                         if attempt < max_retries:
                             wait_time = retry_delay * (2 ** attempt)
-                            logger.warning(f"   ⚠️  xAI API timeout (attempt {attempt + 1}/{max_retries + 1}), retrying in {wait_time}s...")
+                            logger.warning(f"   xAI API timeout (attempt {attempt + 1}/{max_retries + 1}), retrying in {wait_time}s...")
                             await asyncio.sleep(wait_time)
                         else:
                             raise
                     except Exception as e:
                         if attempt < max_retries:
                             wait_time = retry_delay * (2 ** attempt)
-                            logger.warning(f"   ⚠️  xAI API error (attempt {attempt + 1}/{max_retries + 1}): {str(e)}, retrying in {wait_time}s...")
+                            logger.warning(f"   xAI API error (attempt {attempt + 1}/{max_retries + 1}): {str(e)}, retrying in {wait_time}s...")
                             await asyncio.sleep(wait_time)
                         else:
                             raise
@@ -309,12 +309,12 @@ class DesignGeneratorAgent:
             }
             
         except asyncio.TimeoutError:
-            error_msg = "xAI API call timed out after 90 seconds (with retries). The request may be too complex or the API is slow. Try simplifying the description or try again later."
-            logger.error(f"❌ {error_msg}")
+            error_msg = "xAI API call timed out after 180 seconds (with retries). The request may be too complex or the API is slow. Try simplifying the description or try again later."
+            logger.error(f"{error_msg}")
             raise Exception(error_msg)
         except Exception as e:
             error_msg = f"Design generation failed: {str(e)}"
-            logger.error(f"❌ {error_msg}")
+            logger.error(f"{error_msg}")
             import traceback
             traceback.print_exc()
             raise Exception(error_msg)

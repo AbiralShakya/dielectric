@@ -1,5 +1,5 @@
 #!/bin/bash
-echo "🎯 Neuro-Geometric Placer - Complete Demo Workflow"
+echo "🎯 Dielectric - Complete Demo Workflow"
 echo "=================================================="
 echo ""
 

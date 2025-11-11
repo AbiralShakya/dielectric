@@ -1,7 +1,7 @@
 #!/bin/bash
 # Deploy anywhere - Railway, Render, Heroku, etc.
 
-echo "🚀 Deploying Neuro-Geometric Placer..."
+echo "🚀 Deploying Dielectric..."
 
 # Install dependencies
 pip install -r requirements.txt

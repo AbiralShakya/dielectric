@@ -1,17 +1,17 @@
 #!/bin/bash
 
-# Neuro-Geometric Placer Demo Script
+# Dielectric Demo Script
 # Runs the complete system for HackPrinceton demo
 
 set -e
 
-echo "🔌 Neuro-Geometric Placer Demo"
+echo "🔌 Dielectric Demo"
 echo "================================"
 echo ""
 
 # Check if in correct directory
 if [ ! -f "requirements.txt" ]; then
-    echo "❌ Please run from neuro-geometric-placer directory"
+    echo "❌ Please run from dielectric directory"
     exit 1
 fi
 

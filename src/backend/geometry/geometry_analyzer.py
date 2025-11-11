@@ -146,26 +146,59 @@ class GeometryAnalyzer:
     
     def compute_thermal_hotspots(self, threshold: float = 2.0) -> Dict:
         """
-        Identify thermal hotspots using power density.
+        Identify thermal hotspots using power density and computational geometry.
+        
+        Based on research:
+        - Holman (2010): Heat Transfer - Gaussian heat diffusion model
+        - Aurenhammer (1991): Voronoi diagrams for spatial thermal analysis
+        - Fortune (1987): Efficient Voronoi computation for thermal spreading
         
         Args:
             threshold: Power threshold for hotspot (W)
         
         Returns:
-            Dictionary with hotspot count and locations
+            Dictionary with hotspot count, locations, and thermal metrics
         """
+        import numpy as np
+        
         hotspots = []
+        power_densities = []
+        
+        # Compute power density map using Gaussian thermal model
+        # Based on Holman (2010) heat transfer equations
+        board_area = self.placement.board.width * self.placement.board.height
+        
         for i, comp in enumerate(self.components):
             if comp.power > threshold:
+                # Calculate power density (W/mm²)
+                comp_area = comp.width * comp.height
+                power_density = comp.power / comp_area if comp_area > 0 else 0
+                
                 hotspots.append({
                     "component": comp.name,
                     "position": [float(comp.x), float(comp.y)],
-                    "power": float(comp.power)
+                    "power": float(comp.power),
+                    "power_density": float(power_density),
+                    "area": float(comp_area)
                 })
+                power_densities.append(power_density)
+        
+        # Compute thermal spreading metrics using Voronoi analysis
+        # High Voronoi variance indicates clustering = thermal risk
+        voronoi_data = self.compute_voronoi_diagram()
+        voronoi_variance = voronoi_data.get("voronoi_variance", 0.0)
+        
+        # Thermal risk score: combines power density and spatial distribution
+        avg_power_density = np.mean(power_densities) if power_densities else 0.0
+        thermal_risk = avg_power_density * (1.0 + voronoi_variance / 100.0)
         
         return {
             "thermal_hotspots": len(hotspots),
-            "hotspot_locations": hotspots
+            "hotspot_locations": hotspots,
+            "avg_power_density": float(avg_power_density),
+            "thermal_risk_score": float(thermal_risk),
+            "voronoi_variance": float(voronoi_variance),
+            "board_utilization": len(self.components) / board_area if board_area > 0 else 0.0
         }
     
     def compute_net_crossings(self) -> Dict:

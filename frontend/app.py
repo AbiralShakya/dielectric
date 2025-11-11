@@ -1,5 +1,5 @@
 """
-Neuro-Geometric Placer - Complete PCB Design Flow
+Dielectric - Complete PCB Design Flow
 
 Natural Language → AI Optimization → Visualization → Simulator Export
 """
@@ -190,12 +190,12 @@ def create_professional_pcb_visualization(
     return fig
 
 st.set_page_config(
-    page_title="Neuro-Geometric Placer",
+    page_title="Dielectric",
     page_icon="🔌",
     layout="wide"
 )
 
-st.title("🔌 Neuro-Geometric Placer")
+st.title("🔌 Dielectric")
 st.markdown("**Natural Language → AI PCB Design → Visualization → Simulator Export**")
 st.markdown("*Powered by xAI Agents + Computational Geometry*")
 
@@ -743,7 +743,7 @@ with tab3:
 
 # Footer
 st.markdown("---")
-st.markdown("**Neuro-Geometric Placer** - Complete AI PCB Design Flow")
+st.markdown("**Dielectric** - Complete AI PCB Design Flow")
 st.markdown("*Natural Language → AI Agents → Computational Geometry → Simulator Export*")
 st.markdown("**Built for HackPrinceton 2025** | *xAI Grok + Multi-Agent Architecture*")
 

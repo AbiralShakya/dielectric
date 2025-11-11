@@ -1,17 +1,17 @@
 #!/bin/bash
 
-# Run Neuro-Geometric Placer Frontend
+# Run Dielectric Frontend
 # Separate script for frontend to run alongside backend
 
 set -e
 
-echo "🌐 Neuro-Geometric Placer Frontend"
+echo "🌐 Dielectric Frontend"
 echo "==================================="
 echo ""
 
 # Check if in correct directory
-if [ ! -f "frontend/app.py" ]; then
-    echo "❌ Please run from neuro-geometric-placer directory"
+if [ ! -f "frontend/app_dielectric.py" ]; then
+    echo "❌ Please run from dielectric directory"
     exit 1
 fi
 
@@ -30,4 +30,4 @@ echo "Open browser to view the interface"
 echo ""
 
 # Start frontend
-streamlit run frontend/app.py --server.port 8501 --server.address 0.0.0.0
+streamlit run frontend/app_dielectric.py --server.port 8501 --server.address 0.0.0.0

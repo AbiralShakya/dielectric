@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# Setup script for Neuro-Geometric Placer
+# Setup script for Dielectric
 
 set -e
 
-echo "🔌 Neuro-Geometric Placer Setup"
+echo "🔌 Dielectric Setup"
 echo "================================"
 echo ""
 

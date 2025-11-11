@@ -29,7 +29,7 @@ class DedalusAgentDeployment:
         if not self.api_key:
             raise ValueError("DEDALUS_API_KEY not set")
         
-        self.server = MCPServer("neuro-geometric-placer")
+        self.server = MCPServer("dielectric")
         
         # Register tools
         @tool

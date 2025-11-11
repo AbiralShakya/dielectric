@@ -1,5 +1,5 @@
 """
-Neuro-Geometric Placer - Professional PCB Design Interface
+Dielectric - Professional PCB Design Interface
 
 Clean, engineer-focused UI for computational geometry-driven PCB optimization.
 """
@@ -17,7 +17,7 @@ API_BASE = "http://localhost:8000"
 
 # Page config
 st.set_page_config(
-    page_title="Neuro-Geometric Placer",
+    page_title="Dielectric",
     page_icon="⚡",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -178,7 +178,7 @@ def create_pcb_visualization(
 
 # Sidebar
 with st.sidebar:
-    st.markdown('<div class="main-header">Neuro-Geometric Placer</div>', unsafe_allow_html=True)
+    st.markdown('<div class="main-header">Dielectric</div>', unsafe_allow_html=True)
     st.markdown('<div class="sub-header">AI-Powered PCB Design</div>', unsafe_allow_html=True)
     
     st.markdown("---")

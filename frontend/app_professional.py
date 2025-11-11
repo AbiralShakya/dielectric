@@ -1,5 +1,5 @@
 """
-Neuro-Geometric Placer - Professional PCB Design Interface
+Dielectric - Professional PCB Design Interface
 
 Clean, modern interface inspired by Slack and professional PCB software.
 """
@@ -114,7 +114,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 st.set_page_config(
-    page_title="Neuro-Geometric Placer",
+    page_title="Dielectric",
     page_icon="⚡",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -251,7 +251,7 @@ def create_pcb_plot(placement_data: Dict, title: str = "PCB Layout") -> go.Figur
 
 # Sidebar
 with st.sidebar:
-    st.markdown("## Neuro-Geometric Placer")
+    st.markdown("## Dielectric")
     st.markdown("---")
     
     # Design Input
@@ -332,7 +332,7 @@ if "results" not in st.session_state:
     st.session_state.results = None
 
 # Main content
-st.markdown("# Neuro-Geometric Placer")
+st.markdown("# Dielectric")
 st.markdown("Computational Geometry + Multi-Agent AI for PCB Design")
 st.markdown("---")
 

@@ -1,52 +1,75 @@
 """
-KiCAD MCP Exporter - Uses KiCAD Python API via KiCAD-MCP-Server
+KiCAD MCP Exporter - Uses Proper KiCad MCP Server
 
-This exporter uses the KiCAD Python API (pcbnew) directly to create
-professional PCB designs instead of manually generating .kicad_pcb files.
+This exporter uses the official KiCad MCP server from https://github.com/lamaalrajih/kicad-mcp
+to properly create KiCad projects with correct PCB and schematic files.
 """
 
 import sys
 import os
 from pathlib import Path
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any, Optional, TYPE_CHECKING
 import tempfile
 import shutil
 
-# Add KiCAD-MCP-Server Python path
-KICAD_MCP_PATH = Path(__file__).parent.parent.parent.parent / "kicad-mcp-server" / "python"
-if KICAD_MCP_PATH.exists():
-    sys.path.insert(0, str(KICAD_MCP_PATH))
-
+# Try to use proper KiCad MCP client
 try:
-    # Try to import pcbnew - requires KiCAD installation
+    try:
+        from src.backend.export.kicad_mcp_client import KiCadMCPClient
+    except ImportError:
+        from backend.export.kicad_mcp_client import KiCadMCPClient
+    KICAD_MCP_CLIENT_AVAILABLE = True
+except ImportError:
+    KICAD_MCP_CLIENT_AVAILABLE = False
+    KiCadMCPClient = None
+
+# Fallback: Try to import pcbnew directly
+try:
     import pcbnew
     KICAD_AVAILABLE = True
 except ImportError:
     KICAD_AVAILABLE = False
-    # Don't print warning here - let the caller handle it gracefully
+    pcbnew = None
+
+# For type hints only
+if TYPE_CHECKING:
+    if KICAD_AVAILABLE:
+        import pcbnew
 
 
 class KiCadMCPExporter:
-    """Exports PCB placements using KiCAD Python API."""
+    """Exports PCB placements using proper KiCad MCP Server."""
     
     def __init__(self):
         """Initialize KiCAD exporter."""
-        if not KICAD_AVAILABLE:
+        self.mcp_client = None
+        self.board = None
+        self.project_path = None
+        self.temp_dir = None
+        
+        # Try to use proper KiCad MCP client first
+        if KICAD_MCP_CLIENT_AVAILABLE and KiCadMCPClient:
+            try:
+                self.mcp_client = KiCadMCPClient()
+                print("✅ Using proper KiCad MCP Client")
+            except Exception as e:
+                print(f"⚠️  KiCad MCP Client not available: {e}")
+                self.mcp_client = None
+        
+        # Fallback to direct pcbnew API
+        if not self.mcp_client and not KICAD_AVAILABLE:
             raise ImportError(
-                "KiCAD Python API (pcbnew) not available. "
-                "Please install KiCAD with Python support:\n"
+                "KiCad MCP Server not available. "
+                "Please install KiCad MCP server from https://github.com/lamaalrajih/kicad-mcp\n"
+                "Or install KiCAD with Python support:\n"
                 "  - Linux: sudo apt-get install kicad kicad-python3\n"
                 "  - macOS: Install KiCAD.app from kicad.org\n"
                 "  - Windows: Install KiCAD with Python support"
             )
-        
-        self.board = None
-        self.project_path = None
-        self.temp_dir = None
     
     def export(self, placement_data: Dict[str, Any], output_path: Optional[str] = None) -> str:
         """
-        Export placement to KiCad PCB format using KiCAD API.
+        Export placement to KiCad PCB format using proper KiCad MCP Server.
         
         Args:
             placement_data: Placement dictionary with board, components, nets
@@ -56,38 +79,76 @@ class KiCadMCPExporter:
             Path to generated .kicad_pcb file
         """
         try:
-            # Create temporary project directory
-            self.temp_dir = tempfile.mkdtemp(prefix="dielectric_kicad_")
-            project_name = "dielectric_design"
-            self.project_path = os.path.join(self.temp_dir, project_name)
+            # Use proper KiCad MCP client if available
+            if self.mcp_client:
+                board_info = placement_data.get("board", {})
+                components = placement_data.get("components", [])
+                nets = placement_data.get("nets", [])
+                
+                project_name = "dielectric_design"
+                result = self.mcp_client.create_project(
+                    project_name=project_name,
+                    board_width=board_info.get("width", 100),
+                    board_height=board_info.get("height", 100),
+                    components=components,
+                    nets=nets
+                )
+                
+                if result.get("success"):
+                    # Save board file content
+                    board_content = result.get("board", "")
+                    if output_path is None:
+                        self.temp_dir = tempfile.mkdtemp(prefix="dielectric_kicad_")
+                        output_path = os.path.join(self.temp_dir, f"{project_name}.kicad_pcb")
+                    
+                    with open(output_path, 'w', encoding='utf-8') as f:
+                        f.write(board_content)
+                    
+                    self.project_path = output_path
+                    return output_path
+                else:
+                    raise Exception(f"KiCad MCP client failed: {result.get('error', 'Unknown error')}")
             
-            # Create new board
-            self.board = pcbnew.CreateEmptyBoard()
-            
-            # Set board properties
-            board_info = placement_data.get("board", {})
-            self._setup_board(board_info)
-            
-            # Add components
-            components = placement_data.get("components", [])
-            self._place_components(components)
-            
-            # Add nets and routing hints
-            nets = placement_data.get("nets", [])
-            self._create_nets(nets)
-            
-            # Save board
-            if output_path is None:
-                output_path = os.path.join(self.temp_dir, f"{project_name}.kicad_pcb")
-            
-            self.board.Save(output_path)
-            
-            return output_path
+            # Fallback to direct pcbnew API
+            elif KICAD_AVAILABLE:
+                return self._export_with_pcbnew(placement_data, output_path)
+            else:
+                raise ImportError("No KiCad export method available")
             
         except Exception as e:
             if self.temp_dir and os.path.exists(self.temp_dir):
                 shutil.rmtree(self.temp_dir, ignore_errors=True)
             raise Exception(f"KiCAD export failed: {str(e)}")
+    
+    def _export_with_pcbnew(self, placement_data: Dict[str, Any], output_path: Optional[str] = None) -> str:
+        """Fallback export using direct pcbnew API."""
+        # Create temporary project directory
+        self.temp_dir = tempfile.mkdtemp(prefix="dielectric_kicad_")
+        project_name = "dielectric_design"
+        self.project_path = os.path.join(self.temp_dir, project_name)
+        
+        # Create new board
+        self.board = pcbnew.CreateEmptyBoard()
+        
+        # Set board properties
+        board_info = placement_data.get("board", {})
+        self._setup_board(board_info)
+        
+        # Add components
+        components = placement_data.get("components", [])
+        self._place_components(components)
+        
+        # Add nets and routing hints
+        nets = placement_data.get("nets", [])
+        self._create_nets(nets)
+        
+        # Save board
+        if output_path is None:
+            output_path = os.path.join(self.temp_dir, f"{project_name}.kicad_pcb")
+        
+        self.board.Save(output_path)
+        
+        return output_path
     
     def _setup_board(self, board_info: Dict[str, Any]):
         """Set up board size and outline."""
@@ -153,7 +214,7 @@ class KiCadMCPExporter:
                 print(f"Warning: Failed to place component {comp_data.get('name', 'unknown')}: {e}")
                 continue
     
-    def _create_footprint(self, name: str, package: str, comp_data: Dict[str, Any]) -> Optional[pcbnew.FOOTPRINT]:
+    def _create_footprint(self, name: str, package: str, comp_data: Dict[str, Any]) -> Optional[Any]:
         """Create a footprint for a component."""
         try:
             # Try to load from library first
@@ -173,7 +234,7 @@ class KiCadMCPExporter:
             print(f"Warning: Failed to create footprint for {name}: {e}")
             return None
     
-    def _load_footprint_from_library(self, package: str) -> Optional[pcbnew.FOOTPRINT]:
+    def _load_footprint_from_library(self, package: str) -> Optional[Any]:
         """Try to load footprint from KiCAD library."""
         try:
             # Common footprint library paths
@@ -197,7 +258,7 @@ class KiCadMCPExporter:
         except Exception as e:
             return None
     
-    def _create_generic_footprint(self, name: str, package: str, comp_data: Dict[str, Any]) -> pcbnew.FOOTPRINT:
+    def _create_generic_footprint(self, name: str, package: str, comp_data: Dict[str, Any]) -> Any:
         """Create a generic footprint when library footprint is not available."""
         width = comp_data.get("width", 5) * 1e6  # Convert mm to nanometers
         height = comp_data.get("height", 5) * 1e6
@@ -320,7 +381,7 @@ class KiCadMCPExporter:
                         if pad:
                             pad.SetNet(net)
     
-    def _find_footprint(self, name: str) -> Optional[pcbnew.FOOTPRINT]:
+    def _find_footprint(self, name: str) -> Optional[Any]:
         """Find footprint by reference name."""
         for footprint in self.board.Footprints():
             if footprint.GetReference() == name:

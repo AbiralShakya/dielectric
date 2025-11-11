@@ -22,18 +22,20 @@ class XAIClient:
         """
         self.api_key = api_key or os.getenv("XAI_API_KEY")
         if not self.api_key:
-            raise ValueError("XAI_API_KEY not found in environment")
+            raise ValueError("XAI_API_KEY not found in environment. Set it with: export XAI_API_KEY=your_key")
         
         self.endpoint = "https://api.x.ai/v1/chat/completions"
         self.headers = {
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json"
         }
+        
+        print(f"✅ xAI Client initialized (endpoint: {self.endpoint})")
     
     def _call_api(
         self,
         messages: List[Dict],
-        model: str = "grok-2-1212",
+        model: str = "grok-4-latest",  # Updated to use latest model
         temperature: float = 0.7
     ) -> Dict:
         """Make API call to xAI."""
@@ -44,16 +46,40 @@ class XAIClient:
         }
         
         try:
+            print(f"🔌 xAI API Call: {self.endpoint}")
+            print(f"   Model: {model}")
+            print(f"   Messages: {len(messages)} message(s)")
+            
             response = requests.post(
                 self.endpoint,
                 json=data,
                 headers=self.headers,
-                timeout=30
+                timeout=45  # Increased timeout for xAI calls
             )
-            response.raise_for_status()
-            return response.json()
+            
+            print(f"   Status: {response.status_code}")
+            
+            if response.status_code != 200:
+                error_text = response.text[:500]
+                print(f"   Error response: {error_text}")
+                raise requests.exceptions.HTTPError(f"xAI API returned {response.status_code}: {error_text}")
+            
+            result = response.json()
+            print(f"   ✅ xAI API call successful")
+            
+            if result.get("choices") and len(result["choices"]) > 0:
+                content = result["choices"][0]["message"]["content"]
+                print(f"   Response length: {len(content)} chars")
+            
+            return result
+        except requests.exceptions.RequestException as e:
+            error_msg = f"xAI API request failed: {str(e)}"
+            print(f"   ❌ {error_msg}")
+            return {"error": error_msg, "choices": []}
         except Exception as e:
-            return {"error": str(e), "choices": []}
+            error_msg = f"xAI API call error: {str(e)}"
+            print(f"   ❌ {error_msg}")
+            return {"error": error_msg, "choices": []}
     
     def intent_to_weights(
         self,
@@ -125,7 +151,7 @@ Return ONLY a JSON object with "alpha", "beta", "gamma" fields. No other text.
             }
         ]
         
-        response = self._call_api(messages, model="grok-2-1212")
+        response = self._call_api(messages, model="grok-4-latest")
         
         if "error" in response:
             # Fallback to default weights
@@ -219,7 +245,7 @@ Be concise and technical but accessible.
             }
         ]
         
-        response = self._call_api(messages, model="grok-2-1212")
+        response = self._call_api(messages, model="grok-4-latest")
         
         if "error" in response:
             return "Optimization completed. See score breakdown for details."

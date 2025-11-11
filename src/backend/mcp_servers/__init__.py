@@ -1,7 +1,7 @@
 """
 MCP Servers for Tool Access
 
-Single unified MCP server with multiple tools for Neuro-Geometric Placer.
+Single unified MCP server with multiple tools for Dielectric.
 """
 
 # Import the unified MCP server

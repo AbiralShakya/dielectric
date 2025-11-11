@@ -1,7 +1,7 @@
 #!/bin/bash
 # Setup script for Dedalus Labs integration
 
-echo "🚀 Setting up Dedalus Labs integration for Neuro-Geometric Placer..."
+echo "🚀 Setting up Dedalus Labs integration for Dielectric..."
 
 # Load .env file if it exists
 if [ -f .env ]; then

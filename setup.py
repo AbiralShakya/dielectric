@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
-Setup script for Neuro-Geometric Placer MCP Server
+Setup script for Dielectric MCP Server
 """
 
 from setuptools import setup, find_packages
 
 setup(
-    name="neuro-geometric-placer",
+    name="dielectric",
     version="1.0.0",
     description="AI-Powered PCB Component Placement System",
     author="Abiral Shakya",

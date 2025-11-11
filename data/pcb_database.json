@@ -4,11 +4,11 @@
       "placement": {
         "components": [
           {
-            "name": "U1",
+            "name": "PWR_IC",
             "package": "SOIC-8",
             "width": 5,
             "height": 4,
-            "power": 0.5,
-            "x": 85.97833310037906,
-            "y": 28.14948061248019,
+            "power": 1.5,
+            "x": 72.34061326192227,
+            "y": 43.63498237337828,
             "angle": 

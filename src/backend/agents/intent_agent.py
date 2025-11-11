@@ -6,11 +6,14 @@ Converts natural language → weight vector (α, β, γ) using computational geo
 
 from typing import Dict, Tuple, Optional
 try:
-    from backend.ai.xai_client import XAIClient
+    from backend.ai.enhanced_xai_client import EnhancedXAIClient
     from backend.geometry.geometry_analyzer import GeometryAnalyzer
     from backend.geometry.placement import Placement
 except ImportError:
-    from src.backend.ai.xai_client import XAIClient
+    try:
+        from src.backend.ai.enhanced_xai_client import EnhancedXAIClient
+    except ImportError:
+        from src.backend.ai.xai_client import XAIClient as EnhancedXAIClient
     from src.backend.geometry.geometry_analyzer import GeometryAnalyzer
     from src.backend.geometry.placement import Placement
 
@@ -21,7 +24,12 @@ class IntentAgent:
     def __init__(self):
         """Initialize intent agent."""
         self.name = "IntentAgent"
-        self.client = XAIClient()
+        try:
+            self.client = EnhancedXAIClient()
+        except Exception:
+            # Fallback to basic client if enhanced not available
+            from src.backend.ai.xai_client import XAIClient
+            self.client = XAIClient()
     
     async def process_intent(
         self,
@@ -46,19 +54,34 @@ class IntentAgent:
             }
         """
         try:
+            print(f"🧠 IntentAgent: Processing intent '{user_intent}'")
+            
             geometry_data = None
             
             # Perform computational geometry analysis if placement provided
             if placement:
+                print("   📐 Computing computational geometry analysis...")
                 analyzer = GeometryAnalyzer(placement)
                 geometry_data = analyzer.analyze()
+                print(f"   ✅ Geometry analysis complete: {len(geometry_data)} metrics")
             
             # Pass computational geometry data to xAI for reasoning
-            alpha, beta, gamma = self.client.intent_to_weights(
-                user_intent,
-                context,
-                geometry_data
-            )
+            print("   🤖 Calling xAI API for weight reasoning...")
+            if hasattr(self.client, 'intent_to_weights_with_geometry'):
+                alpha, beta, gamma = self.client.intent_to_weights_with_geometry(
+                    user_intent,
+                    geometry_data,
+                    context
+                )
+            else:
+                # Fallback for basic client
+                alpha, beta, gamma = self.client.intent_to_weights(
+                    user_intent,
+                    context,
+                    geometry_data
+                )
+            
+            print(f"   ✅ xAI returned weights: α={alpha:.3f}, β={beta:.3f}, γ={gamma:.3f}")
             
             return {
                 "success": True,
@@ -72,9 +95,13 @@ class IntentAgent:
                 "agent": self.name
             }
         except Exception as e:
+            import traceback
+            error_msg = str(e)
+            print(f"   ❌ IntentAgent error: {error_msg}")
+            print(f"   Traceback: {traceback.format_exc()}")
             return {
                 "success": False,
-                "error": str(e),
+                "error": error_msg,
                 "weights": {"alpha": 0.5, "beta": 0.3, "gamma": 0.2},  # Default
                 "agent": self.name
             }

@@ -2,7 +2,7 @@
 """
 Test Single MCP Server with Multiple Tools
 
-Tests the unified Neuro-Geometric Placer MCP server.
+Tests the unified Dielectric MCP server.
 """
 
 import asyncio

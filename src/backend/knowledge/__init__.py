@@ -1,6 +1,21 @@
-"""Knowledge graph for component relationships."""
+"""
+Knowledge Graph Package
 
-from .component_graph import ComponentKnowledgeGraph, ComponentNode, NetEdge
+Hierarchical abstraction and knowledge graph systems for large-scale PCB design.
+"""
 
-__all__ = ["ComponentKnowledgeGraph", "ComponentNode", "NetEdge"]
+from .knowledge_graph import (
+    KnowledgeGraph,
+    Module,
+    ComponentNode,
+    NetEdge,
+    ModuleType
+)
 
+__all__ = [
+    "KnowledgeGraph",
+    "Module",
+    "ComponentNode",
+    "NetEdge",
+    "ModuleType"
+]

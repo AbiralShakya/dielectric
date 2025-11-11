@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Neuro-Geometric Placer MCP Server
+Dielectric MCP Server
 
 A single MCP server with multiple tools for PCB placement optimization.
 Uses Dedalus Labs openmcp framework.
@@ -20,7 +20,7 @@ from backend.geometry.placement import Placement
 
 
 # Create openmcp server
-server = MCPServer("neuro-geometric-placer")
+server = MCPServer("dielectric")
 
 # Register tools within binding context
 with server.binding():
@@ -159,7 +159,7 @@ with server.binding():
 
 def main():
     """Entry point for running the MCP server."""
-    print("🚀 Starting Neuro-Geometric Placer MCP Server")
+    print("🚀 Starting Dielectric MCP Server")
     print("Available tools:")
     print("  - score_delta: Compute placement score changes")
     print("  - generate_heatmap: Create thermal heatmaps")

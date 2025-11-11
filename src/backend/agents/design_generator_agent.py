@@ -6,13 +6,16 @@ Generates PCB designs from natural language descriptions using xAI.
 
 from typing import Dict, List, Optional, Any
 try:
-    from backend.ai.xai_client import XAIClient
+    from backend.ai.enhanced_xai_client import EnhancedXAIClient
     from backend.geometry.placement import Placement
     from backend.geometry.component import Component
     from backend.geometry.board import Board
     from backend.geometry.net import Net
 except ImportError:
-    from src.backend.ai.xai_client import XAIClient
+    try:
+        from src.backend.ai.enhanced_xai_client import EnhancedXAIClient
+    except ImportError:
+        from src.backend.ai.xai_client import XAIClient as EnhancedXAIClient
     from src.backend.geometry.placement import Placement
     from src.backend.geometry.component import Component
     from src.backend.geometry.board import Board
@@ -24,7 +27,12 @@ class DesignGeneratorAgent:
     
     def __init__(self):
         """Initialize design generator."""
-        self.xai_client = XAIClient()
+        try:
+            self.xai_client = EnhancedXAIClient()
+        except Exception:
+            # Fallback to basic client
+            from src.backend.ai.xai_client import XAIClient
+            self.xai_client = XAIClient()
         self.name = "DesignGeneratorAgent"
     
     async def generate_from_natural_language(
@@ -42,75 +50,112 @@ class DesignGeneratorAgent:
         Returns:
             Dictionary with placement data
         """
+        import asyncio
+        import concurrent.futures
+        
         try:
-            # Use xAI to parse natural language and generate design
-            prompt = f"""
-            Generate a PCB design from this description: {description}
+            # Use enhanced xAI client for extensive reasoning
+            if hasattr(self.xai_client, 'generate_design_with_reasoning'):
+                print("🚀 Using Enhanced xAI Client for design generation")
+                loop = asyncio.get_event_loop()
+                with concurrent.futures.ThreadPoolExecutor() as executor:
+                    future = loop.run_in_executor(
+                        executor,
+                        lambda: self.xai_client.generate_design_with_reasoning(description, board_size)
+                    )
+                    result = await asyncio.wait_for(future, timeout=45.0)  # 45 second timeout for xAI
+                
+                if result.get("success"):
+                    design_data = result.get("design", {})
+                    design_data = self._enhance_design(design_data, description)
+                    return {
+                        "success": True,
+                        "placement": design_data,
+                        "agent": self.name,
+                        "description": description,
+                        "enhanced": True
+                    }
+                else:
+                    raise Exception(result.get("error", "Design generation failed"))
+            else:
+                # Fallback to basic xAI generation
+                print("🚀 Using Basic xAI Client for design generation")
+                prompt = f"""
+                Generate a PCB design from this description: {description}
+                
+                Parse the description and identify:
+                1. Components needed (ICs, resistors, capacitors, etc.)
+                2. Component specifications (package types, power requirements)
+                3. Connections/nets between components
+                4. Board size requirements
+                5. Functional modules
+                
+                Return a structured JSON with:
+                {{
+                    "board": {{"width": 100, "height": 100, "clearance": 0.5}},
+                    "components": [
+                        {{
+                            "name": "U1",
+                            "package": "SOIC-8",
+                            "width": 5,
+                            "height": 4,
+                            "power": 0.5,
+                            "x": 50,
+                            "y": 50,
+                            "angle": 0,
+                            "placed": true
+                        }}
+                    ],
+                    "nets": [
+                        {{
+                            "name": "VCC",
+                            "pins": [["U1", "pin1"], ["U2", "pin1"]]
+                        }}
+                    ],
+                    "modules": [
+                        {{
+                            "name": "Power Supply",
+                            "components": ["U1", "C1", "L1"]
+                        }}
+                    ]
+                }}
+                
+                Make it realistic and complete.
+                """
+                
+                loop = asyncio.get_event_loop()
+                with concurrent.futures.ThreadPoolExecutor() as executor:
+                    future = loop.run_in_executor(
+                        executor,
+                        lambda: self.xai_client._call_api([{"role": "user", "content": prompt}], max_tokens=2000)
+                    )
+                    response = await asyncio.wait_for(future, timeout=45.0)  # 45 second timeout
+                
+                # Parse response to extract JSON
+                if response.get("choices"):
+                    content = response["choices"][0]["message"]["content"]
+                    design_data = self._parse_design_response(content, board_size)
+                    design_data = self._enhance_design(design_data, description)
+                    return {
+                        "success": True,
+                        "placement": design_data,
+                        "agent": self.name,
+                        "description": description,
+                        "enhanced": True
+                    }
+                else:
+                    raise Exception("No response from xAI")
             
-            Parse the description and identify:
-            1. Components needed (ICs, resistors, capacitors, etc.)
-            2. Component specifications (package types, power requirements)
-            3. Connections/nets between components
-            4. Board size requirements
-            5. Functional modules
-            
-            Return a structured JSON with:
-            {{
-                "board": {{"width": 100, "height": 100, "clearance": 0.5}},
-                "components": [
-                    {{
-                        "name": "U1",
-                        "package": "SOIC-8",
-                        "width": 5,
-                        "height": 4,
-                        "power": 0.5,
-                        "x": 50,
-                        "y": 50,
-                        "angle": 0,
-                        "placed": true
-                    }}
-                ],
-                "nets": [
-                    {{
-                        "name": "VCC",
-                        "pins": [["U1", "pin1"], ["U2", "pin1"]]
-                    }}
-                ],
-                "modules": [
-                    {{
-                        "name": "Power Supply",
-                        "components": ["U1", "C1", "L1"]
-                    }}
-                ]
-            }}
-            
-            Make it realistic and complete.
-            """
-            
-            response = self.xai_client._call_api(prompt, max_tokens=2000)
-            
-            # Parse response to extract JSON
-            design_data = self._parse_design_response(response, board_size)
-            
-            # Validate and enhance design
-            design_data = self._enhance_design(design_data, description)
-            
-            return {
-                "success": True,
-                "placement": design_data,
-                "agent": self.name,
-                "description": description
-            }
-            
+        except asyncio.TimeoutError:
+            error_msg = "xAI API call timed out after 45 seconds. Please check your xAI API key and network connection."
+            print(f"❌ {error_msg}")
+            raise Exception(error_msg)
         except Exception as e:
-            # Fallback: Generate basic design
-            return {
-                "success": True,
-                "placement": self._generate_fallback_design(description, board_size),
-                "agent": self.name,
-                "description": description,
-                "warning": f"Used fallback design due to: {str(e)}"
-            }
+            error_msg = f"Design generation failed: {str(e)}"
+            print(f"❌ {error_msg}")
+            import traceback
+            traceback.print_exc()
+            raise Exception(error_msg)
     
     def _parse_design_response(self, response: str, board_size: Optional[Dict] = None) -> Dict:
         """Parse xAI response to extract design data."""

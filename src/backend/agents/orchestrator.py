@@ -13,6 +13,7 @@ try:
     from backend.agents.local_placer_agent import LocalPlacerAgent
     from backend.agents.verifier_agent import VerifierAgent
     from backend.agents.error_fixer_agent import ErrorFixerAgent
+    from backend.agents.exporter_agent import ExporterAgent
     from backend.database.pcb_database import PCBDatabase
 except ImportError:
     from src.backend.geometry.placement import Placement
@@ -21,6 +22,7 @@ except ImportError:
     from src.backend.agents.local_placer_agent import LocalPlacerAgent
     from src.backend.agents.verifier_agent import VerifierAgent
     from src.backend.agents.error_fixer_agent import ErrorFixerAgent
+    from src.backend.agents.exporter_agent import ExporterAgent
     from src.backend.database.pcb_database import PCBDatabase
 
 
@@ -33,6 +35,7 @@ class AgentOrchestrator:
         self.local_placer_agent = LocalPlacerAgent()
         self.verifier_agent = VerifierAgent()
         self.error_fixer_agent = ErrorFixerAgent()
+        self.exporter_agent = ExporterAgent()
         self.database = PCBDatabase() if use_database else None
     
     async def optimize_fast(
@@ -103,7 +106,7 @@ class AgentOrchestrator:
             seed = int(hashlib.md5(user_intent.encode()).hexdigest()[:8], 16) % (2**31)
             print(f"🔧 LocalPlacerAgent: Running optimization (seed={seed})...")
             placement_result = await self.local_placer_agent.process(
-                placement, weights, max_time_ms=500.0, callback=callback, random_seed=seed
+                placement, weights, max_time_ms=500.0, callback=callback, random_seed=seed, user_intent=user_intent
             )
 
             if not placement_result["success"]:
@@ -184,6 +187,23 @@ class AgentOrchestrator:
                     "fixes": fix_result.get("fixes_applied", [])
                 }
             
+            # Export to KiCad using MCP server
+            kicad_export = None
+            try:
+                print("📤 ExporterAgent: Exporting to KiCad format...")
+                export_result = await self.exporter_agent.process(optimized_placement, format="kicad")
+                if export_result.get("success"):
+                    kicad_export = {
+                        "format": export_result.get("format"),
+                        "method": export_result.get("method", "unknown"),
+                        "ready": True
+                    }
+                    print(f"✅ ExporterAgent: KiCad export successful (method: {export_result.get('method')})")
+                else:
+                    print(f"⚠️  ExporterAgent: Export failed: {export_result.get('error', 'Unknown error')}")
+            except Exception as e:
+                print(f"⚠️  ExporterAgent: Export exception: {e}")
+            
             return {
                 "success": True,
                 "placement": optimized_placement,
@@ -193,9 +213,10 @@ class AgentOrchestrator:
                 "geometry_data": geometry_data,  # Computational geometry analysis
                 "database_hints": database_hints,  # Industry patterns
                 "error_fixes": error_fixes,  # Agentic error fixing
+                "kicad_export": kicad_export,  # KiCad MCP export
                 "stats": stats,
                 "verification": verification_result,
-                "agents_used": ["IntentAgent", "LocalPlacerAgent", "VerifierAgent", "ErrorFixerAgent"],
+                "agents_used": ["IntentAgent", "LocalPlacerAgent", "VerifierAgent", "ErrorFixerAgent", "ExporterAgent"],
                 "method": "direct_ai_agents"
             }
 

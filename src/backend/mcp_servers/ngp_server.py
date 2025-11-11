@@ -1,5 +1,5 @@
 """
-Neuro-Geometric Placer MCP Server
+Dielectric MCP Server
 
 A single MCP server with multiple tools for PCB placement optimization using Dedalus Labs openmcp framework.
 """
@@ -276,7 +276,7 @@ def generate_kicad_pcb(placement: Placement) -> str:
 
 
 if __name__ == "__main__":
-    print("🚀 Starting Neuro-Geometric Placer MCP Server")
+    print("🚀 Starting Dielectric MCP Server")
     print("Available tools:")
     print("  - score_delta: Compute placement score changes")
     print("  - generate_heatmap: Create thermal heatmaps")

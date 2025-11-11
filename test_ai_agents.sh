@@ -1,5 +1,5 @@
 #!/bin/bash
-echo "🧪 Testing Neuro-Geometric Placer AI Agent System"
+echo "🧪 Testing Dielectric AI Agent System"
 echo "================================================="
 
 # Start server in background

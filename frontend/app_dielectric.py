@@ -13,13 +13,48 @@ from typing import Dict, Any, List, Optional
 import time
 import sys
 import os
+
+# Add frontend directory to path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from geometry_visualizer import (
-    visualize_voronoi_diagram,
-    visualize_minimum_spanning_tree,
-    visualize_convex_hull,
-    create_geometry_dashboard
-)
+
+# Import visualizers with error handling
+_geometry_import_error = None
+_circuit_import_error = None
+
+try:
+    from geometry_visualizer import (
+        visualize_voronoi_diagram,
+        visualize_minimum_spanning_tree,
+        visualize_convex_hull,
+        create_geometry_dashboard
+    )
+except ImportError as e:
+    _geometry_import_error = str(e)
+    # Define dummy functions to prevent crashes
+    def visualize_voronoi_diagram(*args, **kwargs):
+        return go.Figure()
+    def visualize_minimum_spanning_tree(*args, **kwargs):
+        return go.Figure()
+    def visualize_convex_hull(*args, **kwargs):
+        return go.Figure()
+    def create_geometry_dashboard(*args, **kwargs):
+        return go.Figure()
+
+try:
+    from circuit_visualizer import (
+        create_circuit_visualization,
+        create_pcb_layout_view,
+        create_schematic_view
+    )
+except ImportError as e:
+    _circuit_import_error = str(e)
+    # Define dummy functions to prevent crashes
+    def create_circuit_visualization(*args, **kwargs):
+        return go.Figure()
+    def create_pcb_layout_view(*args, **kwargs):
+        return go.Figure()
+    def create_schematic_view(*args, **kwargs):
+        return go.Figure()
 
 API_BASE = "http://localhost:8000"
 
@@ -217,11 +252,32 @@ with st.sidebar:
         help="Generate: Create new PCB from natural language\nOptimize: Optimize existing design"
     )
 
-# Initialize session state
+# Initialize session state early
 if "design_data" not in st.session_state:
     st.session_state.design_data = None
 if "optimization_results" not in st.session_state:
     st.session_state.optimization_results = None
+if "example_description" not in st.session_state:
+    st.session_state.example_description = ""
+
+# Check backend connection
+try:
+    backend_check = requests.get(f"{API_BASE}/health", timeout=2)
+    backend_online = backend_check.status_code == 200
+except:
+    backend_online = False
+
+# Show import errors if any (after Streamlit is initialized)
+if _geometry_import_error:
+    st.warning(f"⚠️ Geometry visualizer import failed: {_geometry_import_error}")
+if _circuit_import_error:
+    st.warning(f"⚠️ Circuit visualizer import failed: {_circuit_import_error}")
+
+# Check backend connection
+if not backend_online:
+    st.error("⚠️ **Backend server is not running!**")
+    st.info("Please start the backend server:\n```bash\ncd /Users/abiralshakya/Documents/hackprinceton2025/dielectric\nsource venv/bin/activate\nuvicorn src.backend.api.main:app --host 0.0.0.0 --port 8000 --reload\n```")
+    st.stop()
 
 # Main content
 st.markdown("# Dielectric")
@@ -234,11 +290,17 @@ if workflow == "Generate Design":
     col1, col2 = st.columns([2, 1])
     
     with col1:
+        # Initialize example_description if not set
+        if "example_description" not in st.session_state:
+            st.session_state.example_description = ""
+        
         design_description = st.text_area(
             "Describe your PCB design",
+            value=st.session_state.example_description,
             height=150,
             placeholder="e.g., Design an audio amplifier circuit with power supply. Include op-amp, resistors, capacitors, and power management IC. Optimize for low noise and thermal efficiency.",
-            help="Describe the PCB you want to create in natural language"
+            help="Describe the PCB you want to create in natural language",
+            key="design_description_input"
         )
         
         col_size1, col_size2 = st.columns(2)
@@ -259,7 +321,7 @@ if workflow == "Generate Design":
                                 "description": design_description,
                                 "board_size": {"width": board_width, "height": board_height, "clearance": 0.5}
                             },
-                            timeout=30
+                            timeout=90  # Increased timeout for xAI calls (90 seconds)
                         )
                         
                         if response.status_code == 200:
@@ -285,17 +347,41 @@ if workflow == "Generate Design":
             if st.button(name, use_container_width=True, key=f"example_{name}"):
                 st.session_state.example_description = desc
                 st.rerun()
-        
-        if "example_description" in st.session_state:
-            design_description = st.session_state.example_description
     
     if st.session_state.design_data:
         st.markdown("---")
         st.markdown("### Generated Design")
-        fig = create_pcb_plot(st.session_state.design_data, "Generated PCB Design")
-        st.plotly_chart(fig, use_container_width=True)
         
-        col1, col2, col3 = st.columns(3)
+        # Circuit visualization tabs
+        viz_tabs = st.tabs(["PCB Layout", "Schematic", "Thermal View"])
+        
+        with viz_tabs[0]:
+            st.markdown("#### PCB Layout View")
+            st.caption("Proper PCB layout showing components, pads, traces, and board outline")
+            pcb_fig = create_pcb_layout_view(
+                st.session_state.design_data.get("board", {}).get("width", 100),
+                st.session_state.design_data.get("board", {}).get("height", 100),
+                st.session_state.design_data.get("components", []),
+                st.session_state.design_data.get("nets", [])
+            )
+            st.plotly_chart(pcb_fig, use_container_width=True)
+        
+        with viz_tabs[1]:
+            st.markdown("#### Schematic View")
+            st.caption("Schematic representation with component symbols and connections")
+            schematic_fig = create_schematic_view(
+                st.session_state.design_data.get("components", []),
+                st.session_state.design_data.get("nets", [])
+            )
+            st.plotly_chart(schematic_fig, use_container_width=True)
+        
+        with viz_tabs[2]:
+            st.markdown("#### Thermal View")
+            st.caption("Thermal heatmap overlay")
+            thermal_fig = create_pcb_plot(st.session_state.design_data, "Thermal Analysis")
+            st.plotly_chart(thermal_fig, use_container_width=True)
+        
+        col1, col2, col3, col4 = st.columns(4)
         with col1:
             st.metric("Components", len(st.session_state.design_data.get("components", [])))
         with col2:
@@ -303,6 +389,30 @@ if workflow == "Generate Design":
         with col3:
             board = st.session_state.design_data.get("board", {})
             st.metric("Board Size", f"{board.get('width', 0)}×{board.get('height', 0)}mm")
+        with col4:
+            # Export button for generated designs
+            if st.button("📥 Export to KiCad", type="primary", use_container_width=True):
+                try:
+                    response = requests.post(
+                        f"{API_BASE}/export/kicad",
+                        json={"placement": st.session_state.design_data},
+                        timeout=10
+                    )
+                    
+                    if response.status_code == 200:
+                        data = response.json()
+                        st.download_button(
+                            "⬇️ Download KiCad File",
+                            data=data["content"],
+                            file_name=data["filename"],
+                            mime="text/plain",
+                            use_container_width=True
+                        )
+                        st.success("✅ KiCad file ready")
+                    else:
+                        st.error(f"Export failed: {response.status_code} - {response.text}")
+                except Exception as e:
+                    st.error(f"Error: {str(e)}")
 
 else:  # Optimize Design
     st.markdown("## Optimize Existing Design")
@@ -384,16 +494,68 @@ else:  # Optimize Design
             
             col1, col2 = st.columns(2)
             
-            with col1:
-                st.markdown("#### Before")
-                fig = create_pcb_plot(st.session_state.design_data, "Initial Design")
-                st.plotly_chart(fig, width='stretch')
+            # Circuit visualization comparison
+            comparison_tabs = st.tabs(["PCB Layout Comparison", "Schematic Comparison", "Thermal Comparison"])
             
-            with col2:
-                st.markdown("#### After")
-                if st.session_state.optimization_results.get("placement"):
-                    fig = create_pcb_plot(st.session_state.optimization_results["placement"], "Optimized Design")
-                    st.plotly_chart(fig, width='stretch')
+            with comparison_tabs[0]:
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.markdown("#### Before - PCB Layout")
+                    board = st.session_state.design_data.get("board", {})
+                    before_pcb = create_pcb_layout_view(
+                        board.get("width", 100),
+                        board.get("height", 100),
+                        st.session_state.design_data.get("components", []),
+                        st.session_state.design_data.get("nets", [])
+                    )
+                    st.plotly_chart(before_pcb, use_container_width=True)
+                
+                with col2:
+                    st.markdown("#### After - PCB Layout")
+                    if st.session_state.optimization_results.get("placement"):
+                        opt_board = st.session_state.optimization_results["placement"].get("board", {})
+                        after_pcb = create_pcb_layout_view(
+                            opt_board.get("width", 100),
+                            opt_board.get("height", 100),
+                            st.session_state.optimization_results["placement"].get("components", []),
+                            st.session_state.optimization_results["placement"].get("nets", [])
+                        )
+                        st.plotly_chart(after_pcb, use_container_width=True)
+            
+            with comparison_tabs[1]:
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.markdown("#### Before - Schematic")
+                    before_sch = create_schematic_view(
+                        st.session_state.design_data.get("components", []),
+                        st.session_state.design_data.get("nets", [])
+                    )
+                    st.plotly_chart(before_sch, use_container_width=True)
+                
+                with col2:
+                    st.markdown("#### After - Schematic")
+                    if st.session_state.optimization_results.get("placement"):
+                        after_sch = create_schematic_view(
+                            st.session_state.optimization_results["placement"].get("components", []),
+                            st.session_state.optimization_results["placement"].get("nets", [])
+                        )
+                        st.plotly_chart(after_sch, use_container_width=True)
+            
+            with comparison_tabs[2]:
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.markdown("#### Before - Thermal")
+                    thermal_before = create_pcb_plot(st.session_state.design_data, "Initial Thermal")
+                    st.plotly_chart(thermal_before, use_container_width=True)
+                
+                with col2:
+                    st.markdown("#### After - Thermal")
+                    if st.session_state.optimization_results.get("placement"):
+                        thermal_after = create_pcb_plot(
+                            st.session_state.optimization_results["placement"],
+                            "Optimized Thermal"
+                        )
+                        st.plotly_chart(thermal_after, use_container_width=True)
             
             # Multi-Agent Workflow Status
             agents_used = st.session_state.optimization_results.get("agents_used", [])

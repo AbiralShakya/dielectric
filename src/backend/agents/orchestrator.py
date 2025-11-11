@@ -63,18 +63,38 @@ class AgentOrchestrator:
         try:
             from src.backend.agents.routing_agent import RoutingAgent
             from src.backend.constraints.pcb_fabrication import FabricationConstraints
+            from src.backend.mcp.kicad_direct_client import KiCadDirectClient
         except ImportError:
             try:
                 from backend.agents.routing_agent import RoutingAgent
                 from backend.constraints.pcb_fabrication import FabricationConstraints
+                from backend.mcp.kicad_direct_client import KiCadDirectClient
             except ImportError:
                 RoutingAgent = None
+                KiCadDirectClient = None
+        
+        # Create shared KiCad client for all agents
+        self.kicad_client = None
+        if KiCadDirectClient:
+            try:
+                self.kicad_client = KiCadDirectClient()
+                if self.kicad_client.is_available():
+                    logger.info("✅ Orchestrator: KiCad client initialized")
+                else:
+                    logger.warning("⚠️  Orchestrator: KiCad not available")
+                    self.kicad_client = None
+            except Exception as e:
+                logger.warning(f"⚠️  Orchestrator: Could not initialize KiCad client: {e}")
+                self.kicad_client = None
         
         if RoutingAgent:
             constraints = FabricationConstraints()
-            self.routing_agent = RoutingAgent(constraints=constraints)
+            self.routing_agent = RoutingAgent(kicad_client=self.kicad_client, constraints=constraints)
         else:
             self.routing_agent = None
+        
+        # Initialize VerifierAgent with KiCad client
+        self.verifier_agent = VerifierAgent(kicad_client=self.kicad_client)
     
     async def _execute_with_retry(
         self,

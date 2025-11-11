@@ -50,6 +50,20 @@ class RoutingAgent:
         self.traces: List[Dict] = []
         self.vias: List[Dict] = []
         
+        # Try to initialize KiCad client if not provided
+        if not self.kicad_client:
+            try:
+                from src.backend.mcp.kicad_direct_client import KiCadDirectClient
+                self.kicad_client = KiCadDirectClient()
+                if self.kicad_client.is_available():
+                    logger.info("✅ RoutingAgent: KiCad client initialized")
+                else:
+                    logger.warning("⚠️  RoutingAgent: KiCad not available")
+                    self.kicad_client = None
+            except Exception as e:
+                logger.warning(f"⚠️  RoutingAgent: Could not initialize KiCad client: {e}")
+                self.kicad_client = None
+        
     async def route_design(self, placement: Placement, max_nets: Optional[int] = None) -> Dict:
         """
         Route all nets in the design.
@@ -241,11 +255,16 @@ class RoutingAgent:
             traces.append(trace_info)
             
             # Place trace using KiCad MCP if available
-            if self.kicad_client:
+            if self.kicad_client and self.kicad_client.is_available():
                 try:
-                    await self._place_trace_kicad(trace_info)
+                    kicad_result = await self._place_trace_kicad(trace_info)
+                    if kicad_result.get("success"):
+                        trace_info["kicad_placed"] = True
+                        logger.info(f"   ✅ KiCad: Placed trace for {net.name}")
+                    else:
+                        logger.warning(f"   ⚠️  KiCad trace placement failed: {kicad_result.get('error')}")
                 except Exception as e:
-                    logger.warning(f"Failed to place trace via KiCad MCP: {e}")
+                    logger.warning(f"Failed to place trace via KiCad: {e}")
         
         return {
             "success": True,
@@ -431,50 +450,50 @@ class RoutingAgent:
     
     async def _place_trace_kicad(self, trace_info: Dict):
         """
-        Place trace using KiCad MCP client.
+        Place trace using KiCad direct client.
         
         Args:
             trace_info: Trace information dictionary
+        
+        Returns:
+            Result dictionary
         """
-        if not self.kicad_client:
-            return
+        if not self.kicad_client or not self.kicad_client.is_available():
+            return {"success": False, "error": "KiCad client not available"}
         
         try:
-            # Call KiCad MCP route_trace tool
             start_pos = trace_info["start_position"]
             end_pos = trace_info["end_position"]
             layer = trace_info["layer"]
             width = trace_info["width"]
             net = trace_info["net"]
             
-            # Format for KiCad MCP API
-            params = {
-                "start": {
-                    "x": start_pos[0],
-                    "y": start_pos[1],
-                    "unit": "mm"
-                },
-                "end": {
-                    "x": end_pos[0],
-                    "y": end_pos[1],
-                    "unit": "mm"
-                },
-                "layer": layer,
-                "width": width,
-                "net": net
+            # Format for KiCad client
+            start = {
+                "x": start_pos[0],
+                "y": start_pos[1],
+                "unit": "mm"
+            }
+            end = {
+                "x": end_pos[0],
+                "y": end_pos[1],
+                "unit": "mm"
             }
             
-            # Call MCP tool (would use actual MCP client in production)
-            # For now, log the call
-            logger.info(f"   KiCad MCP: route_trace({net}, {layer}, {width}mm)")
+            # Call KiCad client
+            result = await self.kicad_client.route_trace(
+                start=start,
+                end=end,
+                layer=layer,
+                width=width,
+                net=net
+            )
             
-            # In production, would use:
-            # result = await self.kicad_client.call_tool("route_trace", params)
-            # if not result.get("success"):
-            #     logger.warning(f"KiCad trace placement failed: {result.get('error')}")
+            return result
             
         except Exception as e:
-            logger.warning(f"Failed to place trace via KiCad MCP: {e}")
+            logger.warning(f"Failed to place trace via KiCad: {e}")
+            return {"success": False, "error": str(e)}
     
     def get_routing_statistics(self) -> Dict:
         """Get routing statistics."""

@@ -41,6 +41,20 @@ class VerifierAgent:
         self.constraints = constraints or FabricationConstraints()
         self.constraint_validator = ConstraintValidator(self.constraints)
         self.kicad_client = kicad_client
+        
+        # Try to initialize KiCad client if not provided
+        if not self.kicad_client:
+            try:
+                from src.backend.mcp.kicad_direct_client import KiCadDirectClient
+                self.kicad_client = KiCadDirectClient()
+                if self.kicad_client.is_available():
+                    logger.info("✅ VerifierAgent: KiCad client initialized")
+                else:
+                    logger.warning("⚠️  VerifierAgent: KiCad not available")
+                    self.kicad_client = None
+            except Exception as e:
+                logger.warning(f"⚠️  VerifierAgent: Could not initialize KiCad client: {e}")
+                self.kicad_client = None
     
     async def process(self, placement: Placement, include_dfm: bool = True, run_kicad_drc: bool = True) -> Dict:
         """
@@ -74,7 +88,7 @@ class VerifierAgent:
         
         # KiCad DRC integration
         kicad_drc_violations = []
-        if run_kicad_drc and self.kicad_client:
+        if run_kicad_drc and self.kicad_client and self.kicad_client.is_available():
             try:
                 kicad_drc_result = await self._run_kicad_drc(placement)
                 if kicad_drc_result.get("success"):
@@ -278,7 +292,7 @@ class VerifierAgent:
     
     async def _run_kicad_drc(self, placement: Placement) -> Dict:
         """
-        Run KiCad Design Rule Check via MCP.
+        Run KiCad Design Rule Check via direct client.
         
         Args:
             placement: Placement to check
@@ -286,7 +300,7 @@ class VerifierAgent:
         Returns:
             DRC result with violations
         """
-        if not self.kicad_client:
+        if not self.kicad_client or not self.kicad_client.is_available():
             return {
                 "success": False,
                 "error": "KiCad client not available",
@@ -294,20 +308,15 @@ class VerifierAgent:
             }
         
         try:
-            # Call KiCad MCP run_drc tool
-            params = {}
+            # Run DRC
+            result = await self.kicad_client.run_drc()
             
-            # In production, would use:
-            # result = await self.kicad_client.call_tool("run_drc", params)
-            # return result
+            if result.get("success"):
+                logger.info(f"   KiCad DRC: Found {len(result.get('violations', []))} violations")
+            else:
+                logger.warning(f"   KiCad DRC failed: {result.get('error')}")
             
-            # For now, return structure
-            logger.info("   Running KiCad DRC via MCP...")
-            return {
-                "success": True,
-                "violations": [],
-                "message": "KiCad DRC integration ready - requires MCP client"
-            }
+            return result
             
         except Exception as e:
             logger.error(f"KiCad DRC failed: {e}")

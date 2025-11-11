@@ -32,8 +32,23 @@ fi
 
 # Check for XAI_API_KEY
 if [ -z "$XAI_API_KEY" ]; then
-    echo "⚠️  XAI_API_KEY not set. Set it with: export XAI_API_KEY=your_key"
+    echo "❌ XAI_API_KEY not set!"
+    echo ""
+    echo "   XAI_API_KEY is REQUIRED for Dielectric to work properly."
+    echo "   Without it, natural language processing will be severely limited."
+    echo ""
+    echo "   Set it with: export XAI_API_KEY=your_key"
     echo "   Or add to .env file"
+    echo ""
+    echo "   Get your API key from: https://console.x.ai/"
+    echo ""
+    read -p "   Continue anyway? (y/N): " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        echo "   Exiting. Please set XAI_API_KEY first."
+        exit 1
+    fi
+    echo "   ⚠️  Continuing without XAI_API_KEY - functionality will be limited"
 fi
 
 echo ""

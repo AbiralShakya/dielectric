@@ -64,7 +64,7 @@ class ErrorFixerAgent:
                 break
             
             # Get issues
-            issues = self._extract_issues(quality)
+            issues = await self._extract_issues(quality, fixed_placement)
             
             if not issues:
                 break
@@ -91,7 +91,7 @@ class ErrorFixerAgent:
             "agent": self.name
         }
     
-    def _extract_issues(self, quality: Dict) -> List[Dict]:
+    async def _extract_issues(self, quality: Dict, placement: Placement) -> List[Dict]:
         """Extract actionable issues from quality report."""
         issues = []
         

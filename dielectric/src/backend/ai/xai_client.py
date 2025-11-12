@@ -40,7 +40,8 @@ class XAIClient:
         self,
         messages: List[Dict],
         model: str = "grok-4-latest",  # Updated to use latest model
-        temperature: float = 0.7
+        temperature: float = 0.7,
+        max_tokens: Optional[int] = None
     ) -> Dict:
         """Make API call to xAI."""
         if not self.enabled or not self.headers:
@@ -53,6 +54,10 @@ class XAIClient:
             "messages": messages,
             "temperature": temperature
         }
+        
+        # Add max_tokens if provided
+        if max_tokens is not None:
+            data["max_tokens"] = max_tokens
         
         try:
             print(f"🔌 xAI API Call: {self.endpoint}")

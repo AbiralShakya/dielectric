@@ -98,16 +98,46 @@ class FolderParser:
         temp_dir = tempfile.mkdtemp(prefix="dielectric_folder_")
         
         try:
-            # Extract zip
-            with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-                zip_ref.extractall(temp_dir)
+            logger.info(f"Extracting zip file: {zip_path} (size: {zip_path.stat().st_size / (1024*1024):.2f} MB)")
             
-            logger.info(f"Extracted zip to {temp_dir}")
+            # Extract zip with error handling for large files
+            try:
+                with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+                    # Check for zip bomb (too many files or too large)
+                    file_count = len(zip_ref.namelist())
+                    total_size = sum(info.file_size for info in zip_ref.infolist())
+                    
+                    logger.info(f"   Zip contains {file_count} files, total size: {total_size / (1024*1024):.2f} MB")
+                    
+                    # Safety check: warn if very large
+                    if total_size > 500 * 1024 * 1024:  # 500MB
+                        logger.warning(f"   ⚠️  Large zip file ({total_size / (1024*1024):.2f} MB), extraction may take time")
+                    
+                    if file_count > 10000:
+                        logger.warning(f"   ⚠️  Many files ({file_count}), extraction may take time")
+                    
+                    # Extract all files
+                    zip_ref.extractall(temp_dir)
+                    
+                logger.info(f"✅ Extracted zip to {temp_dir}")
+            except zipfile.BadZipFile:
+                # Try as Altium .PcbDoc (which is a zip archive)
+                logger.info("   Not a standard zip, trying as Altium format...")
+                # For now, raise error - Altium parsing would need special handling
+                raise ValueError(f"Invalid zip file or unsupported format: {zip_path}")
+            except Exception as e:
+                logger.error(f"   Failed to extract zip: {e}")
+                raise ValueError(f"Failed to extract zip file: {e}")
+            
             return self._parse_directory(Path(temp_dir), optimization_intent)
         finally:
             # Cleanup
-            if os.path.exists(temp_dir):
-                shutil.rmtree(temp_dir, ignore_errors=True)
+            try:
+                if os.path.exists(temp_dir):
+                    shutil.rmtree(temp_dir, ignore_errors=True)
+                    logger.debug(f"Cleaned up temp directory: {temp_dir}")
+            except Exception as e:
+                logger.warning(f"Failed to clean up temp directory: {e}")
     
     def _parse_directory(
         self,

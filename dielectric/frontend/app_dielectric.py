@@ -44,6 +44,32 @@ except ImportError as e:
         return go.Figure()
 
 try:
+    from frontend.components import (
+        create_sleek_file_upload,
+        create_multi_agent_pipeline_viz,
+        create_physics_insights_dashboard,
+        create_geometry_insights_dashboard
+    )
+except ImportError:
+    try:
+        from components import (
+            create_sleek_file_upload,
+            create_multi_agent_pipeline_viz,
+            create_physics_insights_dashboard,
+            create_geometry_insights_dashboard
+        )
+    except ImportError:
+        # Fallback if components module not available
+        def create_sleek_file_upload():
+            pass
+        def create_multi_agent_pipeline_viz(*args, **kwargs):
+            return go.Figure()
+        def create_physics_insights_dashboard(*args, **kwargs):
+            pass
+        def create_geometry_insights_dashboard(*args, **kwargs):
+            pass
+
+try:
     from circuit_visualizer import (
         create_circuit_visualization,
         create_pcb_layout_view,
@@ -545,7 +571,16 @@ def process_zip_file(zip_file):
         status_text.info("**Step 1/4:** Uploading zip file to server...")
         progress_bar.progress(10)
         
-        files = {'file': (zip_file.name, zip_file.getvalue(), zip_file.type)}
+        # Ensure we have the correct content type
+        content_type = zip_file.type or "application/zip"
+        if not content_type or content_type == "application/octet-stream":
+            # Try to detect from filename
+            if zip_file.name.lower().endswith('.zip'):
+                content_type = "application/zip"
+            elif zip_file.name.lower().endswith('.pcbdoc'):
+                content_type = "application/zip"  # Altium files are zip archives
+        
+        files = {'file': (zip_file.name, zip_file.getvalue(), content_type)}
         
         status_text.info("**Step 2/4:** Extracting and scanning folder structure...")
         progress_bar.progress(30)
@@ -605,7 +640,31 @@ def process_zip_file(zip_file):
                 error_detail = error_json.get("detail", response.text[:500])
             except:
                 error_detail = response.text[:500] if hasattr(response, 'text') else f"HTTP {response.status_code}"
+            
+            # Show detailed error
             status_text.error(f"**Error {response.status_code}:** {error_detail}")
+            
+            # Additional help for common errors
+            if response.status_code == 500:
+                st.error("""
+                **Server Error (500):** The backend encountered an error processing your file.
+                
+                **Possible causes:**
+                - The zip file format is not supported
+                - The zip file is corrupted
+                - The zip file contains unsupported PCB design files
+                - Backend service error
+                
+                **Try:**
+                - Check that your zip file is not corrupted
+                - Ensure the zip contains PCB design files (.kicad_pcb, .json, etc.)
+                - Try extracting the zip and uploading individual files instead
+                - Check backend logs for more details
+                """)
+            
+            # Show full error details
+            with st.expander("Full Error Details"):
+                st.code(error_detail)
             
     except requests.exceptions.Timeout:
         st.session_state.processing_status = "error"
@@ -864,7 +923,7 @@ if workflow == "Generate Design":
     
     # Use session state directly, don't pass value parameter to avoid widget warning
     design_description = st.text_area(
-        "",
+        "Design Description",
         height=120,
         placeholder="Create a microcontroller board with MCU, crystal oscillator, decoupling capacitors, and programming header",
         key="design_description_input",
@@ -1048,9 +1107,13 @@ if workflow == "Generate Design":
 
 else:  # Optimize Design
     st.markdown("""
-    <div style="margin-bottom: 3rem;">
-        <h2 style="margin-bottom: 0.75rem;">Optimize Existing PCB Design</h2>
-        <p style="color: #86868b; font-size: 1.0625rem; margin-top: 0; font-weight: 400;">Upload your PCB design and optimize it with AI-powered algorithms</p>
+    <div style="margin-bottom: 5rem;">
+        <h2 style="font-size: 2.25rem; font-weight: 400; margin-bottom: 1rem; color: #ffffff; letter-spacing: -0.02em; line-height: 1.2;">
+            Optimize Existing PCB Design
+        </h2>
+        <p style="color: #71717a; font-size: 1rem; margin: 0;">
+            Upload your PCB design and optimize it with AI-powered algorithms
+        </p>
     </div>
     """, unsafe_allow_html=True)
     
@@ -1058,18 +1121,168 @@ else:  # Optimize Design
     col1, col2 = st.columns([1, 1])
     
     with col1:
-        st.markdown("### Load Design")
+        # Upload Type Toggle - React-style
+        st.markdown("""
+        <label style="display: block; font-size: 0.75rem; font-weight: 500; color: #71717a; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 1rem;">
+            Upload Type
+        </label>
+        """, unsafe_allow_html=True)
         
         upload_option = st.radio(
             "Upload Type",
             ["Single File", "Folder/Zip"],
             horizontal=True,
-            help="Choose to upload a single PCB file or an entire folder/zip"
+            help="Choose to upload a single PCB file or an entire folder/zip",
+            key="upload_option_radio",
+            label_visibility="collapsed"
         )
         
-        if upload_option == "Single File":
-            uploaded_file = st.file_uploader("Upload PCB Design", type=["json", "kicad_pcb"])
+        # Style the radio buttons to match React component
+        st.markdown("""
+        <style>
+        div[data-testid="stRadio"] > div {
+            display: inline-flex;
+            gap: 0.25rem;
+            background: #0a0a0a;
+            border: 1px solid #18181b;
+            padding: 0.25rem;
+            border-radius: 0.5rem;
+        }
+        div[data-testid="stRadio"] > div > label {
+            padding: 0.5rem 1.25rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            border-radius: 0.25rem;
+            transition: all 0.2s;
+        }
+        div[data-testid="stRadio"] > div > label[data-baseweb="radio"]:has(input:checked) {
+            background: #18181b;
+            color: #ffffff;
+        }
+        div[data-testid="stRadio"] > div > label:not(:has(input:checked)) {
+            color: #71717a;
+        }
+        div[data-testid="stRadio"] > div > label:hover:not(:has(input:checked)) {
+            color: #d4d4d8;
+        }
+        </style>
+        """, unsafe_allow_html=True)
         
+        # Clear the other uploader's state when switching options
+        if 'last_upload_option' in st.session_state and st.session_state.last_upload_option != upload_option:
+            # Clear the other option's file state
+            if upload_option == "Single File":
+                st.session_state.folder_zip_upload = None
+            else:
+                st.session_state.single_file_upload = None
+        st.session_state.last_upload_option = upload_option
+        
+        # Initialize uploaded_file variable
+        uploaded_file = None
+        uploaded_files = None
+        
+        # Upload Area - React-style clean design
+        st.markdown("""
+        <div style="background: #0a0a0a; border: 1px solid #18181b; padding: 2.5rem; margin-top: 1rem;">
+        """, unsafe_allow_html=True)
+        
+        if upload_option == "Single File":
+            # Clean single file upload - React style
+            st.markdown("""
+            <div style="border: 2px dashed #27272a; padding: 4rem 2rem; text-align: center; transition: border-color 0.2s;"
+                 onmouseover="this.style.borderColor='#3f3f46'" 
+                 onmouseout="this.style.borderColor='#27272a'">
+                <div style="font-size: 2rem; color: #3f3f46; margin-bottom: 1rem;">📤</div>
+                <p style="color: #a1a1aa; font-size: 0.875rem; margin-bottom: 0.5rem;">
+                    Drag & drop your PCB design file
+                </p>
+                <p style="color: #52525b; font-size: 0.75rem; margin-bottom: 1rem;">or click to browse</p>
+                <div style="display: flex; gap: 0.5rem; justify-content: center; margin-bottom: 1rem; flex-wrap: wrap;">
+                    <span style="padding: 0.25rem 0.75rem; background: #000000; border: 1px solid #27272a; color: #71717a; font-size: 0.75rem;">.kicad_pcb</span>
+                    <span style="padding: 0.25rem 0.75rem; background: #000000; border: 1px solid #27272a; color: #71717a; font-size: 0.75rem;">.json</span>
+                </div>
+                <p style="color: #3f3f46; font-size: 0.75rem; margin-top: 1rem;">Limit 200MB per file</p>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            uploaded_file = st.file_uploader(
+                "Upload PCB Design",
+                type=["json", "kicad_pcb"],
+                label_visibility="collapsed",
+                key="single_file_upload"
+            )
+            
+            # Show uploaded file in clean card
+            if uploaded_file:
+                st.markdown(f"""
+                <div style="background: #0a0a0a; border: 1px solid #18181b; border-radius: 0.5rem; padding: 1rem; margin-top: 1rem; display: flex; align-items: center; gap: 1rem;">
+                    <div style="font-size: 1.25rem; color: #71717a;">📄</div>
+                    <div style="flex: 1;">
+                        <div style="color: #ffffff; font-weight: 500; font-size: 0.875rem;">{uploaded_file.name}</div>
+                        <div style="color: #71717a; font-size: 0.75rem;">{(uploaded_file.size / 1024 / 1024):.2f} MB</div>
+                    </div>
+                    <div style="color: #4ec9b0; font-size: 0.75rem; font-weight: 500;">✓ Ready</div>
+                </div>
+                """, unsafe_allow_html=True)
+        
+        else:  # Folder/Zip
+            # Clean folder/zip upload - React style
+            st.markdown("""
+            <div style="border: 2px dashed #27272a; padding: 4rem 2rem; text-align: center; transition: border-color 0.2s;"
+                 onmouseover="this.style.borderColor='#3f3f46'" 
+                 onmouseout="this.style.borderColor='#27272a'">
+                <div style="font-size: 2rem; color: #3f3f46; margin-bottom: 1rem;">📁</div>
+                <p style="color: #a1a1aa; font-size: 0.875rem; margin-bottom: 0.5rem;">
+                    Drag & drop folder or zip file
+                </p>
+                <p style="color: #52525b; font-size: 0.75rem; margin-bottom: 1rem;">or click to browse</p>
+                <div style="display: flex; gap: 0.5rem; justify-content: center; margin-bottom: 1rem; flex-wrap: wrap;">
+                    <span style="padding: 0.25rem 0.75rem; background: #000000; border: 1px solid #27272a; color: #71717a; font-size: 0.75rem;">.zip</span>
+                    <span style="padding: 0.25rem 0.75rem; background: #000000; border: 1px solid #27272a; color: #71717a; font-size: 0.75rem;">.kicad_pcb</span>
+                    <span style="padding: 0.25rem 0.75rem; background: #000000; border: 1px solid #27272a; color: #71717a; font-size: 0.75rem;">.json</span>
+                </div>
+                <p style="color: #3f3f46; font-size: 0.75rem; margin-top: 1rem;">Limit 200MB per file</p>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            uploaded_files = st.file_uploader(
+                "Upload Folder/Zip",
+                type=None,
+                accept_multiple_files=True,
+                label_visibility="collapsed",
+                key="folder_zip_upload"
+            )
+            
+            # Show uploaded files in clean cards
+            if uploaded_files:
+                for f in uploaded_files:
+                    file_size_mb = f.size / 1024 / 1024
+                    st.markdown(f"""
+                    <div style="background: #0a0a0a; border: 1px solid #18181b; border-radius: 0.5rem; padding: 1rem; margin-top: 0.5rem; display: flex; align-items: center; gap: 1rem;">
+                        <div style="font-size: 1.25rem; color: #71717a;">📦</div>
+                        <div style="flex: 1;">
+                            <div style="color: #ffffff; font-weight: 500; font-size: 0.875rem;">{f.name}</div>
+                            <div style="color: #71717a; font-size: 0.75rem;">{file_size_mb:.2f} MB</div>
+                        </div>
+                        <div style="color: #4ec9b0; font-size: 0.75rem; font-weight: 500;">✓ Ready</div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                
+                # Process button for folder/zip
+                if st.button("🚀 Process Files", type="primary", use_container_width=True, key="process_folder"):
+                    zip_files = [f for f in uploaded_files if f.name.endswith('.zip')]
+                    other_files = [f for f in uploaded_files if not f.name.endswith('.zip')]
+                    
+                    if zip_files and len(zip_files) == 1 and len(other_files) == 0:
+                        process_zip_file(zip_files[0])
+                    elif other_files:
+                        process_multiple_files(other_files)
+                    else:
+                        st.warning("Please upload either a single zip file or multiple PCB files")
+        
+        st.markdown("</div>", unsafe_allow_html=True)  # Close upload container
+        
+        # Process single file upload
         if uploaded_file:
             try:
                 if uploaded_file.name.endswith('.json'):
@@ -1103,59 +1316,44 @@ else:  # Optimize Design
                             st.error(f"Error: {str(e)}")
             except Exception as e:
                 st.error(f"Error loading file: {str(e)}")
-        else:  # Folder/Zip
-            uploaded_files = st.file_uploader(
-                "Upload Folder/Zip",
-                type=None,  # Accept all file types for folder uploads
-                accept_multiple_files=True,
-                help="Upload a zip file or multiple files. Supports .zip, .kicad_pcb, .json, and other PCB file formats"
-            )
-            
-            # Store uploaded files in session state to detect changes
-            if uploaded_files:
-                # Check if files changed
-                file_names = [f.name for f in uploaded_files]
-                if 'last_uploaded_files' not in st.session_state or st.session_state.last_uploaded_files != file_names:
-                    st.session_state.last_uploaded_files = file_names
-                    st.session_state.files_to_process = uploaded_files
-                    st.session_state.processing_status = "ready"
-            
-            # Show uploaded files
-            if uploaded_files:
-                st.markdown("**Uploaded Files:**")
-                for f in uploaded_files:
-                    col1, col2 = st.columns([4, 1])
-                    with col1:
-                        st.text(f"{f.name} ({f.size / 1024 / 1024:.2f} MB)")
-                    with col2:
-                        if st.button("Remove", key=f"remove_{f.name}", use_container_width=True):
-                            st.session_state.last_uploaded_files = []
-                        st.rerun()
-            
-            # Process button - explicit trigger
-            if uploaded_files and st.session_state.get('files_to_process'):
-                st.markdown("---")
-                if st.button("Process Folder", type="primary", use_container_width=True):
-                    zip_files = [f for f in uploaded_files if f.name.endswith('.zip')]
-                    other_files = [f for f in uploaded_files if not f.name.endswith('.zip')]
-                    
-                    if zip_files and len(zip_files) == 1 and len(other_files) == 0:
-                        # Single zip file
-                        process_zip_file(zip_files[0])
-                    elif other_files:
-                        # Multiple files
-                        process_multiple_files(other_files)
-                    else:
-                        st.warning("Please upload either a single zip file or multiple PCB files")
-            
-            # Show processing status if in progress
-            if st.session_state.get('processing_status') == 'processing':
-                st.info("Processing folder... This may take a moment.")
-                st.progress(0.5)  # Indeterminate progress
         
-        # Examples in compact format
-        with st.expander("Quick Examples", expanded=False):
-            example_cols = st.columns(2)
+        # Show processing status if in progress (for folder/zip)
+        if st.session_state.get('processing_status') == 'processing':
+            st.info("Processing folder... This may take a moment.")
+            st.progress(0.5)  # Indeterminate progress
+        
+        # Quick Examples - React-style dropdown
+        st.markdown("""
+        <div style="margin-top: 2rem;">
+        """, unsafe_allow_html=True)
+        
+        examples_expanded = st.session_state.get('examples_expanded', False)
+        
+        # React-style button with chevron
+        chevron_icon = "▼" if examples_expanded else "▶"
+        if st.button(f"Quick Examples {chevron_icon}", key="toggle_examples_opt", use_container_width=False):
+            st.session_state.examples_expanded = not examples_expanded
+            st.rerun()
+        
+        # Style the button to match React component
+        st.markdown("""
+        <style>
+        button[key="toggle_examples_opt"] {
+            background: #0a0a0a !important;
+            border: 1px solid #18181b !important;
+            color: #a1a1aa !important;
+            font-size: 0.875rem !important;
+            padding: 0.5rem 1rem !important;
+            transition: all 0.2s !important;
+        }
+        button[key="toggle_examples_opt"]:hover {
+            color: #d4d4d8 !important;
+            border-color: #27272a !important;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+        
+        if st.session_state.get('examples_expanded', False):
             examples = [
                 ("Audio Amplifier", "Design an audio amplifier with op-amp, input/output capacitors, and power supply filtering"),
                 ("Power Supply", "Create a switching power supply with buck converter IC, inductor, capacitors, and feedback resistors"),
@@ -1163,15 +1361,73 @@ else:  # Optimize Design
                 ("MCU Board", "Create a microcontroller board with MCU, crystal oscillator, decoupling capacitors, and programming header")
             ]
             
+            example_cols = st.columns(2)
             for idx, (name, desc) in enumerate(examples):
                 with example_cols[idx % 2]:
+                    # React-style example buttons
                     if st.button(name, key=f"opt_example_{idx}", use_container_width=True):
-                        st.session_state.design_data = None  # Clear any existing design
-                        st.session_state.example_description = desc
-                        st.rerun()
+                        # Generate the example design
+                        with st.spinner(f"Generating {name}..."):
+                            try:
+                                response = requests.post(
+                                    f"{API_BASE}/generate",
+                                    json={
+                                        "description": desc,
+                                        "board_size": {
+                                            "width": 100,
+                                            "height": 100,
+                                            "clearance": 0.15
+                                        }
+                                    },
+                                    timeout=180
+                                )
+                                
+                                if response.status_code == 200:
+                                    result = response.json()
+                                    st.session_state.design_data = result.get("placement")
+                                    st.session_state.examples_expanded = False
+                                    st.success(f"**{name} generated!** Ready to optimize.")
+                                    st.rerun()
+                                else:
+                                    try:
+                                        error_json = response.json()
+                                        error_detail = error_json.get("detail", response.text[:500])
+                                    except:
+                                        error_detail = response.text[:500] if hasattr(response, 'text') else f"HTTP {response.status_code}"
+                                    st.error(f"Error generating {name}: {error_detail}")
+                            except requests.exceptions.Timeout:
+                                st.error(f"Timeout generating {name}. Please try again.")
+                            except Exception as e:
+                                st.error(f"Error: {str(e)}")
+            
+            # Style example buttons to match React component
+            st.markdown("""
+            <style>
+            button[key^="opt_example_"] {
+                background: #0a0a0a !important;
+                border: 1px solid #18181b !important;
+                color: #a1a1aa !important;
+                font-size: 0.875rem !important;
+                padding: 0.75rem 1rem !important;
+                text-align: left !important;
+                transition: all 0.2s !important;
+            }
+            button[key^="opt_example_"]:hover {
+                color: #d4d4d8 !important;
+                border-color: #27272a !important;
+            }
+            </style>
+            """, unsafe_allow_html=True)
+        
+        st.markdown("</div>", unsafe_allow_html=True)
     
     with col2:
         if st.session_state.design_data:
+            st.markdown("""
+            <div style="background: #0a0a0a; border: 1px solid #18181b; padding: 1.5rem; border-radius: 0.5rem;">
+                <h3 style="font-size: 1rem; font-weight: 500; color: #ffffff; margin-bottom: 1rem;">Current Design</h3>
+            </div>
+            """, unsafe_allow_html=True)
             fig = create_pcb_plot(st.session_state.design_data, "Current Design")
             st.plotly_chart(fig, use_container_width=True, key="current_design_plot")
     
@@ -1381,53 +1637,75 @@ else:  # Optimize Design
                         )
                         st.plotly_chart(thermal_after, use_container_width=True, key="thermal_after")
             
-            # Multi-Agent Workflow Status
+            # Multi-Agent Workflow Status - Enhanced Visualization
             agents_used = st.session_state.optimization_results.get("agents_used", [])
             if agents_used:
                 st.markdown("---")
-                st.markdown("### Multi-Agent Workflow")
-                st.markdown("**Why this matters:** Each agent specializes in one task, working together like a team of engineers.")
+                st.markdown("### 🤖 Multi-Agent Workflow")
+                st.markdown("""
+                <div style="background: linear-gradient(135deg, rgba(0, 122, 255, 0.1) 0%, rgba(78, 201, 176, 0.1) 100%);
+                            border-left: 4px solid #007aff;
+                            padding: 1rem;
+                            border-radius: 8px;
+                            margin-bottom: 1.5rem;">
+                    <strong>Research Vision:</strong> Multi-Agent Reinforcement Learning (MARL) for collaborative, learning agents.
+                    Agents will learn to collaborate and adapt strategies based on design complexity.
+                </div>
+                """, unsafe_allow_html=True)
                 
-                agent_descriptions = {
-                    "IntentAgent": "Understands your goals using computational geometry + xAI",
-                    "LocalPlacerAgent": "Optimizes placement (deterministic, fast)",
-                    "VerifierAgent": "Validates design rules and constraints",
-                    "ErrorFixerAgent": "Automatically fixes violations",
-                    "DesignGeneratorAgent": "Creates designs from natural language"
-                }
-                
-                cols = st.columns(len(agents_used))
-                for i, agent in enumerate(agents_used):
-                    with cols[i]:
-                        st.markdown(f"**{agent}**")
-                        if agent in agent_descriptions:
-                            st.caption(agent_descriptions[agent])
-                        st.success("Active")
+                # Pipeline visualization
+                try:
+                    pipeline_fig = create_multi_agent_pipeline_viz(agents_used)
+                    st.plotly_chart(pipeline_fig, use_container_width=True, key="agent_pipeline")
+                except:
+                    # Fallback to simple display
+                    agent_descriptions = {
+                        "IntentAgent": "Understands your goals using computational geometry + xAI",
+                        "LocalPlacerAgent": "Optimizes placement (deterministic, fast)",
+                        "PhysicsSimulationAgent": "Simulates thermal, SI, PDN physics",
+                        "VerifierAgent": "Validates design rules and constraints",
+                        "ErrorFixerAgent": "Automatically fixes violations",
+                        "ExporterAgent": "Exports to KiCad format"
+                    }
+                    
+                    cols = st.columns(len(agents_used))
+                    for i, agent in enumerate(agents_used):
+                        with cols[i]:
+                            st.markdown(f"**{agent.replace('Agent', '')}**")
+                            if agent in agent_descriptions:
+                                st.caption(agent_descriptions[agent])
+                            st.success("✓ Active")
             
-            # Computational Geometry Visualizations - THE MAIN DIFFERENTIATOR
+            # Computational Geometry Visualizations - Enhanced with Insights
             geometry_data = st.session_state.optimization_results.get("geometry_data")
             placement_data = st.session_state.optimization_results.get("placement", st.session_state.design_data)
             
             if placement_data and len(placement_data.get("components", [])) >= 2:
                 st.markdown("---")
-                st.markdown("### 🔬 Computational Geometry Analysis")
-                st.markdown("**This is what makes Dielectric unique:** We use computational geometry to understand PCB layouts, then feed this structured data to xAI for reasoning.")
                 
-                # Geometry metrics
-                if geometry_data:
-                    col1, col2, col3, col4 = st.columns(4)
-                    with col1:
-                        st.metric("MST Length", f"{geometry_data.get('mst_length', 0):.1f} mm",
-                                 help="Minimum Spanning Tree - optimal trace length estimate")
-                    with col2:
-                        st.metric("Voronoi Variance", f"{geometry_data.get('voronoi_variance', 0):.2f}",
-                                 help="Component distribution uniformity (lower = better)")
-                    with col3:
-                        st.metric("Thermal Hotspots", f"{geometry_data.get('thermal_hotspots', 0)}",
-                                 help="High-power component regions")
-                    with col4:
-                        st.metric("Net Crossings", f"{geometry_data.get('net_crossings', 0)}",
-                                 help="Potential routing conflicts")
+                # Use enhanced geometry insights dashboard
+                try:
+                    create_geometry_insights_dashboard(geometry_data or {}, placement_data)
+                except:
+                    # Fallback to original
+                    st.markdown("### 🔬 Computational Geometry Analysis")
+                    st.markdown("**This is what makes Dielectric unique:** We use computational geometry to understand PCB layouts, then feed this structured data to xAI for reasoning.")
+                    
+                    # Geometry metrics
+                    if geometry_data:
+                        col1, col2, col3, col4 = st.columns(4)
+                        with col1:
+                            st.metric("MST Length", f"{geometry_data.get('mst_length', 0):.1f} mm",
+                                     help="Minimum Spanning Tree - optimal trace length estimate")
+                        with col2:
+                            st.metric("Voronoi Variance", f"{geometry_data.get('voronoi_variance', 0):.2f}",
+                                     help="Component distribution uniformity (lower = better)")
+                        with col3:
+                            st.metric("Thermal Hotspots", f"{geometry_data.get('thermal_hotspots', 0)}",
+                                     help="High-power component regions")
+                        with col4:
+                            st.metric("Net Crossings", f"{geometry_data.get('net_crossings', 0)}",
+                                     help="Potential routing conflicts")
                 
                 # Geometry visualizations
                 viz_tabs = st.tabs(["Dashboard", "Voronoi", "MST", "Convex Hull"])
@@ -1511,6 +1789,20 @@ else:  # Optimize Design
                         placement_data.get("board", {}).get("height", 100)
                     )
                     st.plotly_chart(fig, width='stretch', key="convex_hull")
+            
+            # Physics Insights Dashboard
+            physics_results = st.session_state.optimization_results.get("physics_simulation")
+            if physics_results:
+                st.markdown("---")
+                try:
+                    create_physics_insights_dashboard(physics_results, geometry_data)
+                except Exception as e:
+                    logger.debug(f"Physics dashboard error: {e}")
+                    # Fallback: show basic physics info
+                    if isinstance(physics_results, dict):
+                        st.markdown("### 🔬 Physics Simulation Results")
+                        physics_score = physics_results.get("physics_score", 1.0)
+                        st.metric("Physics Score", f"{physics_score:.2f}")
             
             # Quality metrics
             quality = st.session_state.optimization_results.get("quality", {})

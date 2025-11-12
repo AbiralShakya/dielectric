@@ -7,10 +7,11 @@ Optimizes for interactive UI (<200ms) and scales to 100+ component designs.
 
 import asyncio
 import logging
-from typing import Dict, Optional, Callable, List
+from typing import Dict, Optional, Callable, List, TYPE_CHECKING, Any
 
 # Initialize ENHANCED_AVAILABLE flag
 ENHANCED_AVAILABLE = False
+DesignModule = None  # Will be set if import succeeds
 
 try:
     from backend.geometry.placement import Placement
@@ -204,7 +205,7 @@ class LocalPlacerAgent:
     async def _optimize_modules(
         self,
         placement: Placement,
-        modules: List[DesignModule],
+        modules: List[Any],  # DesignModule when available
         weights: Dict,
         max_time_ms: float,
         random_seed: Optional[int]
@@ -257,7 +258,7 @@ class LocalPlacerAgent:
     async def _optimize_components_in_modules(
         self,
         placement: Placement,
-        modules: List[DesignModule],
+        modules: List[Any],  # DesignModule when available
         weights: Dict,
         max_time_ms: float,
         callback: Optional[Callable],

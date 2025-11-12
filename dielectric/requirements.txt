@@ -20,6 +20,12 @@ numba>=0.58.0  # JIT compilation for fast scoring
 jax>=0.4.0  # Optional: GPU acceleration
 jaxlib>=0.4.0
 
+# Machine Learning & Deep Learning
+torch>=2.0.0  # PyTorch for neural networks
+torch-geometric>=2.3.0  # Graph Neural Networks
+torchvision>=0.15.0
+torchaudio>=2.0.0
+
 # Visualization
 streamlit>=1.28.0
 matplotlib>=3.7.0

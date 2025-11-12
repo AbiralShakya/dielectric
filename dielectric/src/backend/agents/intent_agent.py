@@ -73,13 +73,15 @@ class IntentAgent:
             
             # Pass computational geometry data to xAI for reasoning
             if self.client and (hasattr(self.client, 'enabled') and self.client.enabled or not hasattr(self.client, 'enabled')):
-                print("   🤖 Calling xAI API for weight reasoning...")
+                print("   🤖 Calling xAI API with enriched mathematical context...")
                 try:
                     if hasattr(self.client, 'intent_to_weights_with_geometry'):
+                        # Pass placement for full context enrichment
                         alpha, beta, gamma = self.client.intent_to_weights_with_geometry(
                             user_intent,
                             geometry_data,
-                            context
+                            context,
+                            placement=placement  # Pass placement for full enrichment
                         )
                     elif hasattr(self.client, 'intent_to_weights'):
                         # Fallback for basic client

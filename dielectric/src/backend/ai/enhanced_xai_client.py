@@ -15,6 +15,15 @@ import requests
 from typing import Dict, List, Optional, Tuple, Any
 import time
 
+try:
+    from backend.ai.context_enricher import ContextEnricher
+    from backend.ai.ml_feature_extractor import ContextSummarizer
+    from backend.ai.enhanced_prompt_engine import EnhancedPromptEngine
+except ImportError:
+    from src.backend.ai.context_enricher import ContextEnricher
+    from src.backend.ai.ml_feature_extractor import ContextSummarizer
+    from src.backend.ai.enhanced_prompt_engine import EnhancedPromptEngine
+
 
 class EnhancedXAIClient:
     """Enhanced xAI client with extensive reasoning capabilities."""
@@ -24,6 +33,11 @@ class EnhancedXAIClient:
         self.api_key = api_key or os.getenv("XAI_API_KEY")
         self.endpoint = "https://api.x.ai/v1/chat/completions"
         self.call_count = 0
+        
+        # Initialize context enrichment components
+        self.context_enricher = ContextEnricher()
+        self.context_summarizer = ContextSummarizer()
+        self.prompt_engine = EnhancedPromptEngine()
         
         if not self.api_key:
             print("⚠️  XAI_API_KEY not found in environment. LLM features will use fallback behavior.")
@@ -37,6 +51,7 @@ class EnhancedXAIClient:
             }
             self.enabled = True
             print(f"✅ Enhanced xAI Client initialized (endpoint: {self.endpoint})")
+            print(f"   📊 Context enrichment enabled (mathematical + ML insights)")
     
     def _call_api(
         self,
@@ -201,16 +216,32 @@ Make it realistic, complete, and optimized for thermal management.
         user_intent: str,
         current_score: float,
         iteration: int,
-        max_iterations: int
+        max_iterations: int,
+        physics_data: Optional[Dict] = None
     ) -> Dict:
         """
         Use xAI to reason about computational geometry data and suggest optimization strategy.
         
+        Now uses enhanced prompt engine with ML insights.
+        
         Called periodically during simulated annealing to guide optimization.
         """
-        progress = (iteration / max_iterations) * 100 if max_iterations > 0 else 0
-        
-        prompt = f"""
+        # Use enhanced prompt engine
+        try:
+            messages = self.prompt_engine.create_optimization_strategy_prompt(
+                geometry_data=geometry_data,
+                physics_data=physics_data or {},
+                user_intent=user_intent,
+                current_score=current_score,
+                iteration=iteration,
+                max_iterations=max_iterations
+            )
+        except Exception as e:
+            # Fallback to original method
+            print(f"   ⚠️  Enhanced prompt engine failed: {e}, using fallback")
+            progress = (iteration / max_iterations) * 100 if max_iterations > 0 else 0
+            
+            prompt = f"""
 You are optimizing a PCB layout using simulated annealing. Analyze the current computational geometry state and suggest optimization strategy.
 
 **Current State (Iteration {iteration}/{max_iterations}, {progress:.1f}% complete):**
@@ -247,19 +278,19 @@ Return JSON:
 
 Be specific and actionable.
 """
+            
+            messages = [
+                {
+                    "role": "system",
+                    "content": "You are a PCB optimization expert analyzing computational geometry metrics to guide simulated annealing."
+                },
+                {
+                    "role": "user",
+                    "content": prompt
+                }
+            ]
         
-        messages = [
-            {
-                "role": "system",
-                "content": "You are a PCB optimization expert analyzing computational geometry metrics to guide simulated annealing."
-            },
-            {
-                "role": "user",
-                "content": prompt
-            }
-        ]
-        
-        response = self._call_api(messages, temperature=0.7, max_tokens=1000)
+        response = self._call_api(messages, temperature=0.7, max_tokens=2000)  # Increased for richer responses
         
         if "error" in response or not response.get("choices"):
             return {"priority": "balanced", "strategy": "Continue optimization"}
@@ -273,14 +304,32 @@ Be specific and actionable.
         final_geometry: Dict,
         initial_score: float,
         final_score: float,
-        user_intent: str
+        user_intent: str,
+        initial_physics: Optional[Dict] = None,
+        final_physics: Optional[Dict] = None
     ) -> Dict:
         """
         Use xAI to analyze optimization results and suggest refinements.
-        """
-        improvement = ((initial_score - final_score) / initial_score * 100) if initial_score > 0 else 0
         
-        prompt = f"""
+        Now uses enhanced prompt engine with ML insights.
+        """
+        # Use enhanced prompt engine
+        try:
+            messages = self.prompt_engine.create_post_optimization_prompt(
+                initial_geometry=initial_geometry,
+                final_geometry=final_geometry,
+                initial_physics=initial_physics or {},
+                final_physics=final_physics or {},
+                initial_score=initial_score,
+                final_score=final_score,
+                user_intent=user_intent
+            )
+        except Exception as e:
+            # Fallback to original method
+            print(f"   ⚠️  Enhanced prompt engine failed: {e}, using fallback")
+            improvement = ((initial_score - final_score) / initial_score * 100) if initial_score > 0 else 0
+            
+            prompt = f"""
 Analyze PCB optimization results and provide insights.
 
 **Initial State:**
@@ -314,19 +363,19 @@ Return JSON:
     "overall_quality": "excellent" | "good" | "fair" | "needs_work"
 }}
 """
+            
+            messages = [
+                {
+                    "role": "system",
+                    "content": "You are a PCB design expert analyzing optimization results."
+                },
+                {
+                    "role": "user",
+                    "content": prompt
+                }
+            ]
         
-        messages = [
-            {
-                "role": "system",
-                "content": "You are a PCB design expert analyzing optimization results."
-            },
-            {
-                "role": "user",
-                "content": prompt
-            }
-        ]
-        
-        response = self._call_api(messages, temperature=0.7, max_tokens=2000)
+        response = self._call_api(messages, temperature=0.7, max_tokens=3000)  # Increased for richer analysis
         
         if "error" in response or not response.get("choices"):
             return {"overall_quality": "good", "improvements": [], "suggestions": []}
@@ -338,14 +387,30 @@ Return JSON:
         self,
         user_intent: str,
         geometry_data: Optional[Dict] = None,
-        context: Optional[Dict] = None
+        context: Optional[Dict] = None,
+        placement: Optional[Any] = None
     ) -> Tuple[float, float, float]:
         """
         Enhanced intent-to-weights conversion with extensive geometry reasoning.
+        
+        Now uses:
+        - Context enrichment (mathematical, physics, engineering)
+        - ML feature extraction (insights from small models)
+        - Enhanced prompt engineering
         """
-        geometry_context = ""
-        if geometry_data:
-            geometry_context = f"""
+        # Use enhanced prompt engine
+        try:
+            messages = self.prompt_engine.create_intent_prompt(
+                user_intent=user_intent,
+                placement=placement,
+                context=context
+            )
+        except Exception as e:
+            # Fallback to original method
+            print(f"   ⚠️  Enhanced prompt engine failed: {e}, using fallback")
+            geometry_context = ""
+            if geometry_data:
+                geometry_context = f"""
 **Computational Geometry Analysis:**
 - Component density: {geometry_data.get('density', 0):.3f} components/mm²
 - Voronoi cell variance: {geometry_data.get('voronoi_variance', 0):.3f} (lower = uniform distribution)
@@ -361,8 +426,8 @@ Return JSON:
 - Long MST → components far apart → signal integrity issues
 - Many net crossings → routing conflicts → manufacturability problems
 """
-        
-        prompt = f"""
+            
+            prompt = f"""
 You are a PCB optimization expert. Analyze user intent and computational geometry data to determine optimization weights.
 
 **User Intent**: "{user_intent}"
@@ -395,19 +460,19 @@ Return ONLY valid JSON:
     "reasoning": "Brief explanation of weight choices"
 }}
 """
+            
+            messages = [
+                {
+                    "role": "system",
+                    "content": "You are a PCB optimization expert. Return only valid JSON with alpha, beta, gamma weights."
+                },
+                {
+                    "role": "user",
+                    "content": prompt
+                }
+            ]
         
-        messages = [
-            {
-                "role": "system",
-                "content": "You are a PCB optimization expert. Return only valid JSON with alpha, beta, gamma weights."
-            },
-            {
-                "role": "user",
-                "content": prompt
-            }
-        ]
-        
-        response = self._call_api(messages, temperature=0.7, max_tokens=1000)
+        response = self._call_api(messages, temperature=0.7, max_tokens=2000)  # Increased for richer responses
         
         if "error" in response:
             return (0.5, 0.3, 0.2)

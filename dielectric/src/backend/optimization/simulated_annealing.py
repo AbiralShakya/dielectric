@@ -139,6 +139,11 @@ class SimulatedAnnealing:
         """
         comp_names = list(placement.components.keys())
         
+        # Ensure comp_names is a flat 1D list and not empty
+        if not comp_names:
+            raise ValueError("No components available for perturbation")
+        comp_names = [str(name) for name in comp_names]  # Ensure all are strings
+        
         if self.use_geometry_guidance and geometry_analyzer:
             # Use geometry to guide perturbation
             geometry_data = geometry_analyzer.analyze()
@@ -168,11 +173,14 @@ class SimulatedAnnealing:
                 move_candidates.extend(problematic_comps)
             
             if move_candidates and self.rng.rand() < 0.6:  # 60% chance to use guidance
-                comp_name = self.rng.choice(move_candidates)
+                # Convert to numpy array for RandomState.choice()
+                comp_name = self.rng.choice(np.array(move_candidates, dtype=object))
             else:
-                comp_name = self.rng.choice(comp_names)
+                # Convert to numpy array for RandomState.choice()
+                comp_name = self.rng.choice(np.array(comp_names, dtype=object))
         else:
-            comp_name = self.rng.choice(comp_names)
+            # Convert to numpy array for RandomState.choice()
+            comp_name = self.rng.choice(np.array(comp_names, dtype=object))
         
         comp = placement.get_component(comp_name)
         if not comp:
@@ -190,7 +198,7 @@ class SimulatedAnnealing:
                 
                 if mst_edges and self.rng.rand() < 0.3:  # 30% chance to use MST guidance
                     # Place component near MST edge midpoint
-                    edge = self.rng.choice(mst_edges)
+                    edge = self.rng.choice(np.array(mst_edges, dtype=object))
                     if len(edge) >= 3:
                         i, j, weight = edge[0], edge[1], edge[2]
                         comps_list = list(placement.components.values())
@@ -222,7 +230,7 @@ class SimulatedAnnealing:
                 new_x = self.rng.uniform(margin, placement.board.width - margin)
                 new_y = self.rng.uniform(margin, placement.board.height - margin)
             
-            new_angle = self.rng.choice([0, 90, 180, 270])
+            new_angle = int(self.rng.choice([0, 90, 180, 270]))
             
             return ("move", comp_name, new_x, new_y, new_angle)
         else:
@@ -243,14 +251,16 @@ class SimulatedAnnealing:
                                         candidates.append(other_comp_name)
                         
                         if candidates and self.rng.rand() < 0.5:
-                            comp2_name = self.rng.choice(candidates)
+                            comp2_name = self.rng.choice(np.array(candidates, dtype=object))
                             return ("swap", comp1_name, comp2_name)
                     
                     # Fallback to random swap
-                    comp1, comp2 = self.rng.choice(comp_names, size=2, replace=False)
+                    comp_names_array = np.array(comp_names, dtype=object)
+                    comp1, comp2 = self.rng.choice(comp_names_array, size=2, replace=False)
                     return ("swap", comp1, comp2)
                 else:
-                    comp1, comp2 = self.rng.choice(comp_names, size=2, replace=False)
+                    comp_names_array = np.array(comp_names, dtype=object)
+                    comp1, comp2 = self.rng.choice(comp_names_array, size=2, replace=False)
                     return ("swap", comp1, comp2)
             else:
                 # Fallback to move

@@ -84,6 +84,11 @@ class EnhancedSimulatedAnnealing:
         """
         comp_names = list(placement.components.keys())
         
+        # Ensure comp_names is a flat 1D list and not empty
+        if not comp_names:
+            raise ValueError("No components available for perturbation")
+        comp_names = [str(name) for name in comp_names]  # Ensure all are strings
+        
         # Check if strategy suggests specific moves
         suggested_moves = self.current_strategy.get("suggested_moves", [])
         
@@ -96,23 +101,25 @@ class EnhancedSimulatedAnnealing:
                     margin = max(comp.width, comp.height)
                     new_x = self.rng.uniform(margin, placement.board.width - margin)
                     new_y = self.rng.uniform(margin, placement.board.height - margin)
-                    new_angle = self.rng.choice([0, 90, 180, 270])
+                    new_angle = int(self.rng.choice([0, 90, 180, 270]))
                     return ("move", suggested_comp, new_x, new_y, new_angle)
         
         # Default perturbation logic
         if self.rng.rand() < 0.7:  # 70% move, 30% swap
-            comp_name = self.rng.choice(comp_names)
+            # Convert to numpy array for RandomState.choice()
+            comp_name = self.rng.choice(np.array(comp_names, dtype=object))
             comp = placement.get_component(comp_name)
             
             margin = max(comp.width, comp.height)
             new_x = self.rng.uniform(margin, placement.board.width - margin)
             new_y = self.rng.uniform(margin, placement.board.height - margin)
-            new_angle = self.rng.choice([0, 90, 180, 270])
+            new_angle = int(self.rng.choice([0, 90, 180, 270]))
             
             return ("move", comp_name, new_x, new_y, new_angle)
         else:
             if len(comp_names) >= 2:
-                comp1, comp2 = self.rng.choice(comp_names, size=2, replace=False)
+                comp_names_array = np.array(comp_names, dtype=object)
+                comp1, comp2 = self.rng.choice(comp_names_array, size=2, replace=False)
                 return ("swap", comp1, comp2)
             else:
                 comp_name = comp_names[0]

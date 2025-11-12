@@ -832,7 +832,7 @@ if workflow == "Generate Design":
                 st.session_state.design_data.get("components", []),
                 st.session_state.design_data.get("nets", [])
             )
-            st.plotly_chart(pcb_fig, use_container_width=True)
+            st.plotly_chart(pcb_fig, use_container_width=True, key="pcb_layout_main")
         
         with viz_tabs[1]:
             st.markdown("#### Schematic View")
@@ -841,13 +841,13 @@ if workflow == "Generate Design":
                 st.session_state.design_data.get("components", []),
                 st.session_state.design_data.get("nets", [])
             )
-            st.plotly_chart(schematic_fig, use_container_width=True)
+            st.plotly_chart(schematic_fig, use_container_width=True, key="schematic_view_main")
         
         with viz_tabs[2]:
             st.markdown("#### Thermal View")
             st.caption("Thermal heatmap overlay")
             thermal_fig = create_pcb_plot(st.session_state.design_data, "Thermal Analysis")
-            st.plotly_chart(thermal_fig, use_container_width=True)
+            st.plotly_chart(thermal_fig, use_container_width=True, key="thermal_view_main")
         
         col1, col2, col3, col4 = st.columns(4)
         with col1:
@@ -1009,7 +1009,7 @@ else:  # Optimize Design
     with col2:
         if st.session_state.design_data:
             fig = create_pcb_plot(st.session_state.design_data, "Current Design")
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, use_container_width=True, key="current_design_plot")
     
     # Optimization Section - Show prominently after upload
     if st.session_state.design_data:
@@ -1168,7 +1168,7 @@ else:  # Optimize Design
                         st.session_state.design_data.get("components", []),
                         st.session_state.design_data.get("nets", [])
                     )
-                    st.plotly_chart(before_pcb, use_container_width=True)
+                    st.plotly_chart(before_pcb, use_container_width=True, key="before_pcb_layout")
                 
                 with col2:
                     st.markdown("#### After - PCB Layout")
@@ -1180,7 +1180,7 @@ else:  # Optimize Design
                             st.session_state.optimization_results["placement"].get("components", []),
                             st.session_state.optimization_results["placement"].get("nets", [])
                         )
-                        st.plotly_chart(after_pcb, use_container_width=True)
+                        st.plotly_chart(after_pcb, use_container_width=True, key="after_pcb_layout")
             
             with comparison_tabs[1]:
                 col1, col2 = st.columns(2)
@@ -1190,7 +1190,7 @@ else:  # Optimize Design
                         st.session_state.design_data.get("components", []),
                         st.session_state.design_data.get("nets", [])
                     )
-                    st.plotly_chart(before_sch, use_container_width=True)
+                    st.plotly_chart(before_sch, use_container_width=True, key="before_schematic")
                 
                 with col2:
                     st.markdown("#### After - Schematic")
@@ -1199,14 +1199,14 @@ else:  # Optimize Design
                             st.session_state.optimization_results["placement"].get("components", []),
                             st.session_state.optimization_results["placement"].get("nets", [])
                         )
-                        st.plotly_chart(after_sch, use_container_width=True)
+                        st.plotly_chart(after_sch, use_container_width=True, key="after_schematic")
             
             with comparison_tabs[2]:
                 col1, col2 = st.columns(2)
                 with col1:
                     st.markdown("#### Before - Thermal")
                     thermal_before = create_pcb_plot(st.session_state.design_data, "Initial Thermal")
-                    st.plotly_chart(thermal_before, use_container_width=True)
+                    st.plotly_chart(thermal_before, use_container_width=True, key="thermal_before")
                 
                 with col2:
                     st.markdown("#### After - Thermal")
@@ -1215,7 +1215,7 @@ else:  # Optimize Design
                             st.session_state.optimization_results["placement"],
                             "Optimized Thermal"
                         )
-                        st.plotly_chart(thermal_after, use_container_width=True)
+                        st.plotly_chart(thermal_after, use_container_width=True, key="thermal_after")
             
             # Multi-Agent Workflow Status
             agents_used = st.session_state.optimization_results.get("agents_used", [])
@@ -1315,7 +1315,7 @@ else:  # Optimize Design
                         """)
                     
                     fig = create_geometry_dashboard(placement_data, geometry_data)
-                    st.plotly_chart(fig, width='stretch')
+                    st.plotly_chart(fig, width='stretch', key="geometry_dashboard")
                 
                 with viz_tabs[1]:
                     st.markdown("#### Voronoi Diagram - Component Distribution")
@@ -1325,7 +1325,7 @@ else:  # Optimize Design
                         placement_data.get("board", {}).get("width", 100),
                         placement_data.get("board", {}).get("height", 100)
                     )
-                    st.plotly_chart(fig, width='stretch')
+                    st.plotly_chart(fig, width='stretch', key="voronoi_diagram")
                 
                 with viz_tabs[2]:
                     st.markdown("#### Minimum Spanning Tree - Optimal Routing")
@@ -1336,7 +1336,7 @@ else:  # Optimize Design
                         placement_data.get("board", {}).get("width", 100),
                         placement_data.get("board", {}).get("height", 100)
                     )
-                    st.plotly_chart(fig, width='stretch')
+                    st.plotly_chart(fig, width='stretch', key="mst_diagram")
                 
                 with viz_tabs[3]:
                     st.markdown("#### Convex Hull - Board Utilization")
@@ -1346,7 +1346,7 @@ else:  # Optimize Design
                         placement_data.get("board", {}).get("width", 100),
                         placement_data.get("board", {}).get("height", 100)
                     )
-                    st.plotly_chart(fig, width='stretch')
+                    st.plotly_chart(fig, width='stretch', key="convex_hull")
             
             # Quality metrics
             quality = st.session_state.optimization_results.get("quality", {})

@@ -4,197 +4,49 @@
       "placement": {
         "components": [
           {
-            "name": "U1_ESP32",
-            "package": "ESP32-WROOM-32 Module",
-            "width": 25.5,
-            "height": 18.0,
-            "power": 0.3,
-            "x": 20.0,
-            "y": 40.0,
-            "angle": 0,
-            "placed": true,
-            "pins": [
-              {
-                "name": "pin1",
-                "x_offset": -12.75,
-                "y_offset": -9.0,
-                "net": ""
-              },
-              {
-                "name": "pin2",
-                "x_offset": 12.75,
-                "y_offset": -9.0,
-                "net": ""
-              },
-              {
-                "name": "pin3",
-                "x_offset": 12.75,
-                "y_offset": 9.0,
-                "net": ""
-              },
-              {
-                "name": "pin4",
-                "x_offset": -12.75,
-                "y_offset": 9.0,
-                "net": ""
-              }
-            ]
-          },
-          {
-            "name": "U2_L298",
-            "package": "Multiwatt15",
-            "width": 20.0,
-            "height": 10.0,
-            "power": 5.0,
-            "x": 90.0,
-            "y": 40.0,
-            "angle": 0,
-            "placed": true,
-            "pins": [
-              {
-                "name": "pin1",
-                "x_offset": -10.0,
-                "y_offset": -5.0,
-                "net": ""
-              },
-              {
-                "name": "pin2",
-                "x_offset": 10.0,
-                "y_offset": -5.0,
-                "net": ""
-              },
-              {
-                "name": "pin3",
-                "x_offset": 10.0,
-                "y_offset": 5.0,
-                "net": ""
-              },
-              {
-                "name": "pin4",
-                "x_offset": -10.0,
-                "y_offset": 5.0,
-                "net": ""
-              }
-            ]
-          },
-          {
-            "name": "U3_LM358",
+            "name": "U1",
             "package": "SOIC-8",
             "width": 5.0,
             "height": 4.0,
-            "power": 0.1,
-            "x": 70.0,
-            "y": 20.0,
-            "angle": 0,
-            "placed": true,
-            "pins": [
-              {
-                "name": "pin1",
-                "x_offset": -2.5,
-                "y_offset": -2.0,
-                "net": ""
-              },
-              {
-                "name": "pin2",
-                "x_offset": 2.5,
-                "y_offset": -2.0,
-                "net": ""
-              },
-              {
-                "name": "pin3",
-                "x_offset": 2.5,
-                "y_offset": 2.0,
-                "net": ""
-              },
-              {
-                "name": "pin4",
-                "x_offset": -2.5,
-                "y_offset": 2.0,
-                "net": ""
-              }
-            ]
-          },
-          {
-            "name": "U4_AMS1117",
-            "package": "SOT-223",
-            "width": 6.5,
-            "height": 3.5,
-            "power": 1.0,
+            "power": 0.5,
             "x": 40.0,
-            "y": 60.0,
+            "y": 40.0,
             "angle": 0,
             "placed": true,
             "pins": [
               {
                 "name": "pin1",
-                "x_offset": -3.25,
-                "y_offset": -1.75,
+                "x_offset": -2.5,
+                "y_offset": -2.0,
                 "net": ""
               },
               {
                 "name": "pin2",
-                "x_offset": 3.25,
-                "y_offset": -1.75,
+                "x_offset": 2.5,
+                "y_offset": -2.0,
                 "net": ""
               },
               {
                 "name": "pin3",
-                "x_offset": 3.25,
-                "y_offset": 1.75,
+                "x_offset": 2.5,
+                "y_offset": 2.0,
                 "net": ""
               },
               {
                 "name": "pin4",
-                "x_offset": -3.25,
-                "y_offset": 1.75,
+                "x_offset": -2.5,
+                "y_offset": 2.0,
                 "net": ""
               }
             ]
           },
           {
-            "name": "J1_BarrelJack",
-            "package": "Barrel Jack 2.1mm",
-            "width": 12.0,
-            "height": 10.0,
-            "power": 0.0,
-            "x": 10.0,
-            "y": 70.0,
-            "angle": 90,
-            "placed": true,
-            "pins": [
-              {
-                "name": "pin1",
-                "x_offset": -6.0,
-                "y_offset": -5.0,
-                "net": ""
-              },
-              {
-                "name": "pin2",
-                "x_offset": 6.0,
-                "y_offset": -5.0,
-                "net": ""
-              },
-              {
-                "name": "pin3",
-                "x_offset": 6.0,
-                "y_offset": 5.0,
-                "net": ""
-              },
-              {
-                "name": "pin4",
-                "x_offset": -6.0,
-                "y_offset": 5.0,
-                "net": ""
-              }
-            ]
-          },
-          {
-            "name": "J2_MotorOut",
-            "package": "Screw Terminal 2-pin",
+            "name": "L1",
+            "package": "SMD-Inductor-10x10",
             "width": 10.0,
-            "height": 8.0,
-            "power": 0.0,
-            "x": 110.0,
+            "height": 10.0,
+            "power": 0.3,
+            "x": 55.0,
             "y": 40.0,
             "angle": 0,
             "placed": true,
@@ -202,365 +54,254 @@
               {
                 "name": "pin1",
                 "x_offset": -5.0,
-                "y_offset": -4.0,
+                "y_offset": -5.0,
                 "net": ""
               },
               {
                 "name": "pin2",
                 "x_offset": 5.0,
-                "y_offset": -4.0,
+                "y_offset": -5.0,
                 "net": ""
               },
               {
                 "name": "pin3",
                 "x_offset": 5.0,
-                "y_offset": 4.0,
+                "y_offset": 5.0,
                 "net": ""
               },
               {
                 "name": "pin4",
                 "x_offset": -5.0,
-                "y_offset": 4.0,
+                "y_offset": 5.0,
                 "net": ""
               }
             ]
           },
           {
-            "name": "J3_PWM_In",
-            "package": "Pin Header 1-pin",
-            "width": 2.5,
-            "height": 2.5,
+            "name": "C1",
+            "package": "0805",
+            "width": 2.0,
+            "height": 1.25,
             "power": 0.0,
-            "x": 20.0,
-            "y": 10.0,
+            "x": 30.0,
+            "y": 40.0,
             "angle": 0,
             "placed": true,
             "pins": [
               {
                 "name": "pin1",
-                "x_offset": -1.25,
-                "y_offset": -1.25,
+                "x_offset": -1.0,
+                "y_offset": -0.625,
                 "net": ""
               },
               {
                 "name": "pin2",
-                "x_offset": 1.25,
-                "y_offset": -1.25,
+                "x_offset": 1.0,
+                "y_offset": -0.625,
                 "net": ""
               },
               {
                 "name": "pin3",
-                "x_offset": 1.25,
-                "y_offset": 1.25,
+                "x_offset": 1.0,
+                "y_offset": 0.625,
                 "net": ""
               },
               {
                 "name": "pin4",
-                "x_offset": -1.25,
-                "y_offset": 1.25,
+                "x_offset": -1.0,
+                "y_offset": 0.625,
                 "net": ""
               }
             ]
           },
           {
-            "name": "J4_Dir_In",
-            "package": "Pin Header 1-pin",
-            "width": 2.5,
-            "height": 2.5,
+            "name": "C2",
+            "package": "0805",
+            "width": 2.0,
+            "height": 1.25,
             "power": 0.0,
-            "x": 25.0,
-            "y": 10.0,
+            "x": 65.0,
+            "y": 40.0,
             "angle": 0,
             "placed": true,
             "pins": [
               {
                 "name": "pin1",
-                "x_offset": -1.25,
-                "y_offset": -1.25,
+                "x_offset": -1.0,
+                "y_offset": -0.625,
                 "net": ""
               },
               {
                 "name": "pin2",
-                "x_offset": 1.25,
-                "y_offset": -1.25,
+                "x_offset": 1.0,
+                "y_offset": -0.625,
                 "net": ""
               },
               {
                 "name": "pin3",
-                "x_offset": 1.25,
-                "y_offset": 1.25,
+                "x_offset": 1.0,
+                "y_offset": 0.625,
                 "net": ""
               },
               {
                 "name": "pin4",
-                "x_offset": -1.25,
-                "y_offset": 1.25,
+                "x_offset": -1.0,
+                "y_offset": 0.625,
                 "net": ""
               }
             ]
           },
           {
-            "name": "F1_Fuse",
-            "package": "PTC Fuse SMD",
-            "width": 3.0,
-            "height": 2.0,
-            "power": 0.2,
-            "x": 15.0,
-            "y": 60.0,
-            "angle": 0,
-            "placed": true,
-            "pins": [
-              {
-                "name": "pin1",
-                "x_offset": -1.5,
-                "y_offset": -1.0,
-                "net": ""
-              },
-              {
-                "name": "pin2",
-                "x_offset": 1.5,
-                "y_offset": -1.0,
-                "net": ""
-              },
-              {
-                "name": "pin3",
-                "x_offset": 1.5,
-                "y_offset": 1.0,
-                "net": ""
-              },
-              {
-                "name": "pin4",
-                "x_offset": -1.5,
-                "y_offset": 1.0,
-                "net": ""
-              }
-            ]
-          },
-          {
-            "name": "R1_Shunt",
-            "package": "1206",
-            "width": 3.2,
-            "height": 1.6,
-            "power": 2.0,
-            "x": 80.0,
+            "name": "R1",
+            "package": "0603",
+            "width": 1.6,
+            "height": 0.8,
+            "power": 0.01,
+            "x": 40.0,
             "y": 30.0,
             "angle": 0,
             "placed": true,
             "pins": [
               {
                 "name": "pin1",
-                "x_offset": -1.6,
-                "y_offset": -0.8,
+                "x_offset": -0.8,
+                "y_offset": -0.4,
                 "net": ""
               },
               {
                 "name": "pin2",
-                "x_offset": 1.6,
-                "y_offset": -0.8,
+                "x_offset": 0.8,
+                "y_offset": -0.4,
                 "net": ""
               },
               {
                 "name": "pin3",
-                "x_offset": 1.6,
-                "y_offset": 0.8,
+                "x_offset": 0.8,
+                "y_offset": 0.4,
                 "net": ""
               },
               {
                 "name": "pin4",
-                "x_offset": -1.6,
-                "y_offset": 0.8,
+                "x_offset": -0.8,
+                "y_offset": 0.4,
                 "net": ""
               }
             ]
           },
           {
-            "name": "C1_InputCap",
-            "package": "Electrolytic 10x10mm",
+            "name": "R2",
+            "package": "0603",
+            "width": 1.6,
+            "height": 0.8,
+            "power": 0.01,
+            "x": 40.0,
+            "y": 25.0,
+            "angle": 0,
+            "placed": true,
+            "pins": [
+              {
+                "name": "pin1",
+                "x_offset": -0.8,
+                "y_offset": -0.4,
+                "net": ""
+              },
+              {
+                "name": "pin2",
+                "x_offset": 0.8,
+                "y_offset": -0.4,
+                "net": ""
+              },
+              {
+                "name": "pin3",
+                "x_offset": 0.8,
+                "y_offset": 0.4,
+                "net": ""
+              },
+              {
+                "name": "pin4",
+                "x_offset": -0.8,
+                "y_offset": 0.4,
+                "net": ""
+              }
+            ]
+          },
+          {
+            "name": "J1",
+            "package": "Screw-Terminal-2pin",
             "width": 10.0,
-            "height": 10.0,
+            "height": 5.0,
             "power": 0.0,
-            "x": 25.0,
-            "y": 70.0,
+            "x": 10.0,
+            "y": 40.0,
             "angle": 0,
             "placed": true,
             "pins": [
               {
                 "name": "pin1",
                 "x_offset": -5.0,
-                "y_offset": -5.0,
+                "y_offset": -2.5,
                 "net": ""
               },
               {
                 "name": "pin2",
                 "x_offset": 5.0,
-                "y_offset": -5.0,
+                "y_offset": -2.5,
                 "net": ""
               },
               {
                 "name": "pin3",
                 "x_offset": 5.0,
-                "y_offset": 5.0,
+                "y_offset": 2.5,
                 "net": ""
               },
               {
                 "name": "pin4",
                 "x_offset": -5.0,
-                "y_offset": 5.0,
+                "y_offset": 2.5,
                 "net": ""
               }
             ]
           },
           {
-            "name": "C2_Decouple",
-            "package": "0805",
-            "width": 2.0,
-            "height": 1.25,
+            "name": "J2",
+            "package": "Screw-Terminal-2pin",
+            "width": 10.0,
+            "height": 5.0,
             "power": 0.0,
-            "x": 22.0,
-            "y": 50.0,
+            "x": 70.0,
+            "y": 40.0,
             "angle": 0,
             "placed": true,
             "pins": [
               {
                 "name": "pin1",
-                "x_offset": -1.0,
-                "y_offset": -0.625,
+                "x_offset": -5.0,
+                "y_offset": -2.5,
                 "net": ""
               },
               {
                 "name": "pin2",
-                "x_offset": 1.0,
-                "y_offset": -0.625,
+                "x_offset": 5.0,
+                "y_offset": -2.5,
                 "net": ""
               },
               {
                 "name": "pin3",
-                "x_offset": 1.0,
-                "y_offset": 0.625,
+                "x_offset": 5.0,
+                "y_offset": 2.5,
                 "net": ""
               },
               {
                 "name": "pin4",
-                "x_offset": -1.0,
-                "y_offset": 0.625,
-                "net": ""
-              }
-            ]
-          },
-          {
-            "name": "C3_OutputCap",
-            "package": "0805",
-            "width": 2.0,
-            "height": 1.25,
-            "power": 0.0,
-            "x": 42.0,
-            "y": 60.0,
-            "angle": 0,
-            "placed": true,
-            "pins": [
-              {
-                "name": "pin1",
-                "x_offset": -1.0,
-                "y_offset": -0.625,
-                "net": ""
-              },
-              {
-                "name": "pin2",
-                "x_offset": 1.0,
-                "y_offset": -0.625,
-                "net": ""
-              },
-              {
-                "name": "pin3",
-                "x_offset": 1.0,
-                "y_offset": 0.625,
-                "net": ""
-              },
-              {
-                "name": "pin4",
-                "x_offset": -1.0,
-                "y_offset": 0.625,
-                "net": ""
-              }
-            ]
-          },
-          {
-            "name": "R2_Gain",
-            "package": "0805",
-            "width": 2.0,
-            "height": 1.25,
-            "power": 0.05,
-            "x": 72.0,
-            "y": 20.0,
-            "angle": 0,
-            "placed": true,
-            "pins": [
-              {
-                "name": "pin1",
-                "x_offset": -1.0,
-                "y_offset": -0.625,
-                "net": ""
-              },
-              {
-                "name": "pin2",
-                "x_offset": 1.0,
-                "y_offset": -0.625,
-                "net": ""
-              },
-              {
-                "name": "pin3",
-                "x_offset": 1.0,
-                "y_offset": 0.625,
-                "net": ""
-              },
-              {
-                "name": "pin4",
-                "x_offset": -1.0,
-                "y_offset": 0.625,
-                "net": ""
-              }
-            ]
-          },
-          {
-            "name": "LED1_Status",
-            "package": "0805 LED",
-            "width": 2.0,
-            "height": 1.25,
-            "power": 0.05,
-            "x": 30.0,
-            "y": 10.0,
-            "angle": 0,
-            "placed": true,
-            "pins": [
-              {
-                "name": "pin1",
-                "x_offset": -1.0,
-                "y_offset": -0.625,
-                "net": ""
-              },
-              {
-                "name": "pin2",
-                "x_offset": 1.0,
-                "y_offset": -0.625,
-                "net": ""
-              },
-              {
-                "name": "pin3",
-                "x_offset": 1.0,
-                "y_offset": 0.625,
-                "net": ""
-              },
-              {
-                "name": "pin4",
-                "x_offset": -1.0,
-                "y_offset": 0.625,
+                "x_offset": -5.0,
+                "y_offset": 2.5,
                 "net": ""
               }
             ]
           }
         ],
         "board": {
-          "width": 120,
+          "width": 80,
           "height": 80,
           "clearance": 0.5,
           "layer_count": 2,
@@ -584,26 +325,18 @@
         },
         "nets": [
           {
-            "name": "VIN_12V",
+            "name": "VIN",
             "pins": [
               [
-                "J1_BarrelJack",
+                "J1",
                 "pin1"
               ],
               [
-                "F1_Fuse",
+                "C1",
                 "pin1"
               ],
               [
-                "C1_InputCap",
-                "pin1"
-              ],
-              [
-                "U4_AMS1117",
-                "pin1"
-              ],
-              [
-                "U2_L298",
+                "U1",
                 "pin1"
               ]
             ]
@@ -612,602 +345,254 @@
             "name": "GND",
             "pins": [
               [
-                "J1_BarrelJack",
+                "J1",
                 "pin2"
               ],
               [
-                "C1_InputCap",
+                "C1",
                 "pin2"
               ],
               [
-                "U1_ESP32",
-                "GND"
+                "U1",
+                "pin4"
               ],
               [
-                "U2_L298",
-                "GND"
-              ],
-              [
-                "U3_LM358",
-                "GND"
-              ],
-              [
-                "U4_AMS1117",
-                "GND"
-              ],
-              [
-                "J2_MotorOut",
-                "GND"
-              ],
-              [
-                "R1_Shunt",
+                "C2",
                 "pin2"
               ],
               [
-                "C2_Decouple",
+                "R2",
                 "pin2"
               ],
               [
-                "C3_OutputCap",
+                "J2",
                 "pin2"
               ]
             ]
           },
           {
-            "name": "VCC_3V3",
+            "name": "SW",
             "pins": [
               [
-                "U4_AMS1117",
-                "pin3"
-              ],
-              [
-                "U1_ESP32",
-                "3V3"
-              ],
-              [
-                "C3_OutputCap",
-                "pin1"
-              ],
-              [
-                "C2_Decouple",
-                "pin1"
-              ],
-              [
-                "U3_LM358",
-                "VCC"
-              ],
-              [
-                "LED1_Status",
-                "anode"
-              ]
-            ]
-          },
-          {
-            "name": "PWM_Signal",
-            "pins": [
-              [
-                "J3_PWM_In",
-                "pin1"
-              ],
-              [
-                "U1_ESP32",
-                "GPIO2"
-              ],
-              [
-                "U2_L298",
-                "IN1"
-              ]
-            ]
-          },
-          {
-            "name": "DIR_Signal",
-            "pins": [
-              [
-                "J4_Dir_In",
-                "pin1"
-              ],
-              [
-                "U1_ESP32",
-                "GPIO4"
-              ],
-              [
-                "U2_L298",
-                "IN2"
-              ]
-            ]
-          },
-          {
-            "name": "Current_Sense",
-            "pins": [
-              [
-                "R1_Shunt",
-                "pin1"
-              ],
-              [
-                "U2_L298",
-                "SENSE"
-              ],
-              [
-                "U3_LM358",
-                "IN+"
-              ],
-              [
-                "R2_Gain",
-                "pin1"
-              ]
-            ]
-          },
-          {
-            "name": "Motor_Out_A",
-            "pins": [
-              [
-                "U2_L298",
-                "OUT1"
-              ],
-              [
-                "J2_MotorOut",
-                "pin1"
-              ]
-            ]
-          },
-          {
-            "name": "Motor_Out_B",
-            "pins": [
-              [
-                "U2_L298",
-                "OUT2"
-              ],
-              [
-                "J2_MotorOut",
+                "U1",
                 "pin2"
               ],
               [
-                "R1_Shunt",
-                "pin2"
+                "L1",
+                "pin1"
               ]
             ]
           },
           {
-            "name": "Overcurrent_Feedback",
+            "name": "VOUT",
             "pins": [
               [
-                "U3_LM358",
-                "OUT"
-              ],
-              [
-                "U1_ESP32",
-                "GPIO34"
-              ],
-              [
-                "R2_Gain",
+                "L1",
                 "pin2"
+              ],
+              [
+                "C2",
+                "pin1"
+              ],
+              [
+                "R1",
+                "pin1"
+              ],
+              [
+                "J2",
+                "pin1"
+              ]
+            ]
+          },
+          {
+            "name": "FB",
+            "pins": [
+              [
+                "U1",
+                "pin5"
+              ],
+              [
+                "R1",
+                "pin2"
+              ],
+              [
+                "R2",
+                "pin1"
               ]
             ]
           }
         ]
       },
       "geometry": {
-        "density": 0.0015625,
-        "convex_hull_area": 3455.0,
-        "voronoi_variance": 1392127.436921547,
-        "mst_length": 197.93426688624237,
-        "thermal_hotspots": 1,
-        "net_crossings": 32,
-        "routing_complexity": 14.128125,
-        "max_fanout": 10,
-        "avg_fanout": 4.333333333333333,
-        "overlap_risk": 0.3333333333333333,
-        "delaunay_triangles": 21,
-        "delaunay_avg_edge_length": 27.668020495874465,
+        "density": 0.00125,
+        "convex_hull_area": 450.0000000000001,
+        "voronoi_variance": 0.0,
+        "mst_length": 75.0,
+        "thermal_hotspots": 0,
+        "net_crossings": 10,
+        "routing_complexity": 5.1034375,
+        "max_fanout": 6,
+        "avg_fanout": 3.6,
+        "overlap_risk": 0.16666666666666666,
+        "delaunay_triangles": 7,
+        "delaunay_avg_edge_length": 17.057774376256248,
         "force_equilibrium_score": 1.0,
         "total_force": 0.0,
         "voronoi_data": {
-          "voronoi_variance": 1392127.436921547,
+          "voronoi_variance": 0.0,
           "cell_areas": [
-            1611.8450854700852,
-            1831.5529411764703,
-            1382.8977501256913,
-            249.1003787878787,
-            643.2026143790849,
-            706.433155080214,
-            265.67142008318467,
-            4094.8165849673214
+            140.625
           ],
-          "num_regions": 8
+          "num_regions": 1
         },
         "mst_edges": [
           [
             0,
-            6,
-            30.0
+            1,
+            15.0
           ],
           [
             0,
-            11,
-            10.198039027185569
+            2,
+            10.0
+          ],
+          [
+            0,
+            4,
+            10.0
           ],
           [
             1,
-            5,
+            3,
+            10.0
+          ],
+          [
+            2,
+            6,
             20.0
           ],
           [
-            1,
-            9,
-            14.142135623730951
-          ],
-          [
-            2,
-            13,
-            2.0
-          ],
-          [
-            2,
-            14,
-            41.23105625617661
-          ],
-          [
             3,
-            10,
-            18.027756377319946
-          ],
-          [
-            3,
-            12,
-            2.0
+            7,
+            5.0
           ],
           [
             4,
-            8,
-            11.180339887498949
-          ],
-          [
-            6,
-            7,
+            5,
             5.0
-          ],
-          [
-            7,
-            14,
-            5.0
-          ],
-          [
-            8,
-            10,
-            14.142135623730951
-          ],
-          [
-            8,
-            11,
-            12.206555615733702
-          ],
-          [
-            9,
-            13,
-            12.806248474865697
           ]
         ],
         "hull_vertices": [
-          4,
+          7,
           6,
-          14,
-          13,
-          5,
-          10
+          5
         ],
-        "hotspot_locations": [
-          {
-            "component": "U2_L298",
-            "position": [
-              90.0,
-              40.0
-            ],
-            "power": 5.0,
-            "power_density": 0.025,
-            "area": 200.0
-          }
-        ],
+        "hotspot_locations": [],
         "delaunay_data": {
           "triangles": [
             {
               "vertices": [
-                10,
-                12,
-                5
-              ],
-              "edge_lengths": [
-                19.72308292331602,
-                70.8801805866774,
-                90.13878188659973
-              ],
-              "area": 169.99999999999844,
-              "perimeter": 180.74204539659314
-            },
-            {
-              "vertices": [
-                0,
+                5,
                 2,
-                12
-              ],
-              "edge_lengths": [
-                53.85164807134504,
-                48.82622246293481,
-                29.732137494637012
-              ],
-              "area": 719.9999999999995,
-              "perimeter": 132.41000802891685
-            },
-            {
-              "vertices": [
-                6,
-                0,
-                4
-              ],
-              "edge_lengths": [
-                30.0,
-                31.622776601683793,
-                60.8276253029822
-              ],
-              "area": 150.0000000000001,
-              "perimeter": 122.450401904666
-            },
-            {
-              "vertices": [
-                12,
-                1,
-                5
-              ],
-              "edge_lengths": [
-                52.0,
-                20.0,
-                70.8801805866774
-              ],
-              "area": 200.00000000000034,
-              "perimeter": 142.8801805866774
-            },
-            {
-              "vertices": [
-                0,
-                14,
-                2
-              ],
-              "edge_lengths": [
-                31.622776601683793,
-                41.23105625617661,
-                53.85164807134504
-              ],
-              "area": 649.9999999999999,
-              "perimeter": 126.70548092920544
-            },
-            {
-              "vertices": [
-                14,
-                13,
-                2
-              ],
-              "edge_lengths": [
-                43.174066289845804,
-                2.0,
-                41.23105625617661
-              ],
-              "area": 10.000000000000352,
-              "perimeter": 86.40512254602241
-            },
-            {
-              "vertices": [
-                2,
-                9,
-                12
-              ],
-              "edge_lengths": [
-                14.142135623730951,
-                48.41487374764082,
-                48.82622246293481
-              ],
-              "area": 339.99999999999983,
-              "perimeter": 111.38323183430657
-            },
-            {
-              "vertices": [
-                9,
-                1,
-                12
-              ],
-              "edge_lengths": [
-                14.142135623730951,
-                52.0,
-                48.41487374764082
-              ],
-              "area": 340.0000000000002,
-              "perimeter": 114.55700937137178
-            },
-            {
-              "vertices": [
-                13,
-                9,
-                2
-              ],
-              "edge_lengths": [
-                12.806248474865697,
-                14.142135623730951,
-                2.0
-              ],
-              "area": 9.999999999999995,
-              "perimeter": 28.948384098596648
-            },
-            {
-              "vertices": [
-                1,
-                9,
-                5
-              ],
-              "edge_lengths": [
-                14.142135623730951,
-                31.622776601683793,
-                20.0
-              ],
-              "area": 100.00000000000011,
-              "perimeter": 65.76491222541475
-            },
-            {
-              "vertices": [
-                9,
-                13,
-                5
-              ],
-              "edge_lengths": [
-                12.806248474865697,
-                42.941821107167776,
-                31.622776601683793
-              ],
-              "area": 109.99999999999986,
-              "perimeter": 87.37084618371726
-            },
-            {
-              "vertices": [
-                3,
-                0,
-                12
-              ],
-              "edge_lengths": [
-                28.284271247461902,
-                29.732137494637012,
-                2.0
-              ],
-              "area": 20.000000000000075,
-              "perimeter": 60.01640874209892
-            },
-            {
-              "vertices": [
-                3,
-                11,
-                0
-              ],
-              "edge_lengths": [
-                20.591260281974,
-                10.198039027185569,
-                28.284271247461902
-              ],
-              "area": 80.00000000000006,
-              "perimeter": 59.073570556621476
-            },
-            {
-              "vertices": [
-                10,
-                3,
-                12
-              ],
-              "edge_lengths": [
-                18.027756377319946,
-                2.0,
-                19.72308292331602
-              ],
-              "area": 9.999999999999982,
-              "perimeter": 39.75083930063597
-            },
-            {
-              "vertices": [
-                11,
-                3,
-                10
-              ],
-              "edge_lengths": [
-                20.591260281974,
-                18.027756377319946,
-                20.223748416156685
-              ],
-              "area": 164.99999999999994,
-              "perimeter": 58.84276507545063
-            },
-            {
-              "vertices": [
-                8,
-                10,
-                4
-              ],
-              "edge_lengths": [
-                14.142135623730951,
-                15.0,
-                11.180339887498949
-              ],
-              "area": 74.99999999999997,
-              "perimeter": 40.3224755112299
-            },
-            {
-              "vertices": [
-                8,
-                11,
-                10
-              ],
-              "edge_lengths": [
-                12.206555615733702,
-                20.223748416156685,
-                14.142135623730951
-              ],
-              "area": 84.99999999999999,
-              "perimeter": 46.57243965562134
-            },
-            {
-              "vertices": [
-                0,
-                8,
-                4
-              ],
-              "edge_lengths": [
-                20.615528128088304,
-                11.180339887498949,
-                31.622776601683793
-              ],
-              "area": 24.999999999999908,
-              "perimeter": 63.41864461727104
-            },
-            {
-              "vertices": [
-                11,
-                8,
-                0
-              ],
-              "edge_lengths": [
-                12.206555615733702,
-                20.615528128088304,
-                10.198039027185569
-              ],
-              "area": 45.00000000000002,
-              "perimeter": 43.02012277100758
-            },
-            {
-              "vertices": [
-                7,
-                0,
                 6
               ],
               "edge_lengths": [
-                30.4138126514911,
-                30.0,
-                5.0
+                18.027756377319946,
+                20.0,
+                33.54101966249684
               ],
-              "area": 75.0,
-              "perimeter": 65.4138126514911
+              "area": 149.99999999999986,
+              "perimeter": 71.56877603981678
             },
             {
               "vertices": [
-                7,
-                14,
+                3,
+                5,
+                7
+              ],
+              "edge_lengths": [
+                29.154759474226502,
+                33.54101966249684,
+                5.0
+              ],
+              "area": 37.50000000000004,
+              "perimeter": 67.69577913672335
+            },
+            {
+              "vertices": [
+                3,
+                1,
+                5
+              ],
+              "edge_lengths": [
+                10.0,
+                21.213203435596427,
+                29.154759474226502
+              ],
+              "area": 75.00000000000001,
+              "perimeter": 60.36796290982293
+            },
+            {
+              "vertices": [
+                4,
+                1,
                 0
               ],
               "edge_lengths": [
-                5.0,
-                31.622776601683793,
-                30.4138126514911
+                18.027756377319946,
+                15.0,
+                10.0
               ],
-              "area": 75.00000000000007,
-              "perimeter": 67.0365892531749
+              "area": 75.0,
+              "perimeter": 43.027756377319946
+            },
+            {
+              "vertices": [
+                1,
+                4,
+                5
+              ],
+              "edge_lengths": [
+                18.027756377319946,
+                5.0,
+                21.213203435596427
+              ],
+              "area": 37.49999999999999,
+              "perimeter": 44.24095981291637
+            },
+            {
+              "vertices": [
+                2,
+                4,
+                0
+              ],
+              "edge_lengths": [
+                14.142135623730951,
+                10.0,
+                10.0
+              ],
+              "area": 50.0,
+              "perimeter": 34.14213562373095
+            },
+            {
+              "vertices": [
+                4,
+                2,
+                5
+              ],
+              "edge_lengths": [
+                14.142135623730951,
+                18.027756377319946,
+                5.0
+              ],
+              "area": 25.00000000000001,
+              "perimeter": 37.1698920010509
             }
           ],
-          "num_triangles": 21,
-          "avg_edge_length": 27.668020495874465,
-          "max_edge_length": 90.13878188659973,
-          "min_edge_length": 2.0
+          "num_triangles": 7,
+          "avg_edge_length": 17.057774376256248,
+          "max_edge_length": 33.54101966249684,
+          "min_edge_length": 5.0
         },
         "force_data": {
           "total_force": 0.0,
@@ -1217,123 +602,58 @@
         },
         "overlap_pairs": [
           {
-            "comp1": "U1_ESP32",
-            "comp2": "J1_BarrelJack",
-            "distance": 31.622776601683793,
-            "min_clearance": 32.75,
-            "violation": 1.1272233983162074
+            "comp1": "L1",
+            "comp2": "C2",
+            "distance": 10.0,
+            "min_clearance": 11.625,
+            "violation": 1.625
           },
           {
-            "comp1": "U1_ESP32",
-            "comp2": "F1_Fuse",
-            "distance": 20.615528128088304,
-            "min_clearance": 24.25,
-            "violation": 3.634471871911696
-          },
-          {
-            "comp1": "U1_ESP32",
-            "comp2": "C1_InputCap",
-            "distance": 30.4138126514911,
-            "min_clearance": 31.75,
-            "violation": 1.3361873485089006
-          },
-          {
-            "comp1": "U1_ESP32",
-            "comp2": "C2_Decouple",
-            "distance": 10.198039027185569,
-            "min_clearance": 23.375,
-            "violation": 13.176960972814431
-          },
-          {
-            "comp1": "U2_L298",
-            "comp2": "J2_MotorOut",
-            "distance": 20.0,
-            "min_clearance": 24.0,
-            "violation": 4.0
-          },
-          {
-            "comp1": "U2_L298",
-            "comp2": "R1_Shunt",
-            "distance": 14.142135623730951,
-            "min_clearance": 17.4,
-            "violation": 3.2578643762690476
-          },
-          {
-            "comp1": "U3_LM358",
-            "comp2": "R2_Gain",
-            "distance": 2.0,
-            "min_clearance": 6.125,
-            "violation": 4.125
-          },
-          {
-            "comp1": "U4_AMS1117",
-            "comp2": "C3_OutputCap",
-            "distance": 2.0,
-            "min_clearance": 6.625,
-            "violation": 4.625
-          },
-          {
-            "comp1": "J1_BarrelJack",
-            "comp2": "F1_Fuse",
-            "distance": 11.180339887498949,
-            "min_clearance": 13.5,
-            "violation": 2.319660112501051
-          },
-          {
-            "comp1": "J1_BarrelJack",
-            "comp2": "C1_InputCap",
+            "comp1": "L1",
+            "comp2": "J2",
             "distance": 15.0,
-            "min_clearance": 21.0,
-            "violation": 6.0
+            "min_clearance": 17.5,
+            "violation": 2.5
+          },
+          {
+            "comp1": "C2",
+            "comp2": "J2",
+            "distance": 5.0,
+            "min_clearance": 9.125,
+            "violation": 4.125
           }
         ],
         "routing_data": {
-          "net_crossings": 32,
-          "routing_complexity": 14.128125,
-          "max_fanout": 10,
-          "avg_fanout": 4.333333333333333,
+          "net_crossings": 10,
+          "routing_complexity": 5.1034375,
+          "max_fanout": 6,
+          "avg_fanout": 3.6,
           "high_fanout_nets": [
             {
               "net": "GND",
-              "fanout": 10,
-              "components": [
-                "J1_BarrelJack",
-                "C1_InputCap",
-                "U1_ESP32",
-                "U2_L298",
-                "U3_LM358",
-                "U4_AMS1117",
-                "J2_MotorOut",
-                "R1_Shunt",
-                "C2_Decouple",
-                "C3_OutputCap"
-              ]
-            },
-            {
-              "net": "VCC_3V3",
               "fanout": 6,
               "components": [
-                "U4_AMS1117",
-                "U1_ESP32",
-                "C3_OutputCap",
-                "C2_Decouple",
-                "U3_LM358",
-                "LED1_Status"
+                "J1",
+                "C1",
+                "U1",
+                "C2",
+                "R2",
+                "J2"
               ]
             }
           ],
-          "total_nets": 9,
-          "net_density": 0.0009375
+          "total_nets": 5,
+          "net_density": 0.00078125
         }
       },
       "metadata": {
-        "user_intent": "Optimize for thermal management and signal integrity",
+        "user_intent": "Optimize for performance:\n- Minimize trace length for signal integrity\n- Optimize thermal management for reliability\n- Maintain proper clearances\n- Prioritize signal paths over power distribution",
         "weights": {
-          "alpha": 0.379,
-          "beta": 0.379,
-          "gamma": 0.242
+          "alpha": 0.44899999999999995,
+          "beta": 0.239,
+          "gamma": 0.312
         },
-        "score": 145.03801982834986,
+        "score": 92.01371784516061,
         "verification": {
           "success": true,
           "passed": false,
@@ -1341,391 +661,1161 @@
             {
               "type": "validity",
               "severity": "error",
-              "message": "U1_ESP32 overlaps C2_Decouple"
-            },
-            {
-              "type": "validity",
-              "severity": "error",
-              "message": "U3_LM358 overlaps R2_Gain"
-            },
-            {
-              "type": "validity",
-              "severity": "error",
-              "message": "U4_AMS1117 overlaps C3_OutputCap"
+              "message": "C2 overlaps J2"
             },
             {
               "type": "spacing",
-              "component1": "U1_ESP32",
-              "component2": "C2_Decouple",
-              "distance": 10.198039027185569,
-              "required": 13.95,
-              "severity": "error"
-            },
-            {
-              "type": "spacing",
-              "component1": "U3_LM358",
-              "component2": "R2_Gain",
-              "distance": 2.0,
-              "required": 3.7,
-              "severity": "error"
-            },
-            {
-              "type": "spacing",
-              "component1": "U4_AMS1117",
-              "component2": "C3_OutputCap",
-              "distance": 2.0,
-              "required": 4.45,
+              "component1": "C2",
+              "component2": "J2",
+              "distance": 5.0,
+              "required": 6.2,
               "severity": "error"
             },
             {
               "type": "clearance",
               "severity": "error",
-              "component1": "U1_ESP32",
-              "component2": "C2_Decouple",
-              "distance": 10.198039027185569,
-              "required": 14.25,
-              "message": "U1_ESP32 and C2_Decouple too close (10.20mm < 14.25mm)"
-            },
-            {
-              "type": "clearance",
-              "severity": "error",
-              "component1": "U3_LM358",
-              "component2": "R2_Gain",
-              "distance": 2.0,
-              "required": 4.0,
-              "message": "U3_LM358 and R2_Gain too close (2.00mm < 4.00mm)"
-            },
-            {
-              "type": "clearance",
-              "severity": "error",
-              "component1": "U4_AMS1117",
-              "component2": "C3_OutputCap",
-              "distance": 2.0,
-              "required": 4.75,
-              "message": "U4_AMS1117 and C3_OutputCap too close (2.00mm < 4.75mm)"
+              "component1": "C2",
+              "component2": "J2",
+              "distance": 5.0,
+              "required": 6.5,
+              "message": "C2 and J2 too close (5.00mm < 6.50mm)"
             }
           ],
           "warnings": [
             {
               "type": "crosstalk",
               "severity": "warning",
-              "net1": "VIN_12V",
+              "net1": "VIN",
               "net2": "GND",
               "distance": 0.0,
-              "message": "Nets VIN_12V and GND are close (0.00mm) - potential crosstalk risk"
+              "message": "Nets VIN and GND are close (0.00mm) - potential crosstalk risk"
             },
             {
               "type": "crosstalk",
               "severity": "warning",
-              "net1": "VIN_12V",
-              "net2": "VCC_3V3",
+              "net1": "VIN",
+              "net2": "SW",
               "distance": 0.0,
-              "message": "Nets VIN_12V and VCC_3V3 are close (0.00mm) - potential crosstalk risk"
+              "message": "Nets VIN and SW are close (0.00mm) - potential crosstalk risk"
             },
             {
               "type": "crosstalk",
               "severity": "warning",
-              "net1": "VIN_12V",
-              "net2": "PWM_Signal",
+              "net1": "VIN",
+              "net2": "FB",
               "distance": 0.0,
-              "message": "Nets VIN_12V and PWM_Signal are close (0.00mm) - potential crosstalk risk"
-            },
-            {
-              "type": "crosstalk",
-              "severity": "warning",
-              "net1": "VIN_12V",
-              "net2": "DIR_Signal",
-              "distance": 0.0,
-              "message": "Nets VIN_12V and DIR_Signal are close (0.00mm) - potential crosstalk risk"
-            },
-            {
-              "type": "crosstalk",
-              "severity": "warning",
-              "net1": "VIN_12V",
-              "net2": "Current_Sense",
-              "distance": 0.0,
-              "message": "Nets VIN_12V and Current_Sense are close (0.00mm) - potential crosstalk risk"
-            },
-            {
-              "type": "crosstalk",
-              "severity": "warning",
-              "net1": "VIN_12V",
-              "net2": "Motor_Out_A",
-              "distance": 0.0,
-              "message": "Nets VIN_12V and Motor_Out_A are close (0.00mm) - potential crosstalk risk"
-            },
-            {
-              "type": "crosstalk",
-              "severity": "warning",
-              "net1": "VIN_12V",
-              "net2": "Motor_Out_B",
-              "distance": 0.0,
-              "message": "Nets VIN_12V and Motor_Out_B are close (0.00mm) - potential crosstalk risk"
+              "message": "Nets VIN and FB are close (0.00mm) - potential crosstalk risk"
             },
             {
               "type": "crosstalk",
               "severity": "warning",
               "net1": "GND",
-              "net2": "VCC_3V3",
+              "net2": "SW",
               "distance": 0.0,
-              "message": "Nets GND and VCC_3V3 are close (0.00mm) - potential crosstalk risk"
+              "message": "Nets GND and SW are close (0.00mm) - potential crosstalk risk"
             },
             {
               "type": "crosstalk",
               "severity": "warning",
               "net1": "GND",
-              "net2": "PWM_Signal",
+              "net2": "VOUT",
               "distance": 0.0,
-              "message": "Nets GND and PWM_Signal are close (0.00mm) - potential crosstalk risk"
+              "message": "Nets GND and VOUT are close (0.00mm) - potential crosstalk risk"
             },
             {
               "type": "crosstalk",
               "severity": "warning",
               "net1": "GND",
-              "net2": "DIR_Signal",
+              "net2": "FB",
               "distance": 0.0,
-              "message": "Nets GND and DIR_Signal are close (0.00mm) - potential crosstalk risk"
+              "message": "Nets GND and FB are close (0.00mm) - potential crosstalk risk"
             },
             {
               "type": "crosstalk",
               "severity": "warning",
-              "net1": "GND",
-              "net2": "Current_Sense",
+              "net1": "SW",
+              "net2": "VOUT",
               "distance": 0.0,
-              "message": "Nets GND and Current_Sense are close (0.00mm) - potential crosstalk risk"
+              "message": "Nets SW and VOUT are close (0.00mm) - potential crosstalk risk"
             },
             {
               "type": "crosstalk",
               "severity": "warning",
-              "net1": "GND",
-              "net2": "Motor_Out_A",
+              "net1": "SW",
+              "net2": "FB",
               "distance": 0.0,
-              "message": "Nets GND and Motor_Out_A are close (0.00mm) - potential crosstalk risk"
+              "message": "Nets SW and FB are close (0.00mm) - potential crosstalk risk"
             },
             {
               "type": "crosstalk",
               "severity": "warning",
-              "net1": "GND",
-              "net2": "Motor_Out_B",
+              "net1": "VOUT",
+              "net2": "FB",
               "distance": 0.0,
-              "message": "Nets GND and Motor_Out_B are close (0.00mm) - potential crosstalk risk"
-            },
-            {
-              "type": "crosstalk",
-              "severity": "warning",
-              "net1": "GND",
-              "net2": "Overcurrent_Feedback",
-              "distance": 0.0,
-              "message": "Nets GND and Overcurrent_Feedback are close (0.00mm) - potential crosstalk risk"
-            },
-            {
-              "type": "crosstalk",
-              "severity": "warning",
-              "net1": "VCC_3V3",
-              "net2": "PWM_Signal",
-              "distance": 0.0,
-              "message": "Nets VCC_3V3 and PWM_Signal are close (0.00mm) - potential crosstalk risk"
-            },
-            {
-              "type": "crosstalk",
-              "severity": "warning",
-              "net1": "VCC_3V3",
-              "net2": "DIR_Signal",
-              "distance": 0.0,
-              "message": "Nets VCC_3V3 and DIR_Signal are close (0.00mm) - potential crosstalk risk"
-            },
-            {
-              "type": "crosstalk",
-              "severity": "warning",
-              "net1": "VCC_3V3",
-              "net2": "Current_Sense",
-              "distance": 0.0,
-              "message": "Nets VCC_3V3 and Current_Sense are close (0.00mm) - potential crosstalk risk"
-            },
-            {
-              "type": "crosstalk",
-              "severity": "warning",
-              "net1": "VCC_3V3",
-              "net2": "Overcurrent_Feedback",
-              "distance": 0.0,
-              "message": "Nets VCC_3V3 and Overcurrent_Feedback are close (0.00mm) - potential crosstalk risk"
-            },
-            {
-              "type": "crosstalk",
-              "severity": "warning",
-              "net1": "PWM_Signal",
-              "net2": "DIR_Signal",
-              "distance": 0.0,
-              "message": "Nets PWM_Signal and DIR_Signal are close (0.00mm) - potential crosstalk risk"
-            },
-            {
-              "type": "crosstalk",
-              "severity": "warning",
-              "net1": "PWM_Signal",
-              "net2": "Current_Sense",
-              "distance": 0.0,
-              "message": "Nets PWM_Signal and Current_Sense are close (0.00mm) - potential crosstalk risk"
-            },
-            {
-              "type": "crosstalk",
-              "severity": "warning",
-              "net1": "PWM_Signal",
-              "net2": "Motor_Out_A",
-              "distance": 0.0,
-              "message": "Nets PWM_Signal and Motor_Out_A are close (0.00mm) - potential crosstalk risk"
-            },
-            {
-              "type": "crosstalk",
-              "severity": "warning",
-              "net1": "PWM_Signal",
-              "net2": "Motor_Out_B",
-              "distance": 0.0,
-              "message": "Nets PWM_Signal and Motor_Out_B are close (0.00mm) - potential crosstalk risk"
-            },
-            {
-              "type": "crosstalk",
-              "severity": "warning",
-              "net1": "PWM_Signal",
-              "net2": "Overcurrent_Feedback",
-              "distance": 0.0,
-              "message": "Nets PWM_Signal and Overcurrent_Feedback are close (0.00mm) - potential crosstalk risk"
-            },
-            {
-              "type": "crosstalk",
-              "severity": "warning",
-              "net1": "DIR_Signal",
-              "net2": "Current_Sense",
-              "distance": 0.0,
-              "message": "Nets DIR_Signal and Current_Sense are close (0.00mm) - potential crosstalk risk"
-            },
-            {
-              "type": "crosstalk",
-              "severity": "warning",
-              "net1": "DIR_Signal",
-              "net2": "Motor_Out_A",
-              "distance": 0.0,
-              "message": "Nets DIR_Signal and Motor_Out_A are close (0.00mm) - potential crosstalk risk"
-            },
-            {
-              "type": "crosstalk",
-              "severity": "warning",
-              "net1": "DIR_Signal",
-              "net2": "Motor_Out_B",
-              "distance": 0.0,
-              "message": "Nets DIR_Signal and Motor_Out_B are close (0.00mm) - potential crosstalk risk"
-            },
-            {
-              "type": "crosstalk",
-              "severity": "warning",
-              "net1": "DIR_Signal",
-              "net2": "Overcurrent_Feedback",
-              "distance": 0.0,
-              "message": "Nets DIR_Signal and Overcurrent_Feedback are close (0.00mm) - potential crosstalk risk"
-            },
-            {
-              "type": "crosstalk",
-              "severity": "warning",
-              "net1": "Current_Sense",
-              "net2": "Motor_Out_A",
-              "distance": 0.0,
-              "message": "Nets Current_Sense and Motor_Out_A are close (0.00mm) - potential crosstalk risk"
-            },
-            {
-              "type": "crosstalk",
-              "severity": "warning",
-              "net1": "Current_Sense",
-              "net2": "Motor_Out_B",
-              "distance": 0.0,
-              "message": "Nets Current_Sense and Motor_Out_B are close (0.00mm) - potential crosstalk risk"
-            },
-            {
-              "type": "crosstalk",
-              "severity": "warning",
-              "net1": "Current_Sense",
-              "net2": "Overcurrent_Feedback",
-              "distance": 0.0,
-              "message": "Nets Current_Sense and Overcurrent_Feedback are close (0.00mm) - potential crosstalk risk"
-            },
-            {
-              "type": "crosstalk",
-              "severity": "warning",
-              "net1": "Motor_Out_A",
-              "net2": "Motor_Out_B",
-              "distance": 0.0,
-              "message": "Nets Motor_Out_A and Motor_Out_B are close (0.00mm) - potential crosstalk risk"
-            },
-            {
-              "type": "clearance",
-              "severity": "warning",
-              "component1": "U2_L298",
-              "component2": "R1_Shunt",
-              "distance": 14.142135623730951,
-              "required": 12.1,
-              "message": "U2_L298 and R1_Shunt are close (14.14mm < 14.52mm)"
-            },
-            {
-              "type": "thermal",
-              "severity": "warning",
-              "component1": "U2_L298",
-              "component2": "R1_Shunt",
-              "distance": 14.142135623730951,
-              "required": 20.0,
-              "message": "High-power components U2_L298 and R1_Shunt are close (14.14mm)"
+              "message": "Nets VOUT and FB are close (0.00mm) - potential crosstalk risk"
             }
           ],
-          "dfm_score": 0.7000000000000001,
+          "dfm_score": 0.9,
           "dfm_ready": false,
           "agent": "VerifierAgent"
         }
       },
-      "timestamp": "2025-11-11T22:53:31.274091"
+      "timestamp": "2025-11-11T23:42:09.042048"
     },
     {
       "placement": {
         "components": [
           {
             "name": "U1",
-            "package": "TQFP-32",
-            "width": 9.0,
-            "height": 9.0,
-            "power": 0.1,
-            "x": 51.0,
-            "y": 35.0,
+            "package": "SOIC-8",
+            "width": 5.0,
+            "height": 4.0,
+            "power": 0.8,
+            "x": 20.0,
+            "y": 40.0,
             "angle": 0,
             "placed": true,
             "pins": [
               {
                 "name": "pin1",
-                "x_offset": -4.5,
-                "y_offset": -4.5,
+                "x_offset": -2.5,
+                "y_offset": -2.0,
                 "net": ""
               },
               {
                 "name": "pin2",
-                "x_offset": 4.5,
-                "y_offset": -4.5,
+                "x_offset": 2.5,
+                "y_offset": -2.0,
                 "net": ""
               },
               {
                 "name": "pin3",
-                "x_offset": 4.5,
-                "y_offset": 4.5,
+                "x_offset": 2.5,
+                "y_offset": 2.0,
                 "net": ""
               },
               {
                 "name": "pin4",
-                "x_offset": -4.5,
-                "y_offset": 4.5,
+                "x_offset": -2.5,
+                "y_offset": 2.0,
                 "net": ""
               }
             ]
           },
           {
-            "name": "Y1",
-            "package": "SMD-Crystal-5x3.2",
-            "width": 5.0,
-            "height": 3.2,
+            "name": "L1",
+            "package": "SMD-Inductor-10x10",
+            "width": 10.0,
+            "height": 10.0,
+            "power": 0.3,
+            "x": 35.0,
+            "y": 40.0,
+            "angle": 0,
+            "placed": true,
+            "pins": [
+              {
+                "name": "pin1",
+                "x_offset": -5.0,
+                "y_offset": -5.0,
+                "net": ""
+              },
+              {
+                "name": "pin2",
+                "x_offset": 5.0,
+                "y_offset": -5.0,
+                "net": ""
+              },
+              {
+                "name": "pin3",
+                "x_offset": 5.0,
+                "y_offset": 5.0,
+                "net": ""
+              },
+              {
+                "name": "pin4",
+                "x_offset": -5.0,
+                "y_offset": 5.0,
+                "net": ""
+              }
+            ]
+          },
+          {
+            "name": "Cin",
+            "package": "1206",
+            "width": 3.2,
+            "height": 1.6,
+            "power": 0.05,
+            "x": 10.0,
+            "y": 40.0,
+            "angle": 0,
+            "placed": true,
+            "pins": [
+              {
+                "name": "pin1",
+                "x_offset": -1.6,
+                "y_offset": -0.8,
+                "net": ""
+              },
+              {
+                "name": "pin2",
+                "x_offset": 1.6,
+                "y_offset": -0.8,
+                "net": ""
+              },
+              {
+                "name": "pin3",
+                "x_offset": 1.6,
+                "y_offset": 0.8,
+                "net": ""
+              },
+              {
+                "name": "pin4",
+                "x_offset": -1.6,
+                "y_offset": 0.8,
+                "net": ""
+              }
+            ]
+          },
+          {
+            "name": "Cout",
+            "package": "1206",
+            "width": 3.2,
+            "height": 1.6,
+            "power": 0.05,
+            "x": 50.0,
+            "y": 40.0,
+            "angle": 0,
+            "placed": true,
+            "pins": [
+              {
+                "name": "pin1",
+                "x_offset": -1.6,
+                "y_offset": -0.8,
+                "net": ""
+              },
+              {
+                "name": "pin2",
+                "x_offset": 1.6,
+                "y_offset": -0.8,
+                "net": ""
+              },
+              {
+                "name": "pin3",
+                "x_offset": 1.6,
+                "y_offset": 0.8,
+                "net": ""
+              },
+              {
+                "name": "pin4",
+                "x_offset": -1.6,
+                "y_offset": 0.8,
+                "net": ""
+              }
+            ]
+          },
+          {
+            "name": "R1",
+            "package": "0805",
+            "width": 2.0,
+            "height": 1.25,
+            "power": 0.01,
+            "x": 20.0,
+            "y": 50.0,
+            "angle": 90,
+            "placed": true,
+            "pins": [
+              {
+                "name": "pin1",
+                "x_offset": -1.0,
+                "y_offset": -0.625,
+                "net": ""
+              },
+              {
+                "name": "pin2",
+                "x_offset": 1.0,
+                "y_offset": -0.625,
+                "net": ""
+              },
+              {
+                "name": "pin3",
+                "x_offset": 1.0,
+                "y_offset": 0.625,
+                "net": ""
+              },
+              {
+                "name": "pin4",
+                "x_offset": -1.0,
+                "y_offset": 0.625,
+                "net": ""
+              }
+            ]
+          },
+          {
+            "name": "R2",
+            "package": "0805",
+            "width": 2.0,
+            "height": 1.25,
+            "power": 0.01,
+            "x": 20.0,
+            "y": 55.0,
+            "angle": 90,
+            "placed": true,
+            "pins": [
+              {
+                "name": "pin1",
+                "x_offset": -1.0,
+                "y_offset": -0.625,
+                "net": ""
+              },
+              {
+                "name": "pin2",
+                "x_offset": 1.0,
+                "y_offset": -0.625,
+                "net": ""
+              },
+              {
+                "name": "pin3",
+                "x_offset": 1.0,
+                "y_offset": 0.625,
+                "net": ""
+              },
+              {
+                "name": "pin4",
+                "x_offset": -1.0,
+                "y_offset": 0.625,
+                "net": ""
+              }
+            ]
+          },
+          {
+            "name": "D1",
+            "package": "DO-214AA",
+            "width": 4.6,
+            "height": 3.6,
+            "power": 0.2,
+            "x": 35.0,
+            "y": 50.0,
+            "angle": 0,
+            "placed": true,
+            "pins": [
+              {
+                "name": "pin1",
+                "x_offset": -2.3,
+                "y_offset": -1.8,
+                "net": ""
+              },
+              {
+                "name": "pin2",
+                "x_offset": 2.3,
+                "y_offset": -1.8,
+                "net": ""
+              },
+              {
+                "name": "pin3",
+                "x_offset": 2.3,
+                "y_offset": 1.8,
+                "net": ""
+              },
+              {
+                "name": "pin4",
+                "x_offset": -2.3,
+                "y_offset": 1.8,
+                "net": ""
+              }
+            ]
+          },
+          {
+            "name": "J1",
+            "package": "2-Pin-Header",
+            "width": 5.08,
+            "height": 2.54,
             "power": 0.0,
-            "x": 27.32365884610885,
-            "y": 26.91193528118899,
+            "x": 5.0,
+            "y": 5.0,
+            "angle": 0,
+            "placed": true,
+            "pins": [
+              {
+                "name": "pin1",
+                "x_offset": -2.54,
+                "y_offset": -1.27,
+                "net": ""
+              },
+              {
+                "name": "pin2",
+                "x_offset": 2.54,
+                "y_offset": -1.27,
+                "net": ""
+              },
+              {
+                "name": "pin3",
+                "x_offset": 2.54,
+                "y_offset": 1.27,
+                "net": ""
+              },
+              {
+                "name": "pin4",
+                "x_offset": -2.54,
+                "y_offset": 1.27,
+                "net": ""
+              }
+            ]
+          },
+          {
+            "name": "J2",
+            "package": "2-Pin-Header",
+            "width": 5.08,
+            "height": 2.54,
+            "power": 0.0,
+            "x": 70.0,
+            "y": 5.0,
+            "angle": 0,
+            "placed": true,
+            "pins": [
+              {
+                "name": "pin1",
+                "x_offset": -2.54,
+                "y_offset": -1.27,
+                "net": ""
+              },
+              {
+                "name": "pin2",
+                "x_offset": 2.54,
+                "y_offset": -1.27,
+                "net": ""
+              },
+              {
+                "name": "pin3",
+                "x_offset": 2.54,
+                "y_offset": 1.27,
+                "net": ""
+              },
+              {
+                "name": "pin4",
+                "x_offset": -2.54,
+                "y_offset": 1.27,
+                "net": ""
+              }
+            ]
+          }
+        ],
+        "board": {
+          "width": 80,
+          "height": 80,
+          "clearance": 0.5,
+          "layer_count": 2,
+          "layer_stackup": {
+            "layer_count": 2,
+            "layers": [
+              {
+                "name": "F.Cu",
+                "type": "signal",
+                "thickness": 0.035
+              },
+              {
+                "name": "B.Cu",
+                "type": "signal",
+                "thickness": 0.035
+              }
+            ],
+            "dielectric_thickness": 1.6,
+            "dielectric_constant": 4.5
+          }
+        },
+        "nets": [
+          {
+            "name": "VIN",
+            "pins": [
+              [
+                "J1",
+                "pin1"
+              ],
+              [
+                "Cin",
+                "pin1"
+              ],
+              [
+                "U1",
+                "pin1"
+              ]
+            ]
+          },
+          {
+            "name": "GND",
+            "pins": [
+              [
+                "J1",
+                "pin2"
+              ],
+              [
+                "Cin",
+                "pin2"
+              ],
+              [
+                "U1",
+                "pin4"
+              ],
+              [
+                "Cout",
+                "pin2"
+              ],
+              [
+                "R2",
+                "pin2"
+              ],
+              [
+                "D1",
+                "pin2"
+              ],
+              [
+                "J2",
+                "pin2"
+              ]
+            ]
+          },
+          {
+            "name": "SW",
+            "pins": [
+              [
+                "U1",
+                "pin2"
+              ],
+              [
+                "L1",
+                "pin1"
+              ],
+              [
+                "D1",
+                "pin1"
+              ]
+            ]
+          },
+          {
+            "name": "VOUT",
+            "pins": [
+              [
+                "L1",
+                "pin2"
+              ],
+              [
+                "Cout",
+                "pin1"
+              ],
+              [
+                "R1",
+                "pin1"
+              ],
+              [
+                "J2",
+                "pin1"
+              ]
+            ]
+          },
+          {
+            "name": "FB",
+            "pins": [
+              [
+                "U1",
+                "pin5"
+              ],
+              [
+                "R1",
+                "pin2"
+              ],
+              [
+                "R2",
+                "pin1"
+              ]
+            ]
+          }
+        ]
+      },
+      "geometry": {
+        "density": 0.00140625,
+        "convex_hull_area": 2175.0,
+        "voronoi_variance": 24779.75304705216,
+        "mst_length": 140.66662780082012,
+        "thermal_hotspots": 0,
+        "net_crossings": 10,
+        "routing_complexity": 5.2234375,
+        "max_fanout": 7,
+        "avg_fanout": 4.0,
+        "overlap_risk": 0.09090909090909091,
+        "delaunay_triangles": 10,
+        "delaunay_avg_edge_length": 22.807381261869615,
+        "force_equilibrium_score": 1.0,
+        "total_force": 0.0,
+        "voronoi_data": {
+          "voronoi_variance": 24779.75304705216,
+          "cell_areas": [
+            328.125,
+            507.14285714285717,
+            121.875
+          ],
+          "num_regions": 3
+        },
+        "mst_edges": [
+          [
+            0,
+            1,
+            15.0
+          ],
+          [
+            0,
+            2,
+            10.0
+          ],
+          [
+            0,
+            4,
+            10.0
+          ],
+          [
+            1,
+            3,
+            15.0
+          ],
+          [
+            1,
+            6,
+            10.0
+          ],
+          [
+            2,
+            7,
+            35.35533905932738
+          ],
+          [
+            3,
+            8,
+            40.311288741492746
+          ],
+          [
+            4,
+            5,
+            5.0
+          ]
+        ],
+        "hull_vertices": [
+          7,
+          8,
+          3,
+          6,
+          5,
+          2
+        ],
+        "hotspot_locations": [],
+        "delaunay_data": {
+          "triangles": [
+            {
+              "vertices": [
+                8,
+                1,
+                7
+              ],
+              "edge_lengths": [
+                49.49747468305833,
+                46.09772228646444,
+                65.0
+              ],
+              "area": 1137.4999999999998,
+              "perimeter": 160.59519696952276
+            },
+            {
+              "vertices": [
+                3,
+                1,
+                8
+              ],
+              "edge_lengths": [
+                15.0,
+                49.49747468305833,
+                40.311288741492746
+              ],
+              "area": 262.49999999999994,
+              "perimeter": 104.80876342455107
+            },
+            {
+              "vertices": [
+                1,
+                0,
+                7
+              ],
+              "edge_lengths": [
+                15.0,
+                38.07886552931954,
+                46.09772228646444
+              ],
+              "area": 262.5000000000002,
+              "perimeter": 99.17658781578399
+            },
+            {
+              "vertices": [
+                0,
+                2,
+                7
+              ],
+              "edge_lengths": [
+                10.0,
+                35.35533905932738,
+                38.07886552931954
+              ],
+              "area": 175.0,
+              "perimeter": 83.43420458864692
+            },
+            {
+              "vertices": [
+                3,
+                6,
+                1
+              ],
+              "edge_lengths": [
+                18.027756377319946,
+                10.0,
+                15.0
+              ],
+              "area": 75.0,
+              "perimeter": 43.027756377319946
+            },
+            {
+              "vertices": [
+                2,
+                4,
+                5
+              ],
+              "edge_lengths": [
+                14.142135623730951,
+                5.0,
+                18.027756377319946
+              ],
+              "area": 25.00000000000001,
+              "perimeter": 37.1698920010509
+            },
+            {
+              "vertices": [
+                0,
+                4,
+                2
+              ],
+              "edge_lengths": [
+                10.0,
+                14.142135623730951,
+                10.0
+              ],
+              "area": 50.0,
+              "perimeter": 34.14213562373095
+            },
+            {
+              "vertices": [
+                4,
+                6,
+                5
+              ],
+              "edge_lengths": [
+                15.0,
+                15.811388300841896,
+                5.0
+              ],
+              "area": 37.500000000000014,
+              "perimeter": 35.8113883008419
+            },
+            {
+              "vertices": [
+                6,
+                4,
+                1
+              ],
+              "edge_lengths": [
+                15.0,
+                18.027756377319946,
+                10.0
+              ],
+              "area": 75.0,
+              "perimeter": 43.027756377319946
+            },
+            {
+              "vertices": [
+                4,
+                0,
+                1
+              ],
+              "edge_lengths": [
+                10.0,
+                15.0,
+                18.027756377319946
+              ],
+              "area": 75.0,
+              "perimeter": 43.027756377319946
+            }
+          ],
+          "num_triangles": 10,
+          "avg_edge_length": 22.807381261869615,
+          "max_edge_length": 65.0,
+          "min_edge_length": 5.0
+        },
+        "force_data": {
+          "total_force": 0.0,
+          "max_force": 0.0,
+          "equilibrium_score": 1.0,
+          "error": "unhashable type: 'Component'"
+        },
+        "overlap_pairs": [
+          {
+            "comp1": "L1",
+            "comp2": "D1",
+            "distance": 10.0,
+            "min_clearance": 14.1,
+            "violation": 4.1
+          }
+        ],
+        "routing_data": {
+          "net_crossings": 10,
+          "routing_complexity": 5.2234375,
+          "max_fanout": 7,
+          "avg_fanout": 4.0,
+          "high_fanout_nets": [
+            {
+              "net": "GND",
+              "fanout": 7,
+              "components": [
+                "J1",
+                "Cin",
+                "U1",
+                "Cout",
+                "R2",
+                "D1",
+                "J2"
+              ]
+            }
+          ],
+          "total_nets": 5,
+          "net_density": 0.00078125
+        }
+      },
+      "metadata": {
+        "user_intent": "Optimize for reliability:\n- Maximize thermal spacing\n- Ensure proper component clearances\n- Minimize thermal hotspots\n- Optimize for long-term operation\n- Prioritize thermal management over trace length\n```\n",
+        "weights": {
+          "alpha": 0.239,
+          "beta": 0.519,
+          "gamma": 0.242
+        },
+        "score": 91.43109097908918,
+        "verification": {
+          "success": true,
+          "passed": true,
+          "violations": [],
+          "warnings": [
+            {
+              "type": "crosstalk",
+              "severity": "warning",
+              "net1": "VIN",
+              "net2": "GND",
+              "distance": 0.0,
+              "message": "Nets VIN and GND are close (0.00mm) - potential crosstalk risk"
+            },
+            {
+              "type": "crosstalk",
+              "severity": "warning",
+              "net1": "VIN",
+              "net2": "SW",
+              "distance": 0.0,
+              "message": "Nets VIN and SW are close (0.00mm) - potential crosstalk risk"
+            },
+            {
+              "type": "crosstalk",
+              "severity": "warning",
+              "net1": "VIN",
+              "net2": "FB",
+              "distance": 0.0,
+              "message": "Nets VIN and FB are close (0.00mm) - potential crosstalk risk"
+            },
+            {
+              "type": "crosstalk",
+              "severity": "warning",
+              "net1": "GND",
+              "net2": "SW",
+              "distance": 0.0,
+              "message": "Nets GND and SW are close (0.00mm) - potential crosstalk risk"
+            },
+            {
+              "type": "crosstalk",
+              "severity": "warning",
+              "net1": "GND",
+              "net2": "VOUT",
+              "distance": 0.0,
+              "message": "Nets GND and VOUT are close (0.00mm) - potential crosstalk risk"
+            },
+            {
+              "type": "crosstalk",
+              "severity": "warning",
+              "net1": "GND",
+              "net2": "FB",
+              "distance": 0.0,
+              "message": "Nets GND and FB are close (0.00mm) - potential crosstalk risk"
+            },
+            {
+              "type": "crosstalk",
+              "severity": "warning",
+              "net1": "SW",
+              "net2": "VOUT",
+              "distance": 0.0,
+              "message": "Nets SW and VOUT are close (0.00mm) - potential crosstalk risk"
+            },
+            {
+              "type": "crosstalk",
+              "severity": "warning",
+              "net1": "SW",
+              "net2": "FB",
+              "distance": 0.0,
+              "message": "Nets SW and FB are close (0.00mm) - potential crosstalk risk"
+            },
+            {
+              "type": "crosstalk",
+              "severity": "warning",
+              "net1": "VOUT",
+              "net2": "FB",
+              "distance": 0.0,
+              "message": "Nets VOUT and FB are close (0.00mm) - potential crosstalk risk"
+            }
+          ],
+          "dfm_score": 1.0,
+          "dfm_ready": true,
+          "agent": "VerifierAgent"
+        }
+      },
+      "timestamp": "2025-11-12T00:03:35.079503"
+    },
+    {
+      "placement": {
+        "components": [
+          {
+            "name": "U1_ADC",
+            "package": "SOIC-16",
+            "width": 10.0,
+            "height": 7.0,
+            "power": 0.1,
+            "x": 61.0,
+            "y": 45.0,
+            "angle": 0,
+            "placed": true,
+            "pins": [
+              {
+                "name": "pin1",
+                "x_offset": -5.0,
+                "y_offset": -3.5,
+                "net": ""
+              },
+              {
+                "name": "pin2",
+                "x_offset": 5.0,
+                "y_offset": -3.5,
+                "net": ""
+              },
+              {
+                "name": "pin3",
+                "x_offset": 5.0,
+                "y_offset": 3.5,
+                "net": ""
+              },
+              {
+                "name": "pin4",
+                "x_offset": -5.0,
+                "y_offset": 3.5,
+                "net": ""
+              }
+            ]
+          },
+          {
+            "name": "U2_VREF",
+            "package": "SOT-23",
+            "width": 3.0,
+            "height": 3.0,
+            "power": 0.01,
+            "x": 50.0,
+            "y": 40.0,
+            "angle": 0,
+            "placed": true,
+            "pins": [
+              {
+                "name": "pin1",
+                "x_offset": -1.5,
+                "y_offset": -1.5,
+                "net": ""
+              },
+              {
+                "name": "pin2",
+                "x_offset": 1.5,
+                "y_offset": -1.5,
+                "net": ""
+              },
+              {
+                "name": "pin3",
+                "x_offset": 1.5,
+                "y_offset": 1.5,
+                "net": ""
+              },
+              {
+                "name": "pin4",
+                "x_offset": -1.5,
+                "y_offset": 1.5,
+                "net": ""
+              }
+            ]
+          },
+          {
+            "name": "U3_OPAMP",
+            "package": "SOIC-8",
+            "width": 5.0,
+            "height": 4.0,
+            "power": 0.2,
+            "x": 51.0,
+            "y": 45.0,
+            "angle": 0,
+            "placed": true,
+            "pins": [
+              {
+                "name": "pin1",
+                "x_offset": -2.5,
+                "y_offset": -2.0,
+                "net": ""
+              },
+              {
+                "name": "pin2",
+                "x_offset": 2.5,
+                "y_offset": -2.0,
+                "net": ""
+              },
+              {
+                "name": "pin3",
+                "x_offset": 2.5,
+                "y_offset": 2.0,
+                "net": ""
+              },
+              {
+                "name": "pin4",
+                "x_offset": -2.5,
+                "y_offset": 2.0,
+                "net": ""
+              }
+            ]
+          },
+          {
+            "name": "R1_GAIN",
+            "package": "0805",
+            "width": 2.0,
+            "height": 1.25,
+            "power": 0.0,
+            "x": 35.0,
+            "y": 40.0,
+            "angle": 90,
+            "placed": true,
+            "pins": [
+              {
+                "name": "pin1",
+                "x_offset": -1.0,
+                "y_offset": -0.625,
+                "net": ""
+              },
+              {
+                "name": "pin2",
+                "x_offset": 1.0,
+                "y_offset": -0.625,
+                "net": ""
+              },
+              {
+                "name": "pin3",
+                "x_offset": 1.0,
+                "y_offset": 0.625,
+                "net": ""
+              },
+              {
+                "name": "pin4",
+                "x_offset": -1.0,
+                "y_offset": 0.625,
+                "net": ""
+              }
+            ]
+          },
+          {
+            "name": "R2_GAIN",
+            "package": "0805",
+            "width": 2.0,
+            "height": 1.25,
+            "power": 0.0,
+            "x": 35.0,
+            "y": 42.0,
+            "angle": 90,
+            "placed": true,
+            "pins": [
+              {
+                "name": "pin1",
+                "x_offset": -1.0,
+                "y_offset": -0.625,
+                "net": ""
+              },
+              {
+                "name": "pin2",
+                "x_offset": 1.0,
+                "y_offset": -0.625,
+                "net": ""
+              },
+              {
+                "name": "pin3",
+                "x_offset": 1.0,
+                "y_offset": 0.625,
+                "net": ""
+              },
+              {
+                "name": "pin4",
+                "x_offset": -1.0,
+                "y_offset": 0.625,
+                "net": ""
+              }
+            ]
+          },
+          {
+            "name": "R3_FILTER",
+            "package": "0805",
+            "width": 2.0,
+            "height": 1.25,
+            "power": 0.0,
+            "x": 40.0,
+            "y": 40.0,
+            "angle": 0,
+            "placed": true,
+            "pins": [
+              {
+                "name": "pin1",
+                "x_offset": -1.0,
+                "y_offset": -0.625,
+                "net": ""
+              },
+              {
+                "name": "pin2",
+                "x_offset": 1.0,
+                "y_offset": -0.625,
+                "net": ""
+              },
+              {
+                "name": "pin3",
+                "x_offset": 1.0,
+                "y_offset": 0.625,
+                "net": ""
+              },
+              {
+                "name": "pin4",
+                "x_offset": -1.0,
+                "y_offset": 0.625,
+                "net": ""
+              }
+            ]
+          },
+          {
+            "name": "C1_DECOUPLE",
+            "package": "0805",
+            "width": 2.0,
+            "height": 1.25,
+            "power": 0.0,
+            "x": 63.870371039377254,
+            "y": 44.07826604302631,
             "angle": 

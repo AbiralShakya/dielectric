@@ -354,10 +354,6 @@ dielectric/
 └── README.md
 ```
 
----
-
-## Contributing
-
 Dielectric is built with:
 - **Backend**: FastAPI, Python 3.10+
 - **Frontend**: Streamlit
@@ -365,23 +361,6 @@ Dielectric is built with:
 - **Geometry**: SciPy, NumPy
 - **Visualization**: Plotly
 
----
-
-## License
-
-[Specify your license here]
-
----
-
 ## Contact
 
-[Your contact information]
-
----
-
-## Acknowledgments
-
-- Research paper: "Global Optimization Algorithms for Chip Layout and Compaction" by Dorneich et al.
-- KiCad project for PCB design standards
-- xAI for Grok reasoning capabilities
-
+abiral@princeton.edu

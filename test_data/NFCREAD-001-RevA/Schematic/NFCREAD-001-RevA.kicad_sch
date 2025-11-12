@@ -1,6 +1,0 @@
-(kicad_sch (version 20211014) (generator eeschema)
-  (paper "A4")
-  (title_block
-    (title "NFC Reader Schematic")
-  )
-)

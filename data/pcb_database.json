@@ -1,0 +1,14 @@
+{
+  "designs": [
+    {
+      "placement": {
+        "components": [
+          {
+            "name": "PWR_IC",
+            "package": "SOIC-8",
+            "width": 5,
+            "height": 4,
+            "power": 1.5,
+            "x": 72.34061326192227,
+            "y": 43.63498237337828,
+            "angle": 

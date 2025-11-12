@@ -61,7 +61,7 @@ except ImportError as e:
 
 API_BASE = "http://localhost:8000"
 
-# Apple-Inspired Sleek Design - Minimal & Refined
+# Modern Dark Theme - Matching React Design
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
@@ -74,12 +74,24 @@ st.markdown("""
     
     .stApp {
         background: #000000;
-        color: #f5f5f7;
+        color: #ffffff;
     }
     
+    /* Hide sidebar */
     [data-testid="stSidebar"] {
-        background: #1d1d1f;
-        border-right: none;
+        display: none;
+    }
+    
+    /* Hide Streamlit header/footer */
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+    
+    .main .block-container {
+        padding-top: 0;
+        padding-left: 3rem;
+        padding-right: 3rem;
+        max-width: 1400px;
     }
     
     /* Apple Typography */
@@ -124,29 +136,53 @@ st.markdown("""
         letter-spacing: -0.01em;
     }
     
-    /* Apple-Style Buttons - Refined & Minimal */
+    /* Modern Buttons - Matching React Design */
     .stButton>button {
         background: #ffffff;
         color: #000000;
         border: none;
-        border-radius: 8px;
-        padding: 0.875rem 1.75rem;
+        border-radius: 0;
+        padding: 0.875rem 2rem;
         font-weight: 500;
-        font-size: 0.9375rem;
-        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        font-size: 0.875rem;
+        transition: background 0.2s;
         letter-spacing: -0.01em;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
     }
     
     .stButton>button:hover {
-        background: #f5f5f7;
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+        background: #e4e4e7;
     }
     
-    .stButton>button:active {
-        transform: translateY(0);
-        background: #e8e8ed;
+    /* Workflow toggle buttons - properly styled */
+    div[data-testid="column"]:has(button[key="workflow_generate"]),
+    div[data-testid="column"]:has(button[key="workflow_optimize"]) {
+        padding: 0 !important;
+    }
+    
+    button[key="workflow_generate"],
+    button[key="workflow_optimize"] {
+        padding: 0.625rem 1.5rem !important;
+        font-size: 0.875rem !important;
+        font-weight: 500 !important;
+        border-radius: 0.375rem !important;
+        background: transparent !important;
+        color: #71717a !important;
+        width: 100% !important;
+        transition: all 0.2s !important;
+        border: none !important;
+    }
+    
+    button[key="workflow_generate"]:hover,
+    button[key="workflow_optimize"]:hover {
+        color: #ffffff !important;
+        background: transparent !important;
+    }
+    
+    /* Active state styling - apply based on workflow */
+    button[key="workflow_generate"]:focus,
+    button[key="workflow_optimize"]:focus {
+        outline: none !important;
+        box-shadow: none !important;
     }
     
     [data-baseweb="button"][kind="primary"] {
@@ -159,26 +195,42 @@ st.markdown("""
         background: #0051d5 !important;
     }
     
-    /* Apple Input Fields - Refined */
+    /* Modern Input Fields - Matching React Design */
     [data-testid="stTextInput"]>div>div>input,
     [data-testid="stTextArea"]>div>div>textarea,
     [data-testid="stNumberInput"]>div>div>input {
-        background: #1d1d1f !important;
-        color: #f5f5f7 !important;
-        border: 1px solid #424245 !important;
-        border-radius: 8px !important;
-        padding: 0.875rem 1rem !important;
-        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
-        font-size: 0.9375rem !important;
+        background: #000000 !important;
+        color: #71717a !important;
+        border: 1px solid #18181b !important;
+        border-radius: 0 !important;
+        padding: 1.25rem 1.5rem !important;
+        transition: border-color 0.2s !important;
+        font-size: 1rem !important;
     }
     
     [data-testid="stTextInput"]>div>div>input:focus,
     [data-testid="stTextArea"]>div>div>textarea:focus,
     [data-testid="stNumberInput"]>div>div>input:focus {
-        border-color: #007aff !important;
-        background: #2d2d2f !important;
+        border-color: #18181b !important;
+        background: #000000 !important;
         outline: none !important;
-        box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1) !important;
+        box-shadow: none !important;
+        color: #ffffff !important;
+    }
+    
+    [data-testid="stTextArea"]>div>div>textarea::placeholder {
+        color: #3f3f46 !important;
+    }
+    
+    /* Number input labels */
+    [data-testid="stNumberInput"] label {
+        color: #71717a !important;
+        font-size: 0.875rem !important;
+    }
+    
+    /* Number input container */
+    [data-testid="stNumberInput"] {
+        background: transparent !important;
     }
     
     /* Apple Select Boxes */
@@ -346,7 +398,7 @@ st.set_page_config(
     page_title="Dielectric",
     page_icon=None,
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed"
 )
 
 
@@ -478,29 +530,9 @@ def create_pcb_plot(placement_data: Dict, title: str = "PCB Layout") -> go.Figur
     return fig
 
 
-# Apple-Style Sidebar
-with st.sidebar:
-    st.markdown("""
-    <div style="text-align: left; padding: 2rem 0 3rem 0;">
-        <h1 style="font-size: 1.5rem; margin: 0; color: #ffffff; font-weight: 600; letter-spacing: -0.02em;">
-            Dielectric
-        </h1>
-        <p style="color: #86868b; font-size: 0.8125rem; margin-top: 0.5rem; font-weight: 400;">
-            AI-Powered PCB Design
-        </p>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    st.markdown("---")
-    
-    # Workflow selection
-    st.markdown("### Workflow")
-    workflow = st.radio(
-        "Choose workflow",
-        ["Generate Design", "Optimize Design"],
-        help="Generate: Create new PCB from natural language\nOptimize: Optimize existing design",
-        label_visibility="collapsed"
-    )
+# Initialize workflow in session state
+if "workflow" not in st.session_state:
+    st.session_state.workflow = "Generate Design"
 
 def process_zip_file(zip_file):
     """Process a single zip file with progress indicators."""
@@ -681,6 +713,15 @@ if "last_uploaded_files" not in st.session_state:
     st.session_state.last_uploaded_files = []
 if "processing_status" not in st.session_state:
     st.session_state.processing_status = "idle"
+# Initialize design input fields
+if "design_description_input" not in st.session_state:
+    st.session_state.design_description_input = ""
+if "board_width" not in st.session_state:
+    st.session_state.board_width = 80
+if "board_height" not in st.session_state:
+    st.session_state.board_height = 80
+if "board_clearance" not in st.session_state:
+    st.session_state.board_clearance = 0.15
 
 # Check backend connection
 try:
@@ -701,122 +742,245 @@ if not backend_online:
     st.info("Please start the backend server:\n```bash\ncd /Users/abiralshakya/Documents/hackprinceton2025/dielectric\nsource venv/bin/activate\nuvicorn src.backend.api.main:app --host 0.0.0.0 --port 8000 --reload\n```")
     st.stop()
 
-# Apple-Style Header
+# Header Section
 st.markdown("""
-<div style="text-align: left; padding: 0 0 3rem 0;">
-    <h1 style="font-size: 3rem; margin-bottom: 0.75rem; color: #ffffff; font-weight: 600; letter-spacing: -0.03em; line-height: 1.1;">
-        Dielectric
-    </h1>
-    <p style="font-size: 1.0625rem; color: #86868b; margin-top: 0; font-weight: 400; letter-spacing: -0.01em;">
-        Computational Geometry + Multi-Agent AI for PCB Design
-    </p>
+<div style="border-bottom: 1px solid #18181b; padding: 1.5rem 0;">
+    <div style="display: flex; justify-content: space-between; align-items: center; max-width: 1400px; margin: 0 auto;">
+        <div>
+            <h1 style="font-size: 1.25rem; margin: 0; color: #ffffff; font-weight: 400; letter-spacing: -0.01em;">
+                Dielectric
+            </h1>
+            <p style="font-size: 0.75rem; color: #71717a; margin-top: 0.25rem; margin-bottom: 0;">
+                AI-Powered PCB Design
+            </p>
+        </div>
+        <a href="http://localhost:8000/docs" target="_blank" style="padding: 0.5rem 1.25rem; background: #ffffff; color: #000000; border: none; border-radius: 0; font-size: 0.875rem; font-weight: 500; cursor: pointer; transition: background 0.2s; text-decoration: none; display: inline-block;" 
+           onmouseover="this.style.background='#e4e4e7'" 
+           onmouseout="this.style.background='#ffffff'">
+            API Docs
+        </a>
+    </div>
 </div>
 """, unsafe_allow_html=True)
 
-st.markdown("---")
+# Main Content Container
+st.markdown("""
+<div style="max-width: 1400px; margin: 0 auto; padding: 5rem 0;">
+""", unsafe_allow_html=True)
+
+# Workflow Toggle
+st.markdown("""
+<div style="display: inline-flex; gap: 0.25rem; background: #0a0a0a; border: 1px solid #18181b; padding: 0.25rem; border-radius: 0.5rem; margin-bottom: 4rem;">
+""", unsafe_allow_html=True)
+
+col_toggle1, col_toggle2 = st.columns([1, 1], gap="small")
+with col_toggle1:
+    if st.button("Generate Design", key="workflow_generate", use_container_width=True):
+        st.session_state.workflow = "Generate Design"
+        st.rerun()
+with col_toggle2:
+    if st.button("Optimize Design", key="workflow_optimize", use_container_width=True):
+        st.session_state.workflow = "Optimize Design"
+        st.rerun()
+
+st.markdown("</div>", unsafe_allow_html=True)
+
+# Apply active state styling with JavaScript
+workflow = st.session_state.workflow
+st.markdown(f"""
+<script>
+(function() {{
+    const workflow = '{workflow}';
+    setTimeout(function() {{
+        const generateBtn = document.querySelector('button[key="workflow_generate"]');
+        const optimizeBtn = document.querySelector('button[key="workflow_optimize"]');
+        
+        if (workflow === 'Generate Design' && generateBtn) {{
+            generateBtn.style.background = '#18181b';
+            generateBtn.style.color = '#ffffff';
+        }} else if (workflow === 'Optimize Design' && optimizeBtn) {{
+            optimizeBtn.style.background = '#18181b';
+            optimizeBtn.style.color = '#ffffff';
+        }}
+    }}, 100);
+}})();
+</script>
+""", unsafe_allow_html=True)
 
 if workflow == "Generate Design":
+    # Hero Section
     st.markdown("""
-    <div style="margin-bottom: 3rem;">
-        <h2 style="margin-bottom: 0.75rem;">Generate PCB Design from Natural Language</h2>
-        <p style="color: #86868b; font-size: 1.0625rem; margin-top: 0; font-weight: 400;">Describe your PCB design in plain English and let AI create it for you</p>
+    <div style="margin-bottom: 5rem;">
+        <h2 style="font-size: 2.25rem; font-weight: 400; margin-bottom: 1rem; color: #ffffff; letter-spacing: -0.02em; line-height: 1.2;">
+            Generate PCB Design from<br />Natural Language
+        </h2>
+        <p style="color: #71717a; font-size: 1rem; margin: 0;">
+            Computational geometry and multi-agent optimization for PCB layout synthesis
+        </p>
     </div>
     """, unsafe_allow_html=True)
     
-    # Initialize example_description if not set
-    if "example_description" not in st.session_state:
-        st.session_state.example_description = ""
-    
-    # Examples Section
-    st.markdown("""
-    <div style="margin: 2rem 0 1.5rem 0;">
-        <h3 style="color: #f5f5f7; margin-bottom: 1rem; font-weight: 600; font-size: 1.0625rem;">Quick Examples</h3>
-    </div>
-    """, unsafe_allow_html=True)
+    # Quick Examples Dropdown
+    if "examples_open" not in st.session_state:
+        st.session_state.examples_open = False
     
     examples = {
         "Audio Amplifier": "Design an audio amplifier with op-amp, input/output capacitors, and power supply filtering",
         "Power Supply": "Create a switching power supply with buck converter IC, inductor, capacitors, and feedback resistors",
         "Sensor Module": "Design a sensor interface board with ADC, voltage reference, and signal conditioning",
-        "MCU Board": "Create a microcontroller board with MCU, crystal oscillator, decoupling capacitors, and programming header",
-        "RF Module": "Design a 2.4GHz RF module with transceiver IC, matching network, antenna, and power management"
+        "MCU Board": "Create a microcontroller board with MCU, crystal oscillator, decoupling capacitors, and programming header"
     }
     
-    cols = st.columns(2)
-    for idx, (name, desc) in enumerate(examples.items()):
-        with cols[idx % 2]:
-            if st.button(name, key=f"example_{idx}", use_container_width=True):
-                st.session_state.design_description_input = desc
-                st.rerun()
-    
-    # Main input area
-    # Initialize if not exists
-    if "design_description_input" not in st.session_state:
-        st.session_state.design_description_input = ""
-    
     st.markdown("""
-    <div style="margin-bottom: 0.75rem;">
-        <label style="color: #f5f5f7; font-weight: 500; font-size: 0.9375rem;">Describe your PCB design</label>
-    </div>
+    <div style="margin-bottom: 4rem; position: relative;">
     """, unsafe_allow_html=True)
     
+    if st.button("Quick Examples ▼", key="toggle_examples", use_container_width=False):
+        st.session_state.examples_open = not st.session_state.examples_open
+        st.rerun()
+    
+    if st.session_state.examples_open:
+        st.markdown("""
+        <div style="position: absolute; top: 100%; left: 0; margin-top: 0.25rem; width: 16rem; background: #0a0a0a; border: 1px solid #18181b; z-index: 10;">
+        """, unsafe_allow_html=True)
+        
+        for idx, (name, desc) in enumerate(examples.items()):
+            if st.button(name, key=f"example_{idx}", use_container_width=True):
+                st.session_state.design_description_input = desc
+                st.session_state.examples_open = False
+                st.rerun()
+        
+        st.markdown("</div>", unsafe_allow_html=True)
+    
+    st.markdown("</div>", unsafe_allow_html=True)
+    
+    # Input Section
+    st.markdown("""
+    <div style="background: #0a0a0a; border: 1px solid #18181b; padding: 2.5rem;">
+        <label style="display: block; font-size: 0.75rem; font-weight: 500; color: #71717a; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 1.5rem;">
+            Describe your PCB design
+        </label>
+    """, unsafe_allow_html=True)
+    
+    # Use session state directly, don't pass value parameter to avoid widget warning
     design_description = st.text_area(
         "",
-        value=st.session_state.design_description_input,
-        height=140,
-        placeholder="Example: Design an audio amplifier circuit with power supply. Include op-amp, resistors, capacitors, and power management IC. Optimize for low noise and thermal efficiency.",
-        help="Describe the PCB you want to create in natural language",
+        height=120,
+        placeholder="Create a microcontroller board with MCU, crystal oscillator, decoupling capacitors, and programming header",
         key="design_description_input",
         label_visibility="collapsed"
     )
-        
-    # Board size inputs
+    
+    # Board Customization Section
     st.markdown("""
-    <div style="margin: 2rem 0 0.75rem 0;">
-        <label style="color: #f5f5f7; font-weight: 500; font-size: 0.9375rem;">Board Dimensions</label>
-    </div>
+        <div style="margin-top: 2rem; padding-top: 2rem; border-top: 1px solid #18181b;">
+            <label style="display: block; font-size: 0.75rem; font-weight: 500; color: #71717a; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 1rem;">
+                Board Configuration
+            </label>
+        </div>
     """, unsafe_allow_html=True)
     
-    col_size1, col_size2, col_size3 = st.columns([2, 2, 1])
+    col_size1, col_size2, col_size3 = st.columns(3)
     with col_size1:
-        board_width = st.number_input("Width (mm)", 50, 500, 120, 10, key="board_width", label_visibility="visible")
+        board_width = st.number_input(
+            "Width (mm)",
+            min_value=50,
+            max_value=500,
+            value=st.session_state.board_width,
+            step=10,
+            key="board_width_input",
+            help="Board width in millimeters"
+        )
+        st.session_state.board_width = board_width
     with col_size2:
-        board_height = st.number_input("Height (mm)", 50, 500, 80, 10, key="board_height", label_visibility="visible")
+        board_height = st.number_input(
+            "Height (mm)",
+            min_value=50,
+            max_value=500,
+            value=st.session_state.board_height,
+            step=10,
+            key="board_height_input",
+            help="Board height in millimeters"
+        )
+        st.session_state.board_height = board_height
     with col_size3:
-        st.markdown("<br>", unsafe_allow_html=True)  # Spacing
-        if st.button("Generate Design", type="primary", use_container_width=True):
-            if not design_description:
-                st.error("Please enter a design description")
-            else:
-                with st.spinner("Generating PCB design from natural language..."):
-                    try:
-                        response = requests.post(
-                            f"{API_BASE}/generate",
-                            json={
-                                "description": design_description,
-                                "board_size": {"width": board_width, "height": board_height, "clearance": 0.5}
-                            },
-                            timeout=180  # Increased timeout for xAI calls with extensive reasoning (3 minutes)
-                        )
-                        
-                        if response.status_code == 200:
-                            result = response.json()
-                            st.session_state.design_data = result.get("placement")
-                            st.success("Design generated successfully!")
-                            st.rerun()
-                        else:
-                            try:
-                                error_json = response.json()
-                                error_detail = error_json.get("detail", response.text[:500])
-                            except:
-                                error_detail = response.text[:500] if hasattr(response, 'text') else f"HTTP {response.status_code}"
-                            st.error(f"Error {response.status_code}: {error_detail}")
-                    except requests.exceptions.Timeout:
-                        st.error("Request timed out. The design generation is taking longer than expected. Please try again.")
-                    except Exception as e:
-                        st.error(f"Connection error: {str(e)}")
+        board_clearance = st.number_input(
+            "Clearance (mm)",
+            min_value=0.1,
+            max_value=1.0,
+            value=st.session_state.board_clearance,
+            step=0.05,
+            key="board_clearance_input",
+            help="Minimum trace clearance (0.15mm = standard)"
+        )
+        st.session_state.board_clearance = board_clearance
     
+    st.markdown("""
+        <div style="display: flex; justify-content: flex-end; margin-top: 2rem; align-items: center; gap: 0.75rem;">
+    """, unsafe_allow_html=True)
+    
+    if st.button("Generate Design →", key="generate_btn", use_container_width=False):
+        if not design_description:
+            st.error("Please enter a design description")
+        else:
+            with st.spinner("Generating PCB design from natural language..."):
+                try:
+                    response = requests.post(
+                        f"{API_BASE}/generate",
+                        json={
+                            "description": design_description,
+                            "board_size": {
+                                "width": board_width,
+                                "height": board_height,
+                                "clearance": board_clearance
+                            }
+                        },
+                        timeout=180  # Increased timeout for xAI calls with extensive reasoning (3 minutes)
+                    )
+                    
+                    if response.status_code == 200:
+                        result = response.json()
+                        st.session_state.design_data = result.get("placement")
+                        st.success("Design generated successfully!")
+                        st.rerun()
+                    else:
+                        try:
+                            error_json = response.json()
+                            error_detail = error_json.get("detail", response.text[:500])
+                        except:
+                            error_detail = response.text[:500] if hasattr(response, 'text') else f"HTTP {response.status_code}"
+                        st.error(f"Error {response.status_code}: {error_detail}")
+                except requests.exceptions.Timeout:
+                    st.error("Request timed out. The design generation is taking longer than expected. Please try again.")
+                except Exception as e:
+                    st.error(f"Connection error: {str(e)}")
+    
+    st.markdown("</div>", unsafe_allow_html=True)  # Close input section div
+    
+    # Stats Section (shown when design exists)
     if st.session_state.design_data:
+        components_count = len(st.session_state.design_data.get("components", []))
+        nets_count = len(st.session_state.design_data.get("nets", []))
+        board = st.session_state.design_data.get("board", {})
+        board_size = f"{board.get('width', 80)}×{board.get('height', 80)}mm"
+        
+        st.markdown(f"""
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-top: 4rem;">
+            <div style="background: #0a0a0a; border: 1px solid #18181b; padding: 1.5rem;">
+                <div style="font-size: 1.5rem; font-weight: 300; margin-bottom: 0.25rem; color: #71717a;">{components_count}</div>
+                <div style="font-size: 0.75rem; color: #71717a; text-transform: uppercase; letter-spacing: 0.1em;">Components</div>
+            </div>
+            <div style="background: #0a0a0a; border: 1px solid #18181b; padding: 1.5rem;">
+                <div style="font-size: 1.5rem; font-weight: 300; margin-bottom: 0.25rem; color: #71717a;">{nets_count}</div>
+                <div style="font-size: 0.75rem; color: #71717a; text-transform: uppercase; letter-spacing: 0.1em;">Nets</div>
+            </div>
+            <div style="background: #0a0a0a; border: 1px solid #18181b; padding: 1.5rem;">
+                <div style="font-size: 1.5rem; font-weight: 300; margin-bottom: 0.25rem; color: #71717a;">{board_size}</div>
+                <div style="font-size: 0.75rem; color: #71717a; text-transform: uppercase; letter-spacing: 0.1em;">Board Size</div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        
         st.markdown("---")
         st.markdown("### Generated Design")
         

@@ -1,91 +1,178 @@
-# Dielectric - AI-Powered PCB Design Platform
+# Dielectric
 
-<div align="center">
-  <img src="https://img.shields.io/badge/PCB-Design-blue.svg" alt="PCB Design">
-  <img src="https://img.shields.io/badge/AI-Powered-green.svg" alt="AI Powered">
-  <img src="https://img.shields.io/badge/KiCad-Export-orange.svg" alt="KiCad Export">
-  <img src="https://img.shields.io/badge/Python-3.12+-blue.svg" alt="Python 3.12+">
-</div>
+**Computational Geometry + Multi-Agent AI for PCB Design**
 
-## 🚀 Revolutionizing PCB Design with AI
-
-**Dielectric** is an enterprise-grade AI platform that transforms PCB design from a manual, time-intensive process into an automated, intelligent workflow. Using advanced computational geometry, multi-agent AI systems, and natural language processing, Dielectric generates production-ready PCB designs from simple text descriptions.
-
-> **2,000x faster than manual design** • **Enterprise-ready quality** • **Zero manual routing**
+Dielectric is an AI-powered PCB design platform that combines advanced computational geometry algorithms with multi-agent AI reasoning to generate, optimize, and analyze printed circuit board designs from natural language descriptions.
 
 ---
 
-## ✨ Key Features
+## Overview
 
-### 🎯 **Natural Language Design Generation**
-- Describe your PCB in plain English
-- Automatic component selection and placement
-- Intelligent module identification and clustering
-- Real-time design validation
+Dielectric provides tools for PCB design generation, optimization, and analysis. The platform uses computational geometry analysis, simulated annealing optimization, and Grok (xAI) reasoning to support:
 
-### 🧠 **Multi-Agent AI Architecture**
-- **Design Agent**: Interprets requirements and creates initial layouts
-- **Optimization Agent**: Applies computational geometry algorithms
-- **Error Fixer Agent**: Automatically resolves design violations
-- **Validation Agent**: Ensures manufacturing readiness
-
-### 🔧 **Computational Geometry Engine**
-- **Voronoi Diagrams**: Optimal component clustering
-- **Minimum Spanning Trees**: Efficient trace routing
-- **Convex Hull Analysis**: Board size optimization
-- **Thermal Analysis**: Heat dissipation optimization
-- **Simulated Annealing**: Global optimization for component placement and routing
-
-### 📐 **Professional Constraints**
-- Real fabrication limits (trace width, spacing, via sizes)
-- DRC (Design Rule Check) compliance
-- Signal integrity optimization
-- Thermal management
-
-### 🎨 **Visual Design Interface**
-- Interactive PCB visualization
-- Real-time geometry analysis
-- Design optimization feedback
-- Export to KiCad format
+- **Generate** complete PCB designs from natural language descriptions
+- **Optimize** existing designs using AI-powered algorithms
+- **Analyze** designs with computational geometry metrics
+- **Export** to industry-standard formats (KiCad, Gerber, etc.)
 
 ---
 
-## 🏗️ Architecture Overview
+## Key Features
 
+### Natural Language Design Generation
+
+Input a natural language description of your PCB design. The system generates component placement and routing suggestions based on the description.
+
+**Example:**
 ```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│  Natural Lang   │ -> │ Multi-Agent AI  │ -> │ Computational   │
-│  Description    │    │ System          │    │ Geometry        │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-                                                        │
-┌─────────────────┐    ┌─────────────────┐              │
-│  Error Fixing   │ <- │ Validation      │ <- ┌─────────────────┐
-│  & Optimization │    │ & DRC Check     │   │ KiCad Export    │
-└─────────────────┘    └─────────────────┘   └─────────────────┘
+"Design a 2.4GHz RF module with transceiver IC, matching network, antenna, and power management"
 ```
 
-### Core Components:
-- **Frontend**: Streamlit-based professional UI
-- **Backend**: FastAPI with async processing
-- **AI Engine**: xAI Grok API integration
-- **Geometry Engine**: NumPy, SciPy, Shapely
-- **Export System**: Native KiCad format support
+### Computational Geometry Analysis
+
+The platform implements computational geometry algorithms for PCB layout analysis:
+
+- **Voronoi Diagrams** - Analyze component distribution and thermal hotspots
+- **Minimum Spanning Tree (MST)** - Optimize trace routing and minimize wire length
+- **Convex Hull Analysis** - Measure board utilization and component spread
+- **Delaunay Triangulation** - Identify component neighborhoods and local density
+- **Thermal Hotspot Detection** - Gaussian thermal diffusion modeling
+- **Net Crossing Analysis** - Detect routing conflicts and complexity
+- **Force-Directed Layout Metrics** - Analyze placement equilibrium
+
+### Multi-Agent AI Architecture
+
+The system uses multiple specialized agents:
+
+- **IntentAgent** - Understands user goals using computational geometry + xAI
+- **DesignGeneratorAgent** - Creates designs from natural language
+- **LocalPlacerAgent** - Optimizes component placement (deterministic, fast)
+- **GlobalOptimizerAgent** - Applies research-backed global optimization algorithms
+- **VerifierAgent** - Validates design rules and constraints
+- **ErrorFixerAgent** - Automatically fixes violations
+- **RoutingAgent** - Handles trace routing and differential pairs
+- **ManufacturingAgent** - Generates Gerber, drill, and pick-place files
+
+### Comprehensive Design Analysis
+
+Compare designs before and after optimization with:
+
+- **PCB Layout Comparison** - Visualize component placement improvements
+- **Schematic Comparison** - See net routing optimizations
+- **Thermal Analysis** - Identify and resolve thermal hotspots
+
+### Visual Design Comparison
+
+The platform provides before/after visualizations for optimization analysis:
+
+#### PCB Layout Comparison
+
+![PCB Layout Comparison](docs/images/pcb_layout_comparison.png)
+
+*Before and After PCB Layout Comparison showing optimized component placement and routing. The optimized layout demonstrates shorter trace lengths, reduced crossings, and improved component organization.*
+
+#### Schematic Comparison
+
+![Schematic Comparison](docs/images/schematic_comparison.png)
+
+*Schematic Comparison demonstrating improved net routing and shorter trace lengths. Color-coded nets (VCC, GND, XTAL1, RESET) show optimized connectivity patterns.*
+
+#### Thermal Analysis
+
+![Thermal Comparison](docs/images/thermal_comparison.png)
+
+*Thermal Analysis showing reduced hotspot concentration after optimization. The heatmap visualization demonstrates improved thermal distribution with less intense hotspots.*
+
+### Advanced Optimization
+
+The platform implements multiple optimization strategies:
+
+- **Enhanced Simulated Annealing** - With xAI reasoning integration
+- **Force-Directed Placement (FDP)** - Based on research literature
+- **Quadratic Placement** - For large-scale designs
+- **Analytical Placement with Partitioning** - Hierarchical optimization
+- **Compaction Algorithms** - Space-efficient placement
+
+### Industry-Standard Export
+
+Export your optimized designs to:
+
+- **KiCad** - Full `.kicad_pcb` file format
+- **Gerber Files** - Manufacturing-ready output
+- **Drill Files** - Excellon format
+- **Pick-and-Place Files** - CSV/JSON for assembly
+- **BOM (Bill of Materials)** - Component lists with pricing
+
+#### KiCad Export
+
+![KiCad Export](docs/images/kicad_export.png)
+
+*Exported design opened in KiCad PCB Editor, showing components, pads, and ratsnest connections. The design is ready for further editing, routing, or direct manufacturing preparation.*
 
 ---
 
-## 🚀 Quick Start
+## Architecture
+
+### Computational Geometry Engine
+
+Dielectric's geometry analyzer computes real-time metrics that feed into AI reasoning:
+
+```python
+{
+    "density": 0.003,  # components/mm²
+    "voronoi_variance": 0.45,  # distribution uniformity
+    "mst_length": 234.5,  # mm - trace length optimization
+    "convex_hull_area": 8500.0,  # mm² - board utilization
+    "thermal_hotspots": 3,  # number of hotspot regions
+    "thermal_risk_score": 0.65,  # 0-1 thermal risk
+    "net_crossings": 12,  # routing conflicts
+    "routing_complexity": 0.42,  # 0-1 complexity score
+    "overlap_risk": 0.08,  # collision risk
+    "force_equilibrium_score": 0.89  # placement stability
+}
+```
+
+### AI Reasoning Integration
+
+Grok (xAI) reasoning is integrated at multiple stages:
+
+1. **Design Generation** - Extensive reasoning about component selection and placement
+2. **Intent Analysis** - Maps user intent to optimization weights using geometry data
+3. **Optimization Strategy** - Real-time reasoning during simulated annealing (every 25 iterations)
+4. **Post-Optimization Analysis** - Provides insights and refinement suggestions
+
+### Multi-Agent Workflow
+
+```
+User Intent → IntentAgent → Geometry Analysis → xAI Reasoning
+                                    ↓
+                    ┌───────────────┴───────────────┐
+                    ↓                               ↓
+        DesignGeneratorAgent          LocalPlacerAgent
+                    ↓                               ↓
+            GlobalOptimizerAgent      VerifierAgent
+                    ↓                               ↓
+            RoutingAgent              ErrorFixerAgent
+                    ↓                               ↓
+            ManufacturingAgent        ExporterAgent
+```
+
+---
+
+## Installation
 
 ### Prerequisites
-- Python 3.12+
-- xAI API key
-- Git
 
-### Installation
+- Python 3.10+
+- xAI API key (for Grok reasoning)
+- KiCad (optional, for library integration)
+
+### Setup
 
 ```bash
 # Clone the repository
 git clone <repository-url>
-cd neuro-geometric-placer
+cd dielectric
 
 # Create virtual environment
 python -m venv venv
@@ -94,283 +181,207 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 # Install dependencies
 pip install -r requirements.txt
 
-# Set up environment
-echo "XAI_API_KEY=your_xai_api_key_here" > .env
+# Set up environment variables
+export XAI_API_KEY=your_xai_api_key_here
 ```
 
-### Start Dielectric
+### Running the Application
 
+**Backend Server:**
 ```bash
-# Terminal 1: Start Backend
-./venv/bin/python deploy_simple.py
-
-# Terminal 2: Start Frontend
-./venv/bin/streamlit run frontend/app_dielectric.py --server.port 8501
+cd dielectric
+source venv/bin/activate
+uvicorn src.backend.api.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-Open **http://127.0.0.1:8501** in your browser.
+**Frontend:**
+```bash
+cd dielectric/frontend
+streamlit run app_dielectric.py
+```
+
+The application will be available at `http://localhost:8501`
 
 ---
 
-## 💡 Usage Guide
+## Usage
 
-### 1. Generate New Design
+### Generate Design from Natural Language
 
-**Input**: Natural language description
-```
-Design an audio amplifier with:
-- LM358 op-amp with feedback network
-- Power supply filtering capacitors
-- Input/output connectors
-- Optimize for noise isolation
-```
+1. Select **"Generate Design"** workflow
+2. Enter a natural language description of your PCB design
+3. Set board dimensions (width and height in mm)
+4. Click **"Generate Design"**
+5. Review the generated design with visualizations
 
-**Output**: Complete PCB layout with:
-- Component placement
-- Trace routing
-- Power planes
-- Manufacturing files
+**Example Descriptions:**
+- "Design an audio amplifier with op-amp, input/output capacitors, and power supply filtering"
+- "Create a switching power supply with buck converter IC, inductor, capacitors, and feedback resistors"
+- "Design a sensor interface board with ADC, voltage reference, and signal conditioning"
 
-### 2. Optimize Existing Design
+### Optimize Existing Design
 
-**Input**: JSON design file + optimization intent
-```
-"Optimize for thermal management and signal integrity"
-```
+1. Select **"Optimize Design"** workflow
+2. Upload your PCB design file (`.kicad_pcb`, `.json`, or folder/zip)
+3. Enter optimization intent (e.g., "Minimize trace length", "Reduce thermal hotspots")
+4. Click **"Optimize"**
+5. Review optimization results:
+   - Before/After comparisons (Layout, Schematic, Thermal)
+   - Computational geometry metrics
+   - Multi-agent workflow status
+6. Export optimized design to KiCad or manufacturing files
 
-**Features**:
-- Automatic error detection and fixing
-- Performance optimization
-- Constraint satisfaction
-- Quality validation
+### Understanding Optimization Results
 
-### 3. Export to KiCad
+The platform provides analysis including:
 
-**Supported Formats**:
-- KiCad PCB (.kicad_pcb)
-- Component libraries
-- Net classes
-- Design rules
+**Geometry Metrics:**
+- **Voronoi Variance** - Lower is better (more uniform distribution)
+- **MST Length** - Shorter is better (minimized trace routing)
+- **Thermal Risk Score** - Lower is better (reduced hotspots)
+- **Routing Complexity** - Lower is better (fewer conflicts)
 
----
-
-## 📊 Performance Metrics
-
-| Metric | Dielectric | Manual Design |
-|--------|------------|---------------|
-| Design Time | 5-10 minutes | 5-7 days |
-| Error Rate | 0% (auto-fixed) | 15-20% |
-| Quality Score | 0.85/1.0 | 0.7/1.0 |
-| Cost Savings | 95% | - |
-
-### Benchmark Results:
-- **Time Savings**: 2,000x faster than manual design
-- **First-Pass Success**: 100% (agentic error fixing)
-- **Design Complexity**: Handles 100+ component designs
-- **Manufacturing Ready**: Direct KiCad export
+**Visual Comparisons:**
+- **PCB Layout** - Component placement optimization
+- **Schematic** - Net routing improvements
+- **Thermal** - Heat distribution analysis
 
 ---
 
-## 🎨 Example Designs
+## API Endpoints
 
-### Audio Amplifier
-```json
-{
-  "description": "High-performance audio amplifier",
-  "components": ["LM358", "capacitors", "resistors"],
-  "constraints": {
-    "board_size": {"width": 100, "height": 80},
-    "optimization": "thermal_management"
-  }
-}
-```
-
-### IoT Sensor Board
-```json
-{
-  "description": "Low-power IoT sensor with WiFi",
-  "modules": ["ESP32", "sensors", "battery"],
-  "requirements": ["low_power", "compact", "RF_optimized"]
-}
-```
-
-### Power Supply Module
-```json
-{
-  "description": "DC-DC converter with filtering",
-  "components": ["buck_converter", "inductors", "capacitors"],
-  "optimization": "efficiency_maximization"
-}
-```
-
----
-
-## 🔧 API Reference
-
-### Core Endpoints
-
-#### Generate Design
+### Design Generation
 ```http
 POST /generate
 Content-Type: application/json
 
 {
-  "description": "Design an LED driver circuit",
-  "board_size": {"width": 50, "height": 50},
-  "constraints": ["thermal", "manufacturability"]
+    "description": "Design an audio amplifier...",
+    "board_size": {
+        "width": 120,
+        "height": 80,
+        "clearance": 0.5
+    }
 }
 ```
 
-#### Optimize Design
+### Optimization
 ```http
 POST /optimize
 Content-Type: application/json
 
 {
-  "board": {...},
-  "intent": "Optimize for signal integrity",
-  "constraints": [...]
+    "board": {...},
+    "components": [...],
+    "nets": [...],
+    "intent": "Minimize trace length and thermal hotspots"
 }
 ```
 
-#### Export to KiCad
+### Export
 ```http
 POST /export/kicad
 Content-Type: application/json
 
 {
-  "design": {...},
-  "format": "kicad_pcb"
+    "placement": {...}
 }
 ```
 
----
+### Manufacturing Files
+- `POST /manufacturing/gerber` - Generate Gerber files
+- `POST /manufacturing/drill` - Generate drill files
+- `POST /manufacturing/pick-place` - Generate pick-place files
+- `POST /manufacturing/jlcpcb/upload` - Upload to JLCPCB
 
-## 🧪 Testing & Validation
-
-### Automated Testing Suite
-```bash
-# Run all tests
-python -m pytest tests/
-
-# Run geometry tests
-python -m pytest tests/test_geometry.py
-
-# Run API tests
-python -m pytest tests/test_api.py
-```
-
-### Quality Validation
-- **DRC Checks**: Design Rule Compliance
-- **Connectivity**: Net verification
-- **Manufacturing**: Fabrication constraints
-- **Thermal**: Heat analysis
-- **Signal Integrity**: Impedance matching
+### Advanced Features
+- `POST /routing/auto` - Auto-route design
+- `POST /routing/differential-pairs` - Route differential pairs
+- `POST /simulation/signal-integrity/analyze` - SI analysis
+- `POST /simulation/power-integrity/analyze` - PI analysis
+- `POST /simulation/thermal/heatmap` - Thermal heat map
+- `POST /bom/generate` - Generate Bill of Materials
+- `POST /drc/advanced` - Advanced Design Rule Checks
 
 ---
 
-## 📚 Advanced Features
+## Technical Details
 
 ### Computational Geometry Algorithms
-- **Voronoi Partitioning**: Optimal component grouping
-- **MST Routing**: Minimum trace length optimization
-- **Convex Hull**: Board boundary optimization
-- **Thermal Gradient**: Heat dissipation analysis
-- **Simulated Annealing**: Probabilistic optimization that escapes local minima by accepting worse solutions temporarily, then gradually reducing acceptance probability to converge on optimal placement
 
-### Multi-Agent Workflow
-```
-Design Intent → Component Selection → Initial Placement → Optimization → Validation → Error Fixing → Export
-```
+Dielectric implements research-backed algorithms from:
+- **Dorneich et al.** - "Global Optimization Algorithms for Chip Layout and Compaction"
+- **Force-Directed Placement** - For balanced component distribution
+- **Quadratic Placement** - For large-scale optimization
+- **Analytical Placement** - With hierarchical partitioning
 
-### Knowledge Graph Integration
-- Component relationship mapping
-- Design pattern recognition
-- Constraint propagation
-- Hierarchical optimization
+### AI Reasoning
 
----
+- **Model**: Grok (xAI) via API
+- **Reasoning Frequency**: Every 25 iterations during optimization
+- **Context**: Full computational geometry metrics + user intent
+- **Output**: Optimization strategy, component suggestions, thermal insights
 
-## 🔍 Troubleshooting
+### Performance
 
-### Common Issues
-
-**Backend Connection Failed**
-```bash
-# Check if backend is running
-curl http://localhost:8000/health
-
-# Restart backend
-./venv/bin/python deploy_simple.py
-```
-
-**Design Generation Errors**
-- Simplify natural language description
-- Specify board size constraints
-- Check component availability
-
-**Export Issues**
-- Validate design before export
-- Check KiCad version compatibility
-- Review design rule violations
+- **Analysis Time**: ~50-200ms per geometry analysis
+- **Optimization**: Configurable iterations (default: 200)
+- **Design Generation**: ~30-180 seconds (depends on complexity)
+- **Scalability**: Handles designs with 100+ components
 
 ---
 
-## 🤝 Contributing
+## Project Structure
 
-### Development Setup
-```bash
-# Fork and clone
-git clone your-fork-url
-cd neuro-geometric-placer
-
-# Install dev dependencies
-pip install -r requirements-dev.txt
-
-# Run tests
-python -m pytest
+```
+dielectric/
+├── src/
+│   ├── backend/
+│   │   ├── agents/          # AI agents (Design, Intent, Optimizer, etc.)
+│   │   ├── geometry/        # Computational geometry algorithms
+│   │   ├── optimization/    # Simulated annealing, global optimizers
+│   │   ├── routing/          # Autorouting, differential pairs
+│   │   ├── manufacturing/   # Gerber, drill, pick-place generation
+│   │   ├── simulation/      # SI, PI, thermal analysis
+│   │   ├── ai/              # xAI client integration
+│   │   └── api/             # FastAPI endpoints
+│   └── frontend/
+│       └── app_dielectric.py # Streamlit UI
+├── docs/
+│   ├── COMPUTATIONAL_GEOMETRY_USAGE.md
+│   ├── PRODUCT_EXPANSION_PLAN.md
+│   └── images/              # Screenshots and diagrams
+└── README.md
 ```
 
-### Code Standards
-- Type hints required
-- Docstrings for all functions
-- Unit tests for new features
-- Black formatting
+---
+
+## Contributing
+
+Dielectric is built with:
+- **Backend**: FastAPI, Python 3.10+
+- **Frontend**: Streamlit
+- **AI**: Grok (xAI) API
+- **Geometry**: SciPy, NumPy
+- **Visualization**: Plotly
 
 ---
 
-## 📄 License
+## License
 
-**MIT License** - Open source and free to use commercially.
-
----
-
-## 🙋 Support & Community
-
-- **Documentation**: See `/docs` directory
-- **Issues**: GitHub Issues
-- **Discussions**: GitHub Discussions
-- **Email**: support@dielectric.ai
+[Specify your license here]
 
 ---
 
-## 🏆 Acknowledgments
+## Contact
 
-Built with cutting-edge technology:
-- **xAI Grok**: Advanced language understanding
-- **Streamlit**: Professional web interface
-- **FastAPI**: High-performance backend
-- **NumPy/SciPy**: Computational geometry
-- **KiCad**: Industry-standard PCB design
+[Your contact information]
 
 ---
 
-<div align="center">
+## Acknowledgments
 
-**Dielectric** - The future of PCB design automation
+- Research paper: "Global Optimization Algorithms for Chip Layout and Compaction" by Dorneich et al.
+- KiCad project for PCB design standards
+- xAI for Grok reasoning capabilities
 
-*Transforming weeks of manual work into minutes of AI-powered design*
-
-[🚀 Get Started](#-quick-start) • [📚 Documentation](#-api-reference) • [🤝 Contributing](#-contributing)
-
-</div>

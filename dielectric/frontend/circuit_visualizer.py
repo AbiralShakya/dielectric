@@ -122,6 +122,7 @@ def create_pcb_layout_view(
             ))
     
     # Add traces (F.Cu layer - copper traces)
+    shown_nets = set()
     for net in nets:
         net_name = net.get("name", "")
         net_pins = net.get("pins", [])
@@ -152,9 +153,11 @@ def create_pcb_layout_view(
                         mode="lines",
                         line=dict(color=net_color, width=2),
                         name=net_name,
-                        showlegend=True,
+                        showlegend=(net_name not in shown_nets),
+                        legendgroup=net_name,
                         hovertemplate=f"<b>{net_name}</b><br>Trace<extra></extra>"
                     ))
+                shown_nets.add(net_name)
     
     # Update layout
     fig.update_layout(

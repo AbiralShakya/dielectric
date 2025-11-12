@@ -994,7 +994,7 @@ if workflow == "Generate Design":
                                 "clearance": board_clearance
                             }
                         },
-                        timeout=180  # Increased timeout for xAI calls with extensive reasoning (3 minutes)
+                        timeout=600  # Increased timeout for very complex designs (10 minutes)
                     )
                     
                     if response.status_code == 200:
@@ -1379,7 +1379,7 @@ else:  # Optimize Design
                                             "clearance": 0.15
                                         }
                                     },
-                                    timeout=180
+                                    timeout=600  # Increased timeout for very complex designs
                                 )
                                 
                                 if response.status_code == 200:

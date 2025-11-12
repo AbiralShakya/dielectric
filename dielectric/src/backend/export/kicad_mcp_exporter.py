@@ -260,8 +260,10 @@ class KiCadMCPExporter:
         net_lower = net_name.lower()
         
         # Power nets: wider traces
-        if any(kw in net_lower for kw in ["vcc", "vdd", "power", "supply"]):
-            return 0.5  # 20 mil
+        if any(kw in net_lower for kw in ["vin_24v", "24v", "v12", "high_current", "motor", "heater"]):
+            return 1.5  # ≥1.5mm for high-current
+        if any(kw in net_lower for kw in ["vcc", "vdd", "v5", "5v", "power", "supply"]):
+            return 0.5  # 0.5mm for normal power nets
         # Ground nets: medium width
         elif any(kw in net_lower for kw in ["gnd", "ground", "vss"]):
             return 0.3  # 12 mil
@@ -302,9 +304,10 @@ class KiCadMCPExporter:
             self.board.Add(segment)
         
         # Set design rules
-        clearance = board_info.get("clearance", 0.15) * 1e6  # Convert mm to nanometers
+        clr_mm = board_info.get("clearance", 0.5)
+        clearance = int(max(0.5, clr_mm) * 1e6)  # ≥0.5mm
         design_settings = self.board.GetDesignSettings()
-        design_settings.m_MinClearance = int(clearance)
+        design_settings.m_MinClearance = clearance
         design_settings.m_TrackMinWidth = int(0.15 * 1e6)  # 0.15mm minimum trace width
         design_settings.m_ViaMinSize = int(0.6 * 1e6)  # 0.6mm via diameter
         design_settings.m_ViaMinDrill = int(0.25 * 1e6)  # 0.25mm via drill

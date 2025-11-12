@@ -149,6 +149,38 @@ class IntentAgent:
         """
         intent_lower = user_intent.lower()
         
+        # Parse explicit percentage-based weights if present in intent
+        # e.g., "Signal integrity (40%), Thermal management (30%), Manufacturability (20%), Cost (10%)"
+        import re
+        perc = {"signal": None, "thermal": None, "manu": None, "cost": None}
+        try:
+            def extract(patterns):
+                for p in patterns:
+                    m = re.search(p, intent_lower)
+                    if m:
+                        return float(m.group(1))
+                return None
+            perc["signal"] = extract([r"signal\\s+integrity\\s*\\((\\d+)\\s*%\\)", r"signal\\s*\\((\\d+)\\s*%\\)"])
+            perc["thermal"] = extract([r"thermal.*?\\((\\d+)\\s*%\\)"])
+            perc["manu"] = extract([r"manufacturability\\s*\\((\\d+)\\s*%\\)", r"dfm\\s*\\((\\d+)\\s*%\\)"])
+            perc["cost"] = extract([r"cost\\s*\\((\\d+)\\s*%\\)"])
+            if all(v is not None for v in perc.values()):
+                total = sum(perc.values())
+                if total > 0:
+                    alpha = perc["signal"] / total
+                    beta = perc["thermal"] / total
+                    manu = perc["manu"] / total
+                    cost = perc["cost"] / total
+                    gamma = max(0.05, manu * 0.5)
+                    delta = max(0.05, manu * 0.5 + cost)
+                    s = alpha + beta + gamma + delta
+                    alpha, beta, gamma, delta = alpha/s, beta/s, gamma/s, delta/s
+                    self._last_delta = delta
+                    return (alpha, beta, gamma)
+        except Exception:
+            # If parsing fails, continue with keyword/geometry logic below
+            pass
+        
         # Initialize weights including DFM (delta)
         alpha = 0.25  # Trace length
         beta = 0.25   # Thermal

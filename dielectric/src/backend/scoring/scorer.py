@@ -172,6 +172,7 @@ class WorldModelScorer:
         - Spacing violations
         - Via size violations
         - Edge clearance violations
+        - Estimated BOM cost (normalized) – used when user includes Cost in weights
         
         Returns penalty score (higher = worse).
         """
@@ -191,7 +192,8 @@ class WorldModelScorer:
         for i, c1 in enumerate(comp_list):
             for c2 in comp_list[i+1:]:
                 dist = _euclidean_distance(c1.x, c1.y, c2.x, c2.y)
-                min_clearance = constraints.min_pad_to_pad_clearance
+                # Enforce at least 0.5mm min clearance policy
+                min_clearance = max(0.5, constraints.min_pad_to_pad_clearance)
                 min_distance = (c1.width + c2.width) / 2 + min_clearance
                 
                 if dist < min_distance:
@@ -200,10 +202,38 @@ class WorldModelScorer:
                     dfm_penalty += violation * 5.0
             
             # Check edge clearance
-            edge_margin = constraints.min_pad_to_pad_clearance
+            edge_margin = max(0.5, constraints.min_pad_to_pad_clearance)
             if (c1.x < edge_margin or c1.x > placement.board.width - edge_margin or
                 c1.y < edge_margin or c1.y > placement.board.height - edge_margin):
                 dfm_penalty += 2.0
+        
+        # Include cost estimate as part of DFM (normalized)
+        try:
+            from src.backend.components.bom_manager import BOMManager
+            bom_mgr = BOMManager()
+            bom = bom_mgr.generate_bom(placement, include_pricing=True)
+            total_cost = float(bom.get("summary", {}).get("total_cost", 0.0))
+            # Normalize: penalty ~ cost per cm^2 to keep scale reasonable
+            board_area_cm2 = (placement.board.width * placement.board.height) / 100.0
+            if board_area_cm2 > 0:
+                cost_penalty = total_cost / board_area_cm2
+            else:
+                cost_penalty = total_cost
+            # Scale down to comparable range
+            dfm_penalty += cost_penalty * 0.1
+        except Exception:
+            pass
+        
+        # Add routing complexity / signal integrity proxy using computational geometry
+        try:
+            from src.backend.geometry.geometry_analyzer import GeometryAnalyzer
+            analyzer = GeometryAnalyzer(placement)
+            routing = analyzer.compute_net_crossings()
+            # Penalize crossings and high fanout
+            dfm_penalty += routing.get("net_crossings", 0) * 0.5
+            dfm_penalty += routing.get("avg_fanout", 0.0) * 0.2
+        except Exception:
+            pass
         
         return dfm_penalty
     

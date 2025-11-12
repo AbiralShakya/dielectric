@@ -107,6 +107,23 @@ class HierarchicalReasoningAgent:
             logger.info(f"   Max iterations: {max_iterations}")
             logger.info(f"   High-level timescale: {high_level_timescale}")
             
+            # Build knowledge graph to scope reasoning (module-level priorities)
+            kg_summary = {}
+            try:
+                from src.backend.knowledge.knowledge_graph import KnowledgeGraph
+                kg = KnowledgeGraph(placement)
+                # Simple prioritization: high thermal priority modules first
+                priorities = sorted(
+                    kg.modules.values(),
+                    key=lambda m: ("high","medium","low").index(m.thermal_priority) if m.thermal_priority in ["high","medium","low"] else 1
+                )
+                module_order = [m.name for m in priorities]
+                kg_summary = {"modules": list(kg.modules.keys()), "module_order": module_order}
+                # Augment user intent with scoped context (non-invasive)
+                user_intent = f"{user_intent}\n[KG modules: {', '.join(module_order)}]"
+            except Exception:
+                kg_summary = {}
+            
             # Run hierarchical reasoning
             start_time = asyncio.get_event_loop().time()
             
@@ -138,7 +155,8 @@ class HierarchicalReasoningAgent:
                     "method": "hierarchical_reasoning",
                     "high_level_updates": stats.get("high_level_updates", 0),
                     "low_level_updates": stats.get("low_level_updates", 0),
-                    "confidence": stats.get("confidence", 0.0)
+                    "confidence": stats.get("confidence", 0.0),
+                    "knowledge_graph": kg_summary
                 },
                 "agent": self.name
             }

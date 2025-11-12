@@ -59,6 +59,20 @@ class AgentOrchestrator:
         self.database = PCBDatabase() if use_database else None
         self.max_retries = max_retries
         
+        # Initialize Hierarchical Reasoning Agent for large-scale optimization
+        try:
+            from src.backend.agents.hierarchical_reasoning_agent import HierarchicalReasoningAgent
+            self.hierarchical_reasoning_agent = HierarchicalReasoningAgent()
+            logger.info("✅ Orchestrator: Hierarchical Reasoning Agent initialized")
+        except ImportError:
+            try:
+                from backend.agents.hierarchical_reasoning_agent import HierarchicalReasoningAgent
+                self.hierarchical_reasoning_agent = HierarchicalReasoningAgent()
+                logger.info("✅ Orchestrator: Hierarchical Reasoning Agent initialized")
+            except Exception as e:
+                logger.warning(f"⚠️  Hierarchical Reasoning Agent not available: {e}")
+                self.hierarchical_reasoning_agent = None
+        
         # Initialize RoutingAgent (production-ready)
         try:
             from src.backend.agents.routing_agent import RoutingAgent
@@ -221,20 +235,36 @@ class AgentOrchestrator:
                       f"Voronoi variance={geometry_data.get('voronoi_variance', 0):.2f}, "
                       f"Hotspots={geometry_data.get('thermal_hotspots', 0)}")
 
-            # Step 2: LocalPlacerAgent runs optimization with the weights
-            # Use deterministic seed for reproducible results
+            # Step 2: Choose optimization agent based on design size
+            # Use Hierarchical Reasoning for large designs (100+ components)
+            num_components = len(placement.components)
+            use_hierarchical = num_components >= 100 and self.hierarchical_reasoning_agent is not None
+            
             import hashlib
             seed = int(hashlib.md5(user_intent.encode()).hexdigest()[:8], 16) % (2**31)
-            print(f"🔧 LocalPlacerAgent: Running optimization (seed={seed})...")
-            placement_result = await self._execute_with_retry(
-                "LocalPlacerAgent",
-                self.local_placer_agent.process,
-                placement, weights,
-                max_time_ms=500.0,
-                callback=callback,
-                random_seed=seed,
-                user_intent=user_intent
-            )
+            
+            if use_hierarchical:
+                print(f"🧠 HierarchicalReasoningAgent: Running HRM optimization for {num_components} components...")
+                print(f"   Using hierarchical reasoning (high-level planning + low-level execution)")
+                placement_result = await self._execute_with_retry(
+                    "HierarchicalReasoningAgent",
+                    self.hierarchical_reasoning_agent.optimize,
+                    placement, weights, user_intent,
+                    max_time_ms=60000.0,  # 60 seconds for large designs
+                    callback=callback,
+                    random_seed=seed
+                )
+            else:
+                print(f"🔧 LocalPlacerAgent: Running optimization (seed={seed})...")
+                placement_result = await self._execute_with_retry(
+                    "LocalPlacerAgent",
+                    self.local_placer_agent.process,
+                    placement, weights,
+                    max_time_ms=500.0,
+                    callback=callback,
+                    random_seed=seed,
+                    user_intent=user_intent
+                )
 
             if not placement_result["success"]:
                 return {

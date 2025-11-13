@@ -1,0 +1,1 @@
+for hrm to kick in we only consider 100+ pcb components
